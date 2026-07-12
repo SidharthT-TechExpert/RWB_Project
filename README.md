@@ -1,767 +1,407 @@
-## Hi there 👋
+# QuickBite 🍽️
 
-<!--
-**Qickbite/Qickbite** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+> Production-ready restaurant pre-booking platform — microservices architecture
 
-Here are some ideas to get you started:
-
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
-
-
-
-Here's a professional prompt you can give to an AI coding agent (Claude Code, Cursor, GitHub Copilot, Lovable AI, Bolt, etc.) to generate your project architecture. It emphasizes **microservices**, **clean architecture**, and **scalability**.
+QuickBite lets customers discover nearby restaurants, reserve tables, pre-order food, and skip the wait — all in one seamless experience.
 
 ---
 
-# AI Prompt: Build QuickBite (Microservices Architecture)
+## Tech Stack
 
-## Project Overview
-
-Build a **production-ready full-stack restaurant pre-booking platform** called **QuickBite**.
-
-The platform allows customers to:
-
-* Discover nearby restaurants
-* Reserve tables
-* Pre-order food
-* Reserve both table and food together
-* Skip restaurant waiting time
-* Receive real-time booking updates
-
-The goal is to eliminate waiting time and improve the dining experience.
-
-The project must be built using **Microservice Architecture**, **Node.js**, and **React ecosystem** with a clean, scalable codebase.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, Shadcn UI |
+| Mobile | React Native (Expo) — iOS & Android |
+| Backend | Node.js, Express.js, TypeScript, Microservices |
+| Database | MongoDB, Redis |
+| Auth | JWT, Refresh Tokens, Google OAuth, OTP |
+| Payments | Razorpay, Stripe |
+| Notifications | Firebase Push, Email, SMS |
+| Events | RabbitMQ |
+| Deployment | Docker, Kubernetes, Vercel, Nginx |
 
 ---
 
-# Technology Stack
+## Architecture
 
-## Frontend (Website)
-
-* Next.js (App Router)
-* React 19
-* TypeScript
-* Tailwind CSS
-* Shadcn UI
-* React Query (TanStack Query)
-* Axios
-* Framer Motion
-* React Hook Form
-* Zod Validation
-
----
-
-## Mobile
-
-React Native (Expo)
-
-Supports
-
-* Android
-* iOS
-
-Use the same backend APIs.
+```
+Browser / Mobile App
+        │
+   API Gateway :3000
+        │
+┌───────┴──────────────────────────────────────┐
+│  auth     :3001   user        :3002           │
+│  restaurant:3003  food        :3004           │
+│  booking  :3005   order       :3006           │
+│  payment  :3007   review      :3008           │
+│  search   :3009   location    :3010           │
+│  notification:3011 admin      :3012           │
+│  analytics:3013                               │
+└───────┬──────────────────────────────────────┘
+        │
+   MongoDB + Redis + RabbitMQ
+```
 
 ---
 
-## Backend
+## Project Structure
 
-Node.js
-
-Express.js
-
-TypeScript
-
-JWT Authentication
-
-REST APIs
-
-Microservices Architecture
-
----
-
-## Database
-
-MongoDB
-
-Mongoose ODM
-
-Redis
-
----
-
-## Storage
-
-Cloudinary
-
-AWS S3
-
----
-
-## Authentication
-
-JWT
-
-Refresh Token
-
-Google Login
-
-Apple Login
-
-OTP Login
-
-Email Verification
-
-Forgot Password
-
-Role-Based Authentication
+```
+quickbite/
+├── apps/
+│   ├── web/              # Next.js 15 frontend
+│   └── mobile/           # React Native (Expo)
+├── services/
+│   ├── api-gateway/      # Port 3000 — routing, auth, rate limiting
+│   ├── auth-service/     # Port 3001 — JWT, OAuth, OTP
+│   ├── user-service/     # Port 3002 — profiles, addresses, wallet
+│   ├── restaurant-service/# Port 3003 — restaurants, tables, hours
+│   ├── food-service/     # Port 3004 — menu, categories, items
+│   ├── booking-service/  # Port 3005 — reservations, pre-orders
+│   ├── order-service/    # Port 3006 — orders, kitchen tracking
+│   ├── payment-service/  # Port 3007 — Razorpay, Stripe, refunds
+│   ├── review-service/   # Port 3008 — ratings, reviews, replies
+│   ├── search-service/   # Port 3009 — search, suggestions, history
+│   ├── location-service/ # Port 3010 — geocoding, nearby, distance
+│   ├── notification-service/# Port 3011 — push, email, SMS
+│   ├── admin-service/    # Port 3012 — approvals, coupons, CMS
+│   └── analytics-service/# Port 3013 — revenue, reports, growth
+├── packages/
+│   └── shared/           # Common utilities (JWT, logger, errors, etc.)
+├── k8s/                  # Kubernetes manifests
+├── nginx/                # Nginx reverse proxy config
+├── docker-compose.yml    # Local infrastructure (Redis + RabbitMQ)
+├── ecosystem.config.js   # PM2 config for running all services
+└── .env.example          # Environment variable template
+```
 
 ---
 
-## Payments
+## Getting Started (Local Development)
 
-Razorpay
+### Prerequisites
 
-Stripe
+- [Node.js 20+](https://nodejs.org)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- npm 10+
+
+### 1. Clone & install
+
+```bash
+git clone https://github.com/your-org/quickbite.git
+cd quickbite
+npm install
+```
+
+### 2. Set up environment
+
+```bash
+cp .env.example .env
+# Edit .env — add your MongoDB URI if not using native install
+```
+
+> **MongoDB:** If you have MongoDB installed natively, it runs on `localhost:27017` automatically.  
+> **Redis & RabbitMQ:** Started via Docker below.
+
+### 3. Start infrastructure
+
+```bash
+# Starts Redis + RabbitMQ in Docker (MongoDB runs natively)
+docker compose up redis rabbitmq -d
+
+# Verify they're healthy
+docker compose ps
+```
+
+### 4. Start services
+
+Open separate terminal tabs for each service:
+
+```bash
+npm run dev:gateway      # API Gateway   → localhost:3000
+npm run dev:auth         # Auth Service  → localhost:3001
+npm run dev:user         # User Service  → localhost:3002
+npm run dev:restaurant   # Restaurant    → localhost:3003
+npm run dev:food         # Food/Menu     → localhost:3004
+npm run dev:booking      # Booking       → localhost:3005
+npm run dev:order        # Orders        → localhost:3006
+npm run dev:payment      # Payments      → localhost:3007
+npm run dev:review       # Reviews       → localhost:3008
+npm run dev:search       # Search        → localhost:3009
+npm run dev:notification # Notifications → localhost:3011
+npm run dev:admin        # Admin         → localhost:3012
+npm run dev:analytics    # Analytics     → localhost:3013
+```
+
+> For local testing you only need the first 6: gateway, auth, user, restaurant, food, booking.
+
+### 5. Start the web app
+
+```bash
+cd apps/web
+cp .env.local.example .env.local
+npm run dev
+# → http://localhost:3001
+```
+
+### 6. Verify everything works
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Register a user
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@quickbite.com","password":"Test@1234"}'
+```
 
 ---
 
-## Notifications
+## Running All Services at Once (PM2)
 
-Firebase Cloud Messaging
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.js
+pm2 logs        # view all logs
+pm2 stop all    # stop everything
+```
 
-Email
+---
 
-SMS
+## Mobile App
+
+```bash
+cd apps/mobile
+npm install
+
+npm run ios      # iOS simulator (Mac only)
+npm run android  # Android emulator
+npm start        # Expo Go — scan QR with your phone
+```
+
+For physical device testing, update the API URL in `apps/mobile/src/lib/api.ts`:
+
+```ts
+const API_URL = 'http://YOUR_LOCAL_IP:3000/api/v1';
+```
+
+---
+
+## Available Pages
+
+### Customer Web App
+| Page | URL |
+|------|-----|
+| Home | `/` |
+| Restaurants | `/restaurants` |
+| Restaurant Detail | `/restaurants/[slug]` |
+| Search | `/search` |
+| Cart | `/cart` |
+| Bookings | `/bookings` |
+| Orders | `/orders` |
+| Profile | `/profile` |
+| Wallet | `/wallet` |
+| Notifications | `/notifications` |
+| Favourites | `/favorites` |
+| Settings | `/settings` |
+| Help | `/help` |
+
+### Restaurant Dashboard
+| Page | URL |
+|------|-----|
+| Overview | `/dashboard` |
+| Bookings | `/dashboard/bookings` |
+| Menu Management | `/dashboard/menu` |
+| Orders (Live) | `/dashboard/orders` |
+| Reviews | `/dashboard/reviews` |
+| Analytics | `/dashboard/analytics` |
+| Promotions | `/dashboard/promotions` |
+| Settings | `/dashboard/settings` |
+
+### Admin Panel
+| Page | URL |
+|------|-----|
+| Dashboard | `/admin` |
+| Restaurants | `/admin/restaurants` |
+| Users | `/admin/users` |
+| Bookings | `/admin/bookings` |
+| Orders | `/admin/orders` |
+| Payments | `/admin/payments` |
+| Coupons | `/admin/coupons` |
+| Analytics | `/admin/analytics` |
+| Reports | `/admin/reports` |
+
+---
+
+## API Reference
+
+All endpoints go through the API Gateway at `http://localhost:3000/api/v1`.
+
+### Auth
+```
+POST /auth/register        Register new user
+POST /auth/login           Login with email/password
+POST /auth/logout          Logout
+POST /auth/refresh         Refresh access token
+POST /auth/send-otp        Send OTP login code
+POST /auth/verify-otp      Verify OTP and login
+POST /auth/forgot-password Request password reset
+POST /auth/reset-password  Reset password with token
+GET  /auth/me              Get current user
+```
+
+### Restaurants
+```
+GET  /restaurants          List restaurants (with filters)
+GET  /restaurants/featured Featured restaurants
+GET  /restaurants/nearby   Nearby restaurants (?lat&lng)
+GET  /restaurants/search   Search (?q=)
+GET  /restaurants/:slug    Restaurant detail by slug
+POST /restaurants          Create restaurant (owner)
+PUT  /restaurants/:id      Update restaurant (owner)
+```
+
+### Bookings
+```
+POST /bookings             Create booking
+GET  /bookings/my          My bookings
+GET  /bookings/:id         Booking detail
+PATCH /bookings/:id/cancel Cancel booking
+```
+
+### Food
+```
+GET  /food/:restaurantId/menu          Full menu
+GET  /food/:restaurantId/categories    Categories
+GET  /food/items/:id                   Item detail
+POST /food/:restaurantId/items         Add item (owner)
+PUT  /food/:restaurantId/items/:id     Update item (owner)
+```
+
+### Payments
+```
+POST /payments/razorpay/order    Create Razorpay order
+POST /payments/razorpay/verify   Verify payment
+POST /payments/stripe/intent     Create Stripe intent
+GET  /payments/my                Payment history
+```
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the required values.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URI_*` | ✅ | MongoDB connection strings |
+| `REDIS_HOST` | ✅ | Redis host (localhost for Docker) |
+| `JWT_ACCESS_SECRET` | ✅ | JWT signing secret |
+| `JWT_REFRESH_SECRET` | ✅ | JWT refresh signing secret |
+| `RAZORPAY_KEY_ID` | Payment features | Razorpay API key |
+| `STRIPE_SECRET_KEY` | Payment features | Stripe API key |
+| `SMTP_USER` / `SMTP_PASS` | Email features | SMTP credentials |
+| `FIREBASE_PROJECT_ID` | Push notifications | Firebase config |
+| `GOOGLE_CLIENT_ID` | Google login | OAuth credentials |
+| `GOOGLE_MAPS_API_KEY` | Location features | Maps API key |
+
+---
+
+## Docker (Full Stack)
+
+To run everything in Docker including all services:
+
+```bash
+# Build and start all services
+docker compose -f docker-compose.full.yml up -d
+
+# View logs
+docker compose logs -f api-gateway
+
+# Stop everything
+docker compose down
+```
 
 ---
 
 ## Deployment
 
-Frontend
-
-* Vercel
-
-Backend
-
-* Docker
-* Kubernetes Ready
-* Nginx
-* Render / Railway / AWS
-
-Database
-
-MongoDB Atlas
-
-Redis Cloud
-
----
-
-# Architecture
-
-Use **Microservices**.
-
-Do NOT build a monolithic application.
-
-Each service must have its own database models, controllers, routes, and business logic.
-
-Use an API Gateway.
-
-Architecture
-
+### Frontend → Vercel
+```bash
+cd apps/web
+npx vercel --prod
 ```
-Website (Next.js)
-            │
-React Native App
-            │
-        API Gateway
-            │
-──────────────────────────────────────
-Auth Service
 
-User Service
+### Backend → Any VPS / Cloud
+```bash
+# Build all services
+npm run build
 
-Restaurant Service
+# Start with PM2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+```
 
-Food Service
-
-Booking Service
-
-Order Service
-
-Payment Service
-
-Review Service
-
-Notification Service
-
-Search Service
-
-Location Service
-
-Admin Service
-
-Analytics Service
-──────────────────────────────────────
-            │
-        MongoDB + Redis
+### Kubernetes
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/secrets.yaml      # fill in real values first
+kubectl apply -f k8s/api-gateway.yaml
+kubectl apply -f k8s/services.yaml
+kubectl apply -f k8s/horizontal-pod-autoscaler.yaml
 ```
 
 ---
 
-# Backend Folder Structure
+## Testing
 
-Every microservice must use **SRC + MVC architecture**.
+```bash
+# Run all tests
+npm test
 
-Example
+# Test specific service
+npm test --workspace=services/auth-service
 
-```
-auth-service
-
-src/
-
-controllers/
-
-services/
-
-repositories/
-
-models/
-
-routes/
-
-middlewares/
-
-validators/
-
-utils/
-
-config/
-
-database/
-
-events/
-
-queues/
-
-interfaces/
-
-types/
-
-constants/
-
-errors/
-
-docs/
-
-tests/
-
-app.ts
-
-server.ts
-
-package.json
+# Health check all services
+for port in 3000 3001 3002 3003 3004 3005; do
+  echo "Port $port: $(curl -s http://localhost:$port/health | python -c 'import sys,json; print(json.load(sys.stdin)[\"success\"])')"
+done
 ```
 
-Follow the same structure for every microservice.
+---
+
+## Services Health URLs
+
+| Service | Health Check |
+|---------|-------------|
+| API Gateway | http://localhost:3000/health |
+| Auth | http://localhost:3001/health |
+| User | http://localhost:3002/health |
+| Restaurant | http://localhost:3003/health |
+| Food | http://localhost:3004/health |
+| Booking | http://localhost:3005/health |
+| Order | http://localhost:3006/health |
+| Payment | http://localhost:3007/health |
+| Review | http://localhost:3008/health |
+| Search | http://localhost:3009/health |
+| Location | http://localhost:3010/health |
+| Notification | http://localhost:3011/health |
+| Admin | http://localhost:3012/health |
+| Analytics | http://localhost:3013/health |
 
 ---
 
-# Shared Package
+## RabbitMQ Dashboard
 
-Create a shared package.
-
-```
-packages/
-
-shared/
-
-logger/
-
-jwt/
-
-constants/
-
-validators/
-
-response/
-
-middlewares/
-
-types/
-
-utils/
-
-config/
-```
-
-Every microservice should reuse these utilities.
+When running locally via Docker:
+- URL: http://localhost:15672
+- Username: `quickbite`
+- Password: `quickbite_secret`
 
 ---
 
-# API Gateway
+## License
 
-Create an API Gateway.
-
-Responsibilities
-
-* Authentication
-* Rate Limiting
-* Request Validation
-* Routing
-* Logging
-* API Versioning
-* CORS
-* Security Headers
-* Swagger Documentation
-
----
-
-# Authentication Service
-
-Features
-
-* Register
-* Login
-* Logout
-* Refresh Token
-* Email Verification
-* OTP Login
-* Forgot Password
-* Reset Password
-* Google Login
-* Apple Login
-* Role Management
-
-Roles
-
-* Customer
-* Restaurant Owner
-* Admin
-* Delivery Partner
-
----
-
-# User Service
-
-Profile
-
-Addresses
-
-Favorites
-
-Wallet
-
-Coupons
-
-Order History
-
-Booking History
-
-Notifications
-
-Saved Payments
-
----
-
-# Restaurant Service
-
-Restaurant Registration
-
-Restaurant Profile
-
-Restaurant Verification
-
-Opening Hours
-
-Tables
-
-Menu
-
-Offers
-
-Gallery
-
-Restaurant Settings
-
-Live Availability
-
----
-
-# Food Service
-
-Categories
-
-Menu Items
-
-Variants
-
-Add-ons
-
-Availability
-
-Preparation Time
-
-Nutrition
-
-Images
-
----
-
-# Booking Service
-
-Reserve Table
-
-Reserve Food
-
-Reserve Both
-
-Booking Status
-
-Arrival Time
-
-Cancellation
-
-Modification
-
-Live Queue
-
-Booking History
-
----
-
-# Order Service
-
-Pre-orders
-
-Kitchen Status
-
-Order Tracking
-
-Estimated Completion Time
-
-Order History
-
-Reorder
-
-Invoices
-
----
-
-# Payment Service
-
-Razorpay
-
-Stripe
-
-Refunds
-
-Wallet
-
-Coupons
-
-Taxes
-
-Invoices
-
-Payment History
-
----
-
-# Review Service
-
-Ratings
-
-Reviews
-
-Photos
-
-Replies
-
-Report Review
-
-Helpful Votes
-
----
-
-# Search Service
-
-Restaurant Search
-
-Food Search
-
-Cuisine Search
-
-Filters
-
-Sorting
-
-Nearby Search
-
-Popular Search
-
-Recent Search
-
----
-
-# Location Service
-
-Google Maps
-
-Nearby Restaurants
-
-Distance Calculation
-
-ETA
-
-Navigation
-
----
-
-# Notification Service
-
-Push Notifications
-
-Email Notifications
-
-SMS
-
-Booking Updates
-
-Order Updates
-
-Promotions
-
----
-
-# Admin Service
-
-Dashboard
-
-Restaurant Approval
-
-User Management
-
-Reports
-
-Analytics
-
-Coupons
-
-Categories
-
-CMS
-
-Settings
-
----
-
-# Analytics Service
-
-Revenue
-
-Bookings
-
-Popular Foods
-
-Popular Restaurants
-
-Peak Hours
-
-User Growth
-
-Sales Reports
-
-Restaurant Reports
-
----
-
-# Database Design
-
-Use MongoDB.
-
-Every service owns its own collections.
-
-Never allow direct database access between services.
-
-Communication should happen via APIs or an event bus.
-
----
-
-# Communication
-
-REST API
-
-Event-driven communication using RabbitMQ (or Apache Kafka for larger scale).
-
----
-
-# Security
-
-Helmet
-
-Rate Limiter
-
-CORS
-
-JWT
-
-Refresh Tokens
-
-Password Hashing
-
-CSRF Protection (where applicable)
-
-Input Validation
-
-Zod
-
-XSS Protection
-
-SQL/NoSQL Injection Protection
-
----
-
-# Logging
-
-Winston or Pino
-
-Morgan
-
-Centralized logging
-
-Error tracking
-
----
-
-# Testing
-
-Jest
-
-Supertest
-
-Unit Tests
-
-Integration Tests
-
-API Tests
-
----
-
-# Documentation
-
-Swagger / OpenAPI
-
-Every endpoint documented.
-
----
-
-# Frontend Pages
-
-* Home
-* Restaurant Listing
-* Restaurant Details
-* Menu
-* Search
-* Booking
-* Checkout
-* Payment
-* Booking Success
-* Order Tracking
-* Favorites
-* Profile
-* Notifications
-* Wallet
-* Booking History
-* Settings
-* Help Center
-
----
-
-# Restaurant Dashboard
-
-* Dashboard
-* Menu Management
-* Table Management
-* Orders
-* Bookings
-* Analytics
-* Reviews
-* Promotions
-* Employees
-* Settings
-
----
-
-# Admin Dashboard
-
-* Dashboard
-* Users
-* Restaurants
-* Orders
-* Bookings
-* Payments
-* Reports
-* CMS
-* Coupons
-* Analytics
-* Settings
-
----
-
-# UI Design
-
-Use a modern design inspired by Apple, Airbnb, Uber Eats, and Zomato.
-
-Requirements:
-
-* Fully responsive
-* Dark & Light mode
-* Accessible (WCAG)
-* Smooth animations
-* Skeleton loaders
-* Toast notifications
-* Reusable component library
-* Consistent design system
-
----
-
-# Code Standards
-
-* Clean Architecture principles
-* SOLID principles
-* Repository Pattern
-* Service Layer
-* Dependency Injection where appropriate
-* ESLint + Prettier
-* Husky + lint-staged
-* Conventional Commits
-* Environment-based configuration
-* Docker support
-* CI/CD-ready
-
----
-
-## Final Goal
-
-Generate a **production-ready, scalable, enterprise-grade QuickBite platform** with:
-
-* One shared backend powering the web app and React Native mobile apps.
-* Independent microservices using **`src/` + MVC** structure.
-* Secure authentication, payment integration, notifications, and documentation.
-* Clean, maintainable, and extensible code suitable for real-world deployment.
-
-
-
-
-
--->
-
-
+MIT © QuickBite
