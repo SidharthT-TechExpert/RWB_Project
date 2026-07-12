@@ -1,0 +1,33 @@
+{
+    "name":  "@quickbite/search-service",
+    "version":  "1.0.0",
+    "description":  "Search \u0026 discovery service for QuickBite",
+    "main":  "dist/server.js",
+    "scripts":  {
+                    "dev":  "nodemon --exec \"ts-node -r tsconfig-paths/register src/server.ts\" --ext ts",
+                    "build":  "tsc",
+                    "start":  "node dist/server.js"
+                },
+    "dependencies":  {
+                         "@quickbite/shared":  "*",
+                         "express":  "^4.19.2",
+                         "mongoose":  "^8.4.4",
+                         "ioredis":  "^5.4.1",
+                         "axios":  "^1.7.2",
+                         "zod":  "^3.23.8",
+                         "helmet":  "^7.1.0",
+                         "cors":  "^2.8.5",
+                         "morgan":  "^1.10.0",
+                         "dotenv":  "^16.4.5"
+                     },
+    "devDependencies":  {
+                            "@types/express":  "^4.17.21",
+                            "@types/cors":  "^2.8.17",
+                            "@types/morgan":  "^1.9.9",
+                            "@types/node":  "^20.14.9",
+                            "typescript":  "^5.4.5",
+                            "ts-node":  "^10.9.2",
+                            "nodemon":  "^3.1.4",
+                            "tsconfig-paths":  "^4.2.0"
+                        }
+}
