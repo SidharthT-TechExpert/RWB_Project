@@ -23,6 +23,10 @@ export interface Booking {
     quantity: number;
     price: number;
   }>;
+  preOrderTotal: number;
+  subtotal: number;
+  tax: number;
+  serviceCharge: number;
   total: number;
   paymentStatus: string;
   specialRequests?: string;

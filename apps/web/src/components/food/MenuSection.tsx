@@ -26,6 +26,7 @@ interface FoodItem {
   variants: { name: string; price: number; isAvailable: boolean }[];
   addOns: { name: string; price: number; isAvailable: boolean }[];
   allergens: string[];
+  categoryId: string;
 }
 
 interface Category {

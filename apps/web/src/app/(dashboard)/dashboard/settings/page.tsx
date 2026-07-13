@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,6 +38,9 @@ export default function DashboardSettingsPage() {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
+  const [acceptsTableBooking, setAcceptsTableBooking] = useState(true);
+  const [acceptsPreOrders, setAcceptsPreOrders] = useState(true);
+
   const { register: registerGeneral, handleSubmit: handleGeneral } = useForm({
     values: restaurant ? {
       name: restaurant.name,
@@ -48,7 +52,8 @@ export default function DashboardSettingsPage() {
     } : undefined,
   });
 
-  const [hours, setHours] = useState(
+  type HourEntry = { day: string; isOpen: boolean; openTime: string; closeTime: string };
+  const [hours, setHours] = useState<HourEntry[]>(
     restaurant?.openingHours || DAYS.map((day) => ({ day, isOpen: true, openTime: '09:00', closeTime: '22:00' }))
   );
 
@@ -97,7 +102,7 @@ export default function DashboardSettingsPage() {
 
       {/* General */}
       {activeTab === 'general' && (
-        <form onSubmit={handleGeneral((d) => updateMutation.mutate(d))} className="space-y-5">
+        <form onSubmit={handleGeneral((d) => updateMutation.mutate({ ...d, acceptsTableBooking, acceptsPreOrders }))} className="space-y-5">
           <div className="grid sm:grid-cols-2 gap-4">
             <Input label="Restaurant Name" {...registerGeneral('name', { required: true })} />
             <Input label="Phone" leftIcon={<Phone className="h-4 w-4" />} {...registerGeneral('phone')} />
@@ -116,17 +121,17 @@ export default function DashboardSettingsPage() {
           <Input label="Avg Preparation Time (minutes)" type="number" {...registerGeneral('preparationTime')} />
           <div className="flex gap-3">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" defaultChecked={restaurant.acceptsTableBooking} className="w-4 h-4 rounded accent-brand-500" {...registerGeneral('acceptsTableBooking')} />
+              <input type="checkbox" defaultChecked={restaurant.acceptsTableBooking} className="w-4 h-4 rounded accent-brand-500" checked={acceptsTableBooking} onChange={(e) => setAcceptsTableBooking(e.target.checked)} />
               <span className="text-sm font-medium">Accept table bookings</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" defaultChecked={restaurant.acceptsPreOrders} className="w-4 h-4 rounded accent-brand-500" {...registerGeneral('acceptsPreOrders')} />
+              <input type="checkbox" defaultChecked={restaurant.acceptsPreOrders} className="w-4 h-4 rounded accent-brand-500" checked={acceptsPreOrders} onChange={(e) => setAcceptsPreOrders(e.target.checked)} />
               <span className="text-sm font-medium">Accept pre-orders</span>
             </label>
           </div>
-          <Button type="submit" className="gap-2" isLoading={updateMutation.isPending}>
-            <Save className="h-4 w-4" /> Save Changes
-          </Button>
+              <Button type="submit" className="gap-2" isLoading={updateMutation.isPending}>
+                <Save className="h-4 w-4" /> Save Changes
+              </Button>
         </form>
       )}
 

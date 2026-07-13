@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { Settings, Bell, Shield, Globe, Database } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 

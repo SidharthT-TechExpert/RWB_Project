@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import api from '@/lib/api';
 import { formatDate, formatCurrency, orderStatusColors, cn } from '@/lib/utils';
+import type { Order } from '@/hooks/useOrders';
 import toast from 'react-hot-toast';
 
 const STATUS_STEPS = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
@@ -20,8 +21,10 @@ export default function OrderDetailPage() {
     queryKey: ['order', id],
     queryFn: async () => { const { data } = await api.get(`/orders/${id}`); return data.data; },
     enabled: !!id,
-    refetchInterval: (data) =>
-      data && ['pending', 'confirmed', 'preparing', 'ready'].includes(data.status) ? 30000 : false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data && ['pending', 'confirmed', 'preparing', 'ready'].includes((data as Order).status) ? 30000 : false;
+    },
   });
 
   const reorderMutation = useMutation({

@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Monitor, Bell, Shield, Globe, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';

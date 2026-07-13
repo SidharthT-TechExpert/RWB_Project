@@ -1,4 +1,6 @@
 'use client';
+
+export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
@@ -86,7 +88,7 @@ export default function ProfilePage() {
             {activeTab === 'profile' && (
               <form onSubmit={handleSubmit((d) => updateMutation.mutate(d))} className="space-y-5">
                 <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
-                <Input label="Full Name" leftIcon={<User className="h-4 w-4" />} {...register('name', { required: 'Name is required' })} error={errors.name?.message} />
+                <Input label="Full Name" leftIcon={<User className="h-4 w-4" />} {...register('name', { required: 'Name is required' })} error={errors.name?.message as string | undefined} />
                 <Input label="Phone" leftIcon={<Phone className="h-4 w-4" />} {...register('phone')} />
                 <Input label="Email" defaultValue={user?.email} disabled leftIcon={<Mail className="h-4 w-4" />} hint="Contact support to change your email" />
                 <Input label="Dietary Preferences" placeholder="e.g. vegetarian, gluten-free" {...register('dietaryPreferences')} hint="Comma-separated preferences" />

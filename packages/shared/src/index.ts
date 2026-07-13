@@ -13,9 +13,10 @@ export * from './response';
 // Error classes
 export * from './errors';
 
-// Middlewares
+// Middlewares — explicit exports to avoid barrel conflicts
 export * from './middlewares/errorHandler';
-export * from './middlewares/authenticate';
+export { authenticate, authorize, optionalAuthenticate } from './middlewares/authenticate';
+export type { AuthenticatedRequest } from './middlewares/authenticate';
 export * from './middlewares/validate';
 
 // Utilities
@@ -28,8 +29,17 @@ export * from './config/redis';
 // Events
 export * from './events/rabbitmq';
 
-// Types
-export * from './types';
+// Types — AuthenticatedRequest intentionally excluded (lives in middlewares/authenticate)
+export type {
+  ServiceResponse,
+  GeoLocation,
+  Address,
+  TimeSlot,
+  OpeningHours,
+  ContactInfo,
+  Image,
+  PriceRange,
+} from './types';
 
 // Validators
 export * from './validators/common';

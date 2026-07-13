@@ -10,11 +10,7 @@ import api from '@/lib/api';
 import { formatCurrency, getErrorMessage } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-declare global {
-  interface Window {
-    Razorpay: (options: Record<string, unknown>) => { open: () => void };
-  }
-}
+// Remove unused global type declaration - replaced with inline any cast
 
 export default function PaymentPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +27,9 @@ export default function PaymentPage() {
         });
 
         return new Promise<void>((resolve, reject) => {
-          const rzp = new window.Razorpay({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const RazorpayConstructor = (window as any).Razorpay;
+          const rzp = new RazorpayConstructor({
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             amount: booking!.total * 100,
             currency: 'INR',

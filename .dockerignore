@@ -17,7 +17,9 @@ README.md
 .eslintrc*
 .prettierrc*
 commitlint.config.js
-apps/mobile
-k8s
-nginx
-.github
+apps/
+k8s/
+nginx/
+.github/
+logs/
+*.log

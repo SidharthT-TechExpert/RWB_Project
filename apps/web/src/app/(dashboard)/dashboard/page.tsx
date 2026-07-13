@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { CalendarCheck, ShoppingBag, Star, TrendingUp, Users, Clock } from 'lucide-react';

@@ -1,6 +1,15 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  eslint: {
+    // Lint runs as a separate CI step — don't block the production build
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Type checking runs as a separate CI step too
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },

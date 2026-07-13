@@ -129,7 +129,7 @@ npm run dev:payment      # Payments      → localhost:3007
 npm run dev:review       # Reviews       → localhost:3008
 npm run dev:search       # Search        → localhost:3009
 npm run dev:notification # Notifications → localhost:3011
-npm run dev:admin        # Admin         → localhost:3012
+npm run dev:admin        # Admin       1  → localhost:3012
 npm run dev:analytics    # Analytics     → localhost:3013
 ```
 
@@ -310,11 +310,11 @@ Copy `.env.example` to `.env` and fill in the required values.
 
 ## Docker (Full Stack)
 
-To run everything in Docker including all services:
+Run everything — all 14 microservices + MongoDB + Redis + RabbitMQ — with a single command:
 
 ```bash
-# Build and start all services
-docker compose -f docker-compose.full.yml up -d
+# Build images and start all services
+docker compose up -d
 
 # View logs
 docker compose logs -f api-gateway

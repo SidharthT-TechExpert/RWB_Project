@@ -1,8 +1,9 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Lock, UtensilsCrossed } from 'lucide-react';
@@ -15,15 +16,19 @@ const schema = z.object({
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] });
 
+type FormValues = z.infer<typeof schema>;
+
 export default function ResetPasswordPage() {
   const [show, setShow] = useState(false);
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const { resetPassword } = useAuth();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
 
-  const onSubmit = (data: z.infer<typeof schema>) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     resetPassword({ token, password: data.password, confirmPassword: data.confirmPassword });
   };
 
@@ -56,7 +61,7 @@ export default function ResetPasswordPage() {
             placeholder="Create a strong password"
             leftIcon={<Lock className="h-4 w-4" />}
             rightIcon={<button type="button" onClick={() => setShow(!show)}>{show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>}
-            error={errors.password?.message}
+            error={errors.password?.message as string | undefined}
             hint="8+ chars, uppercase, number, special character"
             {...register('password')}
           />
@@ -65,7 +70,7 @@ export default function ResetPasswordPage() {
             type={show ? 'text' : 'password'}
             placeholder="Repeat your password"
             leftIcon={<Lock className="h-4 w-4" />}
-            error={errors.confirmPassword?.message}
+            error={errors.confirmPassword?.message as string | undefined}
             {...register('confirmPassword')}
           />
           <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>Reset Password</Button>

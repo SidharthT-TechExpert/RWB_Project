@@ -3,11 +3,11 @@ import { verifyAccessToken, TokenPayload } from '../jwt';
 import { AuthenticationError, AuthorizationError } from '../errors';
 import { Role } from '../constants';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: TokenPayload;
-    }
+export type AuthenticatedRequest = Request & { user?: TokenPayload };
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: TokenPayload;
   }
 }
 

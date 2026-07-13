@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 import { UtensilsCrossed, Twitter, Instagram, Facebook, Mail } from 'lucide-react';
 

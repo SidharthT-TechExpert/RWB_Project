@@ -104,7 +104,7 @@ export class OrderService {
     if (!order) throw new NotFoundError('Order');
     if (order.userId !== userId) throw new AuthorizationError();
 
-    if ([ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED].includes(order.status)) {
+    if (order.status === ORDER_STATUS.DELIVERED || order.status === ORDER_STATUS.CANCELLED) {
       throw new AppError('Order cannot be cancelled', HTTP_STATUS.BAD_REQUEST);
     }
 

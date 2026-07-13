@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MapPin } from 'lucide-react';
@@ -51,7 +52,7 @@ export default function RestaurantsPage() {
         ) : restaurants.length > 0 ? (
           <>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {restaurants.map((r) => <RestaurantCard key={r._id} restaurant={r} />)}
+              {(restaurants as import('@/hooks/useRestaurants').Restaurant[]).map((r) => <RestaurantCard key={r._id} restaurant={r} />)}
             </div>
 
             {/* Pagination */}

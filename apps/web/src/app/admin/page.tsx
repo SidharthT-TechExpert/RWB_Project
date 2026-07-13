@@ -1,7 +1,8 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+export const dynamic = 'force-dynamic';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Users, UtensilsCrossed, CalendarCheck, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Users, UtensilsCrossed, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 
@@ -138,7 +139,6 @@ function ApprovalRow({ restaurant }: { restaurant: { _id: string; name: string; 
 }
 
 function useApproveRestaurant() {
-  const { useMutation, useQueryClient } = require('@tanstack/react-query');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => api.patch(`/admin/restaurants/${id}/approve`),
@@ -147,7 +147,6 @@ function useApproveRestaurant() {
 }
 
 function useRejectRestaurant() {
-  const { useMutation, useQueryClient } = require('@tanstack/react-query');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => api.patch(`/admin/restaurants/${id}/reject`, { reason: 'Does not meet requirements' }),

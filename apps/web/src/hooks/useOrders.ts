@@ -52,8 +52,10 @@ export function useOrder(id: string) {
       return data.data as Order;
     },
     enabled: !!id,
-    refetchInterval: (data) =>
-      data && ['pending', 'confirmed', 'preparing', 'ready'].includes(data.status) ? 30000 : false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data && ['pending', 'confirmed', 'preparing', 'ready'].includes((data as Order).status) ? 30000 : false;
+    },
   });
 }
 

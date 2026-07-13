@@ -1,9 +1,5 @@
-import { Request } from 'express';
-import { TokenPayload } from '../jwt';
-
-export interface AuthenticatedRequest extends Request {
-  user: TokenPayload;
-}
+// Note: AuthenticatedRequest lives in middlewares/authenticate.ts
+// Import it from there: import { AuthenticatedRequest } from '@quickbite/shared'
 
 export interface ServiceResponse<T = unknown> {
   success: boolean;
