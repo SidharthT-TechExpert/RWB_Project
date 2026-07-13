@@ -36,7 +36,7 @@ Nginx (port 80/443) — SSL termination + reverse proxy
 2. Settings:
    - **Name:** `quickbite-prod`
    - **AMI:** Ubuntu Server 24.04 LTS (64-bit x86)
-   - **Instance type:** `t3.medium` (2 vCPU, 4GB RAM) minimum — use `t3.large` for production
+   - **Instance type:** `t3.small` (2 vCPU, 2GB RAM) — free tier eligible, good for MVP/demo. Upgrade to `t3.medium` or `t3.large` after getting investors.
    - **Key pair:** Create new → name it `quickbite-key` → download `.pem` file
    - **Security Group:** Create new with these rules:
 
@@ -45,9 +45,14 @@ Nginx (port 80/443) — SSL termination + reverse proxy
 | SSH   | 22    | Your IP   | Server access   |
 | HTTP  | 80    | 0.0.0.0/0 | Web traffic     |
 | HTTPS | 443   | 0.0.0.0/0 | Secure web      |
-| Custom| 15672 | Your IP   | RabbitMQ UI     |
 
-3. **Storage:** 30 GB gp3 (minimum)
+> **Do not open port 15672 (RabbitMQ UI) publicly.** If you need the dashboard, use SSH tunneling:
+> ```bash
+> ssh -i quickbite-key.pem -L 15672:localhost:15672 ubuntu@<your EC2 IP>
+> # then open http://localhost:15672 in your browser
+> ```
+
+3. **Storage:** 30 GB gp3 is free tier. Use **100 GB gp3** for Docker images + MongoDB data + logs (~$5.60/mo for the extra 70 GB)
 4. Click **Launch Instance**
 5. Note the **Public IPv4 address** (e.g. `54.123.45.67`)
 
@@ -320,11 +325,12 @@ docker stats
 
 | Resource | Instance | Monthly cost |
 |----------|----------|-------------|
-| EC2 t3.medium | 2 vCPU, 4GB RAM | ~$30 |
-| EC2 t3.large | 2 vCPU, 8GB RAM | ~$60 |
-| EBS Storage 30GB | gp3 | ~$2.4 |
+| EC2 t3.small | 2 vCPU, 2GB RAM | **Free tier eligible** |
+| EC2 t3.medium | 2 vCPU, 4GB RAM | ~$30 (post-investor) |
+| EC2 t3.large | 2 vCPU, 8GB RAM | ~$60 (production) |
+| EBS Storage 30GB | gp3 | Free tier |
+| EBS Storage 100GB | gp3 | ~$8/mo (30GB free + $5.60 for extra 70GB) |
 | Data transfer | 10GB/mo | ~$1 |
-| **Total** | | **~$33–63/mo** |
 
 > For production with real traffic, use `t3.large` minimum.
 > For high traffic, consider moving MongoDB to MongoDB Atlas and Redis to ElastiCache.

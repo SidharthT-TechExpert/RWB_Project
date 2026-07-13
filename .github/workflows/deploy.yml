@@ -122,29 +122,40 @@ jobs:
           NOTIFICATION_SERVICE_URL=http://notification-service:3011
           ADMIN_SERVICE_URL=http://admin-service:3012
           ANALYTICS_SERVICE_URL=http://analytics-service:3013
-          REDIS_HOST=redis
-          REDIS_PORT=6379
-          REDIS_URL=redis://redis:6379
+          JWT_ACCESS_EXPIRES_IN=15m
+          JWT_REFRESH_EXPIRES_IN=7d
+          SMTP_HOST=smtp.gmail.com
+          SMTP_PORT=587
           ENVEOF
 
-          # Append secrets separately to avoid heredoc issues
+          # External services
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.docker
+          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.docker
           echo "RABBITMQ_URL=amqp://quickbite:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672" >> .env.docker
+
+          # Auth
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.docker
           echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.docker
-          echo "JWT_ACCESS_EXPIRES_IN=15m" >> .env.docker
-          echo "JWT_REFRESH_EXPIRES_IN=7d" >> .env.docker
+
+          # Domain
           echo "CORS_ORIGIN=https://${{ secrets.DOMAIN }}" >> .env.docker
           echo "NEXT_PUBLIC_API_URL=https://${{ secrets.DOMAIN }}/api/v1" >> .env.docker
+
+          # Payments
           echo "RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}" >> .env.docker
           echo "RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}" >> .env.docker
           echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> .env.docker
-          echo "SMTP_HOST=smtp.gmail.com" >> .env.docker
-          echo "SMTP_PORT=587" >> .env.docker
+
+          # Email
           echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env.docker
           echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env.docker
           echo "EMAIL_FROM=noreply@${{ secrets.DOMAIN }}" >> .env.docker
+
+          # Firebase
           echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env.docker
           echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env.docker
+
+          # Google
           echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env.docker
           echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.docker
           echo "GOOGLE_CALLBACK_URL=https://${{ secrets.DOMAIN }}/api/v1/auth/google/callback" >> .env.docker
@@ -173,8 +184,6 @@ jobs:
 
             export IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}
             export IMAGE_TAG=${{ github.sha }}
-            export MONGO_USER=quickbite
-            export MONGO_PASSWORD="${{ secrets.MONGO_PASSWORD }}"
             export RABBITMQ_USER=quickbite
             export RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
             export DOMAIN="${{ secrets.DOMAIN }}"
