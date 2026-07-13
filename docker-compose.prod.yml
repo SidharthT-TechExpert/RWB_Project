@@ -36,7 +36,6 @@ services:
       - certbot_certs:/etc/letsencrypt:ro
     depends_on:
       - api-gateway
-      - web
     networks:
       - quickbite-network
 
@@ -200,16 +199,9 @@ services:
     networks:
       - quickbite-network
 
-  # ─── Web App ─────────────────────────────────────────────
-  web:
-    image: ${IMAGE_PREFIX:-ghcr.io/your-org/quickbite}-web:${IMAGE_TAG:-latest}
-    container_name: quickbite-web
-    restart: always
-    environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://${DOMAIN:-qickbite.com}/api/v1
-    networks:
-      - quickbite-network
+  # ─── Web App (hosted on Vercel — not deployed here) ─────
+  # web container removed — frontend is deployed to Vercel
+  # nginx proxies API only
 
 volumes:
   rabbitmq_data:
