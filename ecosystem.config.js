@@ -49,6 +49,8 @@ module.exports = {
       TS_NODE_PROJECT: path.join(root, `services/${name}/tsconfig.json`),
       TS_NODE_TRANSPILE_ONLY: 'true',   // skip type checking = much faster startup
       TS_NODE_FILES: 'true',
+      // Explicit port per service — avoids EADDRINUSE on restart/cluster
+      [`${name.toUpperCase().replace(/-/g, '_')}_PORT`]: String(port),
     },
     error_file: path.join(root, `logs/${name}-error.log`),
     out_file: path.join(root, `logs/${name}-out.log`),

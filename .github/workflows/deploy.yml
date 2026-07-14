@@ -82,6 +82,24 @@ jobs:
         id: vars
         run: echo "IMAGE_PREFIX=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/quickbite" >> $GITHUB_OUTPUT
 
+      - name: Validate required secrets
+        run: |
+          missing=""
+          [ -z "${{ secrets.MONGODB_URI }}" ]        && missing="$missing MONGODB_URI"
+          [ -z "${{ secrets.REDIS_URL }}" ]           && missing="$missing REDIS_URL"
+          [ -z "${{ secrets.JWT_ACCESS_SECRET }}" ]   && missing="$missing JWT_ACCESS_SECRET"
+          [ -z "${{ secrets.JWT_REFRESH_SECRET }}" ]  && missing="$missing JWT_REFRESH_SECRET"
+          [ -z "${{ secrets.RABBITMQ_PASSWORD }}" ]   && missing="$missing RABBITMQ_PASSWORD"
+          [ -z "${{ secrets.DOMAIN }}" ]              && missing="$missing DOMAIN"
+          [ -z "${{ secrets.EC2_HOST }}" ]            && missing="$missing EC2_HOST"
+          [ -z "${{ secrets.EC2_USER }}" ]            && missing="$missing EC2_USER"
+          [ -z "${{ secrets.EC2_SSH_KEY }}" ]         && missing="$missing EC2_SSH_KEY"
+          if [ -n "$missing" ]; then
+            echo "❌ Missing required secrets:$missing"
+            exit 1
+          fi
+          echo "✅ All required secrets present"
+
       - name: Write .env.docker from secrets
         run: |
           cat > .env.docker << 'ENVEOF'
@@ -118,30 +136,36 @@ jobs:
           echo "RABBITMQ_URL=amqp://quickbite:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672" >> .env.docker
 
           # Per-service MongoDB URIs derived from the Atlas base URI
-          # Replaces the database name in the connection string for each service
+          # Safely strips the db name by splitting on the last '/' before any '?'
+          # Works for both mongodb:// and mongodb+srv:// Atlas URIs
           BASE_URI="${{ secrets.MONGODB_URI }}"
-          # Strip query params, replace db name, re-add query params
-          URI_PREFIX=$(echo "$BASE_URI" | sed 's|/[^/?]*?|/|' | sed 's|/[^/?]*$|/|')
-          URI_SUFFIX=$(echo "$BASE_URI" | grep -o '?.*' || echo '')
-          echo "MONGODB_URI_AUTH=${URI_PREFIX}quickbite_auth${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_USER=${URI_PREFIX}quickbite_user${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_RESTAURANT=${URI_PREFIX}quickbite_restaurant${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_FOOD=${URI_PREFIX}quickbite_food${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_BOOKING=${URI_PREFIX}quickbite_booking${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_ORDER=${URI_PREFIX}quickbite_order${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_PAYMENT=${URI_PREFIX}quickbite_payment${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_REVIEW=${URI_PREFIX}quickbite_review${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_SEARCH=${URI_PREFIX}quickbite_search${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_NOTIFICATION=${URI_PREFIX}quickbite_notification${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_ADMIN=${URI_PREFIX}quickbite_admin${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_ANALYTICS=${URI_PREFIX}quickbite_analytics${URI_SUFFIX}" >> .env.docker
-          echo "MONGODB_URI_LOCATION=${URI_PREFIX}quickbite_location${URI_SUFFIX}" >> .env.docker
+          # Everything up to and including the last '/' before the db name
+          URI_BASE=$(echo "$BASE_URI" | sed 's|/[^/?]*\(\?.*\)\?$||')
+          # Query string (e.g. ?retryWrites=true&w=majority) — empty string if none
+          URI_SUFFIX=$(echo "$BASE_URI" | grep -o '[?].*' || echo '')
+          echo "MONGODB_URI_AUTH=${URI_BASE}/quickbite_auth${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_USER=${URI_BASE}/quickbite_user${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_RESTAURANT=${URI_BASE}/quickbite_restaurant${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_FOOD=${URI_BASE}/quickbite_food${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_BOOKING=${URI_BASE}/quickbite_booking${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ORDER=${URI_BASE}/quickbite_order${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_PAYMENT=${URI_BASE}/quickbite_payment${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_REVIEW=${URI_BASE}/quickbite_review${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_SEARCH=${URI_BASE}/quickbite_search${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_NOTIFICATION=${URI_BASE}/quickbite_notification${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ADMIN=${URI_BASE}/quickbite_admin${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ANALYTICS=${URI_BASE}/quickbite_analytics${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_LOCATION=${URI_BASE}/quickbite_location${URI_SUFFIX}" >> .env.docker
 
           # Auth
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.docker
           echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.docker
-          echo "CORS_ORIGIN=https://${{ secrets.DOMAIN }},https://www.${{ secrets.DOMAIN }}" >> .env.docker
+          # CORS: allow all frontend origins (custom domain + www + vercel.app)
+          echo "CORS_ORIGIN=https://qickbite.com,https://www.qickbite.com,https://qickbite.vercel.app" >> .env.docker
           echo "NEXT_PUBLIC_API_URL=https://${{ secrets.DOMAIN }}/api/v1" >> .env.docker
+
+          # Firebase (required for push notifications / token verification)
+          echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env.docker
 
           # Payments
           echo "RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}" >> .env.docker
