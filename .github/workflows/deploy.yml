@@ -112,7 +112,7 @@ jobs:
           # Auth
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.docker
           echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.docker
-          echo "CORS_ORIGIN=https://${{ secrets.DOMAIN }}" >> .env.docker
+          echo "CORS_ORIGIN=https://${{ secrets.DOMAIN }},https://www.${{ secrets.DOMAIN }}" >> .env.docker
           echo "NEXT_PUBLIC_API_URL=https://${{ secrets.DOMAIN }}/api/v1" >> .env.docker
 
           # Payments
