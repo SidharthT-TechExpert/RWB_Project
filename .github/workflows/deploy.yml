@@ -107,8 +107,14 @@ jobs:
 
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.docker
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.docker
-          echo "REDIS_HOST=$(echo '${{ secrets.REDIS_URL }}' | sed 's|redis://[^@]*@||' | cut -d: -f1)" >> .env.docker
-          echo "REDIS_PORT=$(echo '${{ secrets.REDIS_URL }}' | sed 's|.*:||')" >> .env.docker
+          # Extract Redis connection parts for ioredis (needs host/port/password separately)
+          REDIS_URL_VAL="${{ secrets.REDIS_URL }}"
+          REDIS_PASS=$(echo "$REDIS_URL_VAL" | sed 's|redis://[^:]*:||' | cut -d@ -f1)
+          REDIS_HOST=$(echo "$REDIS_URL_VAL" | cut -d@ -f2 | cut -d: -f1)
+          REDIS_PORT=$(echo "$REDIS_URL_VAL" | cut -d@ -f2 | cut -d: -f2)
+          echo "REDIS_PASSWORD=$REDIS_PASS" >> .env.docker
+          echo "REDIS_HOST=$REDIS_HOST" >> .env.docker
+          echo "REDIS_PORT=$REDIS_PORT" >> .env.docker
           echo "RABBITMQ_URL=amqp://quickbite:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672" >> .env.docker
 
           # Per-service MongoDB URIs derived from the Atlas base URI
