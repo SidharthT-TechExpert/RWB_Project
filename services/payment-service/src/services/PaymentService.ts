@@ -14,14 +14,33 @@ import { Payment, IPayment } from '../models/Payment';
 
 const logger = createLogger('payment-service');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+// Lazy-initialize payment providers — crash at startup if keys are missing
+// is avoided by only creating instances when actually needed
+let _razorpay: Razorpay | null = null;
+let _stripe: Stripe | null = null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-06-20',
-});
+const getRazorpay = (): Razorpay => {
+  if (!_razorpay) {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      throw new AppError('Razorpay credentials not configured', HTTP_STATUS.SERVICE_UNAVAILABLE);
+    }
+    _razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+  }
+  return _razorpay;
+};
+
+const getStripe = (): Stripe => {
+  if (!_stripe) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new AppError('Stripe credentials not configured', HTTP_STATUS.SERVICE_UNAVAILABLE);
+    }
+    _stripe = new Stripe(secretKey, { apiVersion: '2024-06-20' });
+  }
+  return _stripe;
+};
 
 const generatePaymentNumber = (): string => {
   return `PAY${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
@@ -35,7 +54,7 @@ export class PaymentService {
     bookingId?: string,
     orderId?: string
   ): Promise<{ payment: IPayment; razorpayOrder: Record<string, unknown> }> {
-    const razorpayOrder = await razorpay.orders.create({
+    const razorpayOrder = await getRazorpay().orders.create({
       amount: Math.round(amount * 100), // paise
       currency,
       receipt: `rcpt_${Date.now()}`,
@@ -104,7 +123,7 @@ export class PaymentService {
     bookingId?: string,
     orderId?: string
   ): Promise<{ payment: IPayment; clientSecret: string }> {
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(amount * 100), // cents
       currency,
       automatic_payment_methods: { enabled: true },
@@ -128,7 +147,7 @@ export class PaymentService {
 
   async handleStripeWebhook(payload: Buffer, signature: string): Promise<void> {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    const event = getStripe().webhooks.constructEvent(payload, signature, webhookSecret);
 
     if (event.type === 'payment_intent.succeeded') {
       const intent = event.data.object as Stripe.PaymentIntent;
@@ -176,12 +195,12 @@ export class PaymentService {
     const refundAmount = amount || payment.amount;
 
     if (payment.provider === 'razorpay' && payment.providerPaymentId) {
-      await razorpay.payments.refund(payment.providerPaymentId, {
+      await getRazorpay().payments.refund(payment.providerPaymentId, {
         amount: Math.round(refundAmount * 100),
         notes: { reason: reason || 'Customer request' },
       });
     } else if (payment.provider === 'stripe' && payment.providerPaymentId) {
-      await stripe.refunds.create({
+      await getStripe().refunds.create({
         payment_intent: payment.providerOrderId!,
         amount: Math.round(refundAmount * 100),
         reason: 'requested_by_customer',
