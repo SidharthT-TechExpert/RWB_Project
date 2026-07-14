@@ -50,6 +50,8 @@ export function useRestaurants(filters: RestaurantFilters = {}) {
       return data;
     },
     staleTime: 2 * 60 * 1000,
+    retry: 1,
+    throwOnError: false,
   });
 }
 
@@ -75,6 +77,8 @@ export function useFeaturedRestaurants() {
       return data.data as Restaurant[];
     },
     staleTime: 10 * 60 * 1000,
+    retry: 1,
+    throwOnError: false,
   });
 }
 

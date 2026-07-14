@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       - run: npm ci
       - run: cd packages/shared && npx tsc --noEmit
@@ -160,8 +160,43 @@ jobs:
             export RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
             export DOMAIN="${{ secrets.DOMAIN }}"
 
+            # Pull new images first (while old containers still running — zero downtime)
             docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            docker image prune -f
+
+            # Force stop any stuck/zombie containers before graceful down
+            docker compose -f docker-compose.prod.yml stop --timeout 30 2>/dev/null || true
+            sleep 3
+
+            # Remove stopped containers cleanly
+            docker compose -f docker-compose.prod.yml rm -f 2>/dev/null || true
+            sleep 3
+
+            # Start fresh with new images
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Clean up old/dangling images to free disk space
+            docker image prune -af --filter "until=24h"
 
             echo "✅ Deployed ${{ github.sha }} to https://${{ secrets.DOMAIN }}"
+
+            # ── System health report ──────────────────────────────
+            echo ""
+            echo "════════════════════════════════════════"
+            echo "        EC2 SYSTEM HEALTH REPORT"
+            echo "════════════════════════════════════════"
+            echo ""
+            echo "── CPU & Memory ─────────────────────────"
+            free -h
+            echo ""
+            echo "── Disk Usage ───────────────────────────"
+            df -h /
+            echo ""
+            echo "── Docker Disk Usage ────────────────────"
+            docker system df
+            echo ""
+            echo "── Running Containers (CPU/MEM) ─────────"
+            docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
+            echo ""
+            echo "── Container Status ─────────────────────"
+            docker compose -f docker-compose.prod.yml ps
+            echo "════════════════════════════════════════"

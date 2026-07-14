@@ -1,8 +1,5 @@
 #!/bin/sh
-# Starts the service using ts-node with transpile-only mode
+# Runs the compiled JavaScript output for the service
 # SERVICE_DIR is set at build time (e.g. services/auth-service)
 
-exec node \
-  --require ts-node/register \
-  --require tsconfig-paths/register \
-  "${SERVICE_DIR}/src/server.ts"
+exec node "${SERVICE_DIR}/dist/server.js"
