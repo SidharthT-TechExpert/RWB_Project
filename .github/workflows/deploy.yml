@@ -107,7 +107,29 @@ jobs:
 
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.docker
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.docker
+          echo "REDIS_HOST=$(echo '${{ secrets.REDIS_URL }}' | sed 's|redis://[^@]*@||' | cut -d: -f1)" >> .env.docker
+          echo "REDIS_PORT=$(echo '${{ secrets.REDIS_URL }}' | sed 's|.*:||')" >> .env.docker
           echo "RABBITMQ_URL=amqp://quickbite:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672" >> .env.docker
+
+          # Per-service MongoDB URIs derived from the Atlas base URI
+          # Replaces the database name in the connection string for each service
+          BASE_URI="${{ secrets.MONGODB_URI }}"
+          # Strip query params, replace db name, re-add query params
+          URI_PREFIX=$(echo "$BASE_URI" | sed 's|/[^/?]*?|/|' | sed 's|/[^/?]*$|/|')
+          URI_SUFFIX=$(echo "$BASE_URI" | grep -o '?.*' || echo '')
+          echo "MONGODB_URI_AUTH=${URI_PREFIX}quickbite_auth${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_USER=${URI_PREFIX}quickbite_user${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_RESTAURANT=${URI_PREFIX}quickbite_restaurant${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_FOOD=${URI_PREFIX}quickbite_food${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_BOOKING=${URI_PREFIX}quickbite_booking${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ORDER=${URI_PREFIX}quickbite_order${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_PAYMENT=${URI_PREFIX}quickbite_payment${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_REVIEW=${URI_PREFIX}quickbite_review${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_SEARCH=${URI_PREFIX}quickbite_search${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_NOTIFICATION=${URI_PREFIX}quickbite_notification${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ADMIN=${URI_PREFIX}quickbite_admin${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_ANALYTICS=${URI_PREFIX}quickbite_analytics${URI_SUFFIX}" >> .env.docker
+          echo "MONGODB_URI_LOCATION=${URI_PREFIX}quickbite_location${URI_SUFFIX}" >> .env.docker
 
           # Auth
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.docker
