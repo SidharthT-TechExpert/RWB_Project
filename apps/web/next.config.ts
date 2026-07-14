@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Use 'standalone' for Docker/self-hosted builds, default for Vercel
+  ...(process.env.NEXT_OUTPUT_MODE === 'standalone' && { output: 'standalone' }),
   eslint: {
     // Lint runs as a separate CI step — don't block the production build
     ignoreDuringBuilds: true,
