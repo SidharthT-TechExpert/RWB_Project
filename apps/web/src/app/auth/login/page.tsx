@@ -89,6 +89,7 @@ export default function LoginPage() {
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 leftIcon={<Lock className="h-4 w-4" />}
                 rightIcon={
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="hover:text-foreground transition-colors">

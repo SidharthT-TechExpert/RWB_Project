@@ -100,6 +100,7 @@ export default function RegisterPage() {
               label="Password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Create a strong password"
+              autoComplete="new-password"
               leftIcon={<Lock className="h-4 w-4" />}
               rightIcon={
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="hover:text-foreground">
@@ -114,6 +115,7 @@ export default function RegisterPage() {
               label="Confirm Password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Repeat your password"
+              autoComplete="new-password"
               leftIcon={<Lock className="h-4 w-4" />}
               error={errors.confirmPassword?.message}
               {...register('confirmPassword')}
