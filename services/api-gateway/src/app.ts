@@ -9,6 +9,9 @@ import proxyRoutes from './routes/proxy';
 
 const app = express();
 
+// Trust the first proxy (nginx) — required for rate limiting and IP detection behind a reverse proxy
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   contentSecurityPolicy: {

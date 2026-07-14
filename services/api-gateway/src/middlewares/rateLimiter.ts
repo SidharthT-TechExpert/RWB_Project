@@ -5,6 +5,7 @@ export const globalRateLimiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false }, // trust proxy set at app level
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.',
@@ -17,6 +18,7 @@ export const authRateLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later.',
@@ -28,6 +30,7 @@ export const strictRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: 'Rate limit exceeded.',
