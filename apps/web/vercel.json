@@ -2,11 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@quickbite_api_url",
-    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "@quickbite_razorpay_key",
-    "NEXT_PUBLIC_GOOGLE_MAPS_KEY": "@quickbite_maps_key"
-  },
   "headers": [
     {
       "source": "/(.*)",
@@ -17,8 +12,5 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api.quickbite.app/api/:path*" }
   ]
 }
