@@ -1,407 +1,267 @@
-# QuickBite 🍽️
+# 🍽️ QuickBite
 
-> Production-ready restaurant pre-booking platform — microservices architecture
-
-QuickBite lets customers discover nearby restaurants, reserve tables, pre-order food, and skip the wait — all in one seamless experience.
+QuickBite is a comprehensive **Restaurant Management and Smart Dining Platform** designed to simplify restaurant operations, improve customer experience, and provide real-time management across multiple restaurants.
 
 ---
 
-## Tech Stack
+## 📖 Overview
+
+QuickBite is an all-in-one platform that connects **Admins, Hotels, Managers, Staff, Kitchen, and Customers** through a centralized system.
+
+The platform enables restaurants to manage reservations, food orders, billing, staff, inventory, customer feedback, analytics, and much more — all from a single ecosystem.
+
+---
+
+## 🎯 Project Goals
+
+- Simplify restaurant operations
+- Provide seamless table reservations
+- Enable online food pre-ordering
+- Improve communication between staff and kitchen
+- Reduce manual billing
+- Track business performance through analytics
+- Support multiple restaurants from one platform
+
+---
+
+## 👥 User Roles
+
+The platform consists of six primary user roles:
+
+| Role | Description |
+|------|-------------|
+| 👑 Admin | Full platform control |
+| 🏨 Hotel | Property owner |
+| 🧑‍💼 Manager | Restaurant-level operations |
+| 👨‍💼 Staff | Floor operations and order management |
+| 👨‍🍳 Kitchen | Food preparation and stock |
+| 👤 Customer | Booking and ordering |
+
+---
+
+## 🛠️ System Architecture
+
+```
+Admin
+  │
+  └── Hotels
+        │
+        └── Managers
+                │
+                ├── Staff
+                │
+                ├── Kitchen
+                │
+                └── Customers
+```
+
+---
+
+## 👑 Admin Portal
+
+The Admin Portal has complete control over the QuickBite platform.
+
+**Dashboard**
+- Platform statistics, revenue analytics, active users
+- Hotel statistics, order tracking
+
+**Hotel Management**
+- Add, edit, delete, verify, block/unblock hotels
+
+**Manager Management**
+- Add manager, assign hotel, block/unblock, delete, reset PIN/fingerprint
+
+**Customer Management**
+- View customers, bookings, payment history, feedback
+
+**Payment Management**
+- Subscription payments, customer payments, refund management
+
+**Reports & Analytics**
+- Daily/monthly sales, revenue reports, customer growth, popular restaurants
+
+**Security**
+- Audit logs, login history, permission management, device management
+
+---
+
+## 🏨 Manager Portal
+
+Managers oversee the operations of their assigned restaurant.
+
+**Authentication**
+Managers can log in using Fingerprint, PIN, or Pattern Lock.
+Fingerprint registration is managed and approved by the Admin.
+
+**Dashboard**
+- Today's sales, active bookings, kitchen status, available tables, staff attendance
+
+**Restaurant Management**
+- Update details, operating hours, images, dining capacity, settings
+
+**Menu Management**
+- Create categories, add/edit/delete food, premium & regular menu, upload images
+
+**Stock Management**
+- Daily stock, tomorrow's stock, low stock alerts, out-of-stock management
+
+**Table Management**
+- Add/edit/remove tables, table availability, reserved tables, QR code generation
+
+**Staff Management**
+- Add/remove/block staff, fingerprint management, attendance tracking
+
+**Billing**
+- Search by table, generate bill, print receipt, split bill, payment tracking
+
+**Reports**
+- Daily, weekly, monthly reports — food sales, staff performance
+
+---
+
+## 👨‍💼 Staff Portal
+
+The Staff Portal is designed for restaurant floor operations.
+
+**Dashboard**
+- Assigned tables, active bookings, pending orders, notifications
+
+**Reservation Management**
+- Walk-in bookings, pre-booked tables, table assignment, change table, cancel booking
+
+**Notifications**
+- Reservation reminders, premium customer alerts, kitchen updates
+
+**Order Management**
+- Select table, browse menu (premium & regular), add special instructions, send to kitchen
+
+**Order History**
+Each order records: table number, customer details, items, quantity, date/time, payment status, assigned staff
+
+---
+
+## 👨‍🍳 Kitchen Portal
+
+The Kitchen Portal focuses on food preparation and stock management.
+
+**Live Kitchen Dashboard**
+- Pending → Preparing → Ready for serving → Completed
+
+**Order Priority**
+1. Premium bookings
+2. Pre-booked customers
+3. Walk-in customers
+
+**Kitchen Operations**
+- Accept orders, start preparation, mark as ready, delay notifications, out-of-stock updates
+
+**Inventory**
+- Today's stock, tomorrow's stock, low stock alerts, stock updates
+
+**Notifications**
+- New orders, premium orders, urgent requests, low inventory alerts
+
+---
+
+## 👤 Customer Portal
+
+Customers can book restaurants and order food online.
+
+**Authentication**
+QuickBite uses OTP-based authentication. Users only need a phone number — no password required.
+
+**Landing Page**
+- Featured restaurants, popular dishes, offers, search
+
+**Restaurant Discovery**
+- Search with filters, ratings, restaurant information
+
+**Dining Reservation**
+- Select restaurant, choose date/time, number of guests, reserve table
+
+**Food Ordering**
+- Premium & regular menu, pre-order food, add to cart
+
+**Payment**
+- UPI, Card, Cash at counter, Online payment
+
+**Booking Status**
+Booked → Confirmed → Preparing → Ready → Completed → Cancelled
+
+**Profile**
+- Edit name, update phone (OTP), booking history, order history, reviews & ratings
+
+---
+
+## 🔄 System Workflow
+
+```
+Admin → Hotels → Managers → Staff → Kitchen → Customers
+
+Booking Flow:
+Customer books a table
+        ↓
+Staff receives reservation notification
+        ↓
+Staff confirms booking
+        ↓
+Customer arrives
+        ↓
+Order placed
+        ↓
+Kitchen prepares food
+        ↓
+Staff serves food
+        ↓
+Manager generates bill
+        ↓
+Customer completes payment
+        ↓
+Customer submits rating & feedback
+```
+
+---
+
+## 🗄️ Database Collections
+
+Admins · Hotels · Managers · Staff · Customers · Restaurants · Categories · Menus · Tables · Bookings · Orders · Order Items · Payments · Bills · Stocks · Kitchen Orders · Notifications · Reviews · Attendance · Fingerprints · Audit Logs
+
+---
+
+## 💻 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, Shadcn UI |
-| Mobile | React Native (Expo) — iOS & Android |
-| Backend | Node.js, Express.js, TypeScript, Microservices |
-| Database | MongoDB, Redis |
-| Auth | JWT, Refresh Tokens, Google OAuth, OTP |
-| Payments | Razorpay, Stripe |
-| Notifications | Firebase Push, Email, SMS |
-| Events | RabbitMQ |
-| Deployment | Docker, Kubernetes, Vercel, Nginx |
+| Frontend | Next.js, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query |
+| Backend | Node.js, Express.js, Socket.IO, BullMQ, Redis |
+| Database | MongoDB, Mongoose |
+| Auth | JWT, OTP, Fingerprint, PIN / Pattern Lock |
+| Storage | Cloudinary |
+| Printing | ESC/POS Thermal Printer Support |
 
 ---
 
-## Architecture
+## 🚀 Future Enhancements
 
-```
-Browser / Mobile App
-        │
-   API Gateway :3000
-        │
-┌───────┴──────────────────────────────────────┐
-│  auth     :3001   user        :3002           │
-│  restaurant:3003  food        :3004           │
-│  booking  :3005   order       :3006           │
-│  payment  :3007   review      :3008           │
-│  search   :3009   location    :3010           │
-│  notification:3011 admin      :3012           │
-│  analytics:3013                               │
-└───────┬──────────────────────────────────────┘
-        │
-   MongoDB + Redis + RabbitMQ
-```
+- AI-powered sales analytics
+- Smart table recommendations
+- Loyalty & rewards program
+- QR code table ordering
+- Multi-language support
+- Mobile applications
+- Offline mode with synchronization
+- Inventory forecasting
+- AI chatbot for customer support
+- Delivery partner integration
+- Restaurant subscription plans
+- Business intelligence dashboard
 
 ---
 
-## Project Structure
+## 📄 License
 
-```
-quickbite/
-├── apps/
-│   ├── web/              # Next.js 15 frontend
-│   └── mobile/           # React Native (Expo)
-├── services/
-│   ├── api-gateway/      # Port 3000 — routing, auth, rate limiting
-│   ├── auth-service/     # Port 3001 — JWT, OAuth, OTP
-│   ├── user-service/     # Port 3002 — profiles, addresses, wallet
-│   ├── restaurant-service/# Port 3003 — restaurants, tables, hours
-│   ├── food-service/     # Port 3004 — menu, categories, items
-│   ├── booking-service/  # Port 3005 — reservations, pre-orders
-│   ├── order-service/    # Port 3006 — orders, kitchen tracking
-│   ├── payment-service/  # Port 3007 — Razorpay, Stripe, refunds
-│   ├── review-service/   # Port 3008 — ratings, reviews, replies
-│   ├── search-service/   # Port 3009 — search, suggestions, history
-│   ├── location-service/ # Port 3010 — geocoding, nearby, distance
-│   ├── notification-service/# Port 3011 — push, email, SMS
-│   ├── admin-service/    # Port 3012 — approvals, coupons, CMS
-│   └── analytics-service/# Port 3013 — revenue, reports, growth
-├── packages/
-│   └── shared/           # Common utilities (JWT, logger, errors, etc.)
-├── k8s/                  # Kubernetes manifests
-├── nginx/                # Nginx reverse proxy config
-├── docker-compose.yml    # Local infrastructure (Redis + RabbitMQ)
-├── ecosystem.config.js   # PM2 config for running all services
-└── .env.example          # Environment variable template
-```
+No license
 
 ---
 
-## Getting Started (Local Development)
-
-### Prerequisites
-
-- [Node.js 20+](https://nodejs.org)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop)
-- npm 10+
-
-### 1. Clone & install
-
-```bash
-git clone https://github.com/your-org/quickbite.git
-cd quickbite
-npm install
-```
-
-### 2. Set up environment
-
-```bash
-cp .env.example .env
-# Edit .env — add your MongoDB URI if not using native install
-```
-
-> **MongoDB:** If you have MongoDB installed natively, it runs on `localhost:27017` automatically.  
-> **Redis & RabbitMQ:** Started via Docker below.
-
-### 3. Start infrastructure
-
-```bash
-# Starts Redis + RabbitMQ in Docker (MongoDB runs natively)
-docker compose up redis rabbitmq -d
-
-# Verify they're healthy
-docker compose ps
-```
-
-### 4. Start services
-
-Open separate terminal tabs for each service:
-
-```bash
-npm run dev:gateway      # API Gateway   → localhost:3000
-npm run dev:auth         # Auth Service  → localhost:3001
-npm run dev:user         # User Service  → localhost:3002
-npm run dev:restaurant   # Restaurant    → localhost:3003
-npm run dev:food         # Food/Menu     → localhost:3004
-npm run dev:booking      # Booking       → localhost:3005
-npm run dev:order        # Orders        → localhost:3006
-npm run dev:payment      # Payments      → localhost:3007
-npm run dev:review       # Reviews       → localhost:3008
-npm run dev:search       # Search        → localhost:3009
-npm run dev:notification # Notifications → localhost:3011
-npm run dev:admin        # Admin       1  → localhost:3012
-npm run dev:analytics    # Analytics     → localhost:3013
-```
-
-> For local testing you only need the first 6: gateway, auth, user, restaurant, food, booking.
-
-### 5. Start the web app
-
-```bash
-cd apps/web
-cp .env.local.example .env.local
-npm run dev
-# → http://localhost:3001
-```
-
-### 6. Verify everything works
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Register a user
-curl -X POST http://localhost:3000/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test User","email":"test@quickbite.com","password":"Test@1234"}'
-```
-
----
-
-## Running All Services at Once (PM2)
-
-```bash
-npm install -g pm2
-pm2 start ecosystem.config.js
-pm2 logs        # view all logs
-pm2 stop all    # stop everything
-```
-
----
-
-## Mobile App
-
-```bash
-cd apps/mobile
-npm install
-
-npm run ios      # iOS simulator (Mac only)
-npm run android  # Android emulator
-npm start        # Expo Go — scan QR with your phone
-```
-
-For physical device testing, update the API URL in `apps/mobile/src/lib/api.ts`:
-
-```ts
-const API_URL = 'http://YOUR_LOCAL_IP:3000/api/v1';
-```
-
----
-
-## Available Pages
-
-### Customer Web App
-| Page | URL |
-|------|-----|
-| Home | `/` |
-| Restaurants | `/restaurants` |
-| Restaurant Detail | `/restaurants/[slug]` |
-| Search | `/search` |
-| Cart | `/cart` |
-| Bookings | `/bookings` |
-| Orders | `/orders` |
-| Profile | `/profile` |
-| Wallet | `/wallet` |
-| Notifications | `/notifications` |
-| Favourites | `/favorites` |
-| Settings | `/settings` |
-| Help | `/help` |
-
-### Restaurant Dashboard
-| Page | URL |
-|------|-----|
-| Overview | `/dashboard` |
-| Bookings | `/dashboard/bookings` |
-| Menu Management | `/dashboard/menu` |
-| Orders (Live) | `/dashboard/orders` |
-| Reviews | `/dashboard/reviews` |
-| Analytics | `/dashboard/analytics` |
-| Promotions | `/dashboard/promotions` |
-| Settings | `/dashboard/settings` |
-
-### Admin Panel
-| Page | URL |
-|------|-----|
-| Dashboard | `/admin` |
-| Restaurants | `/admin/restaurants` |
-| Users | `/admin/users` |
-| Bookings | `/admin/bookings` |
-| Orders | `/admin/orders` |
-| Payments | `/admin/payments` |
-| Coupons | `/admin/coupons` |
-| Analytics | `/admin/analytics` |
-| Reports | `/admin/reports` |
-
----
-
-## API Reference
-
-All endpoints go through the API Gateway at `http://localhost:3000/api/v1`.
-
-### Auth
-```
-POST /auth/register        Register new user
-POST /auth/login           Login with email/password
-POST /auth/logout          Logout
-POST /auth/refresh         Refresh access token
-POST /auth/send-otp        Send OTP login code
-POST /auth/verify-otp      Verify OTP and login
-POST /auth/forgot-password Request password reset
-POST /auth/reset-password  Reset password with token
-GET  /auth/me              Get current user
-```
-
-### Restaurants
-```
-GET  /restaurants          List restaurants (with filters)
-GET  /restaurants/featured Featured restaurants
-GET  /restaurants/nearby   Nearby restaurants (?lat&lng)
-GET  /restaurants/search   Search (?q=)
-GET  /restaurants/:slug    Restaurant detail by slug
-POST /restaurants          Create restaurant (owner)
-PUT  /restaurants/:id      Update restaurant (owner)
-```
-
-### Bookings
-```
-POST /bookings             Create booking
-GET  /bookings/my          My bookings
-GET  /bookings/:id         Booking detail
-PATCH /bookings/:id/cancel Cancel booking
-```
-
-### Food
-```
-GET  /food/:restaurantId/menu          Full menu
-GET  /food/:restaurantId/categories    Categories
-GET  /food/items/:id                   Item detail
-POST /food/:restaurantId/items         Add item (owner)
-PUT  /food/:restaurantId/items/:id     Update item (owner)
-```
-
-### Payments
-```
-POST /payments/razorpay/order    Create Razorpay order
-POST /payments/razorpay/verify   Verify payment
-POST /payments/stripe/intent     Create Stripe intent
-GET  /payments/my                Payment history
-```
-
----
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in the required values.
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MONGODB_URI_*` | ✅ | MongoDB connection strings |
-| `REDIS_HOST` | ✅ | Redis host (localhost for Docker) |
-| `JWT_ACCESS_SECRET` | ✅ | JWT signing secret |
-| `JWT_REFRESH_SECRET` | ✅ | JWT refresh signing secret |
-| `RAZORPAY_KEY_ID` | Payment features | Razorpay API key |
-| `STRIPE_SECRET_KEY` | Payment features | Stripe API key |
-| `SMTP_USER` / `SMTP_PASS` | Email features | SMTP credentials |
-| `FIREBASE_PROJECT_ID` | Push notifications | Firebase config |
-| `GOOGLE_CLIENT_ID` | Google login | OAuth credentials |
-| `GOOGLE_MAPS_API_KEY` | Location features | Maps API key |
-
----
-
-## Docker (Full Stack)
-
-Run everything — all 14 microservices + MongoDB + Redis + RabbitMQ — with a single command:
-
-```bash
-# Build images and start all services
-docker compose up -d
-
-# View logs
-docker compose logs -f api-gateway
-
-# Stop everything
-docker compose down
-```
-
----
-
-## Deployment
-
-### Frontend → Vercel
-```bash
-cd apps/web
-npx vercel --prod
-```
-
-### Backend → Any VPS / Cloud
-```bash
-# Build all services
-npm run build
-
-# Start with PM2
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup
-```
-
-### Kubernetes
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/secrets.yaml      # fill in real values first
-kubectl apply -f k8s/api-gateway.yaml
-kubectl apply -f k8s/services.yaml
-kubectl apply -f k8s/horizontal-pod-autoscaler.yaml
-```
-
----
-
-## Testing
-
-```bash
-# Run all tests
-npm test
-
-# Test specific service
-npm test --workspace=services/auth-service
-
-# Health check all services
-for port in 3000 3001 3002 3003 3004 3005; do
-  echo "Port $port: $(curl -s http://localhost:$port/health | python -c 'import sys,json; print(json.load(sys.stdin)[\"success\"])')"
-done
-```
-
----
-
-## Services Health URLs
-
-| Service | Health Check |
-|---------|-------------|
-| API Gateway | http://localhost:3000/health |
-| Auth | http://localhost:3001/health |
-| User | http://localhost:3002/health |
-| Restaurant | http://localhost:3003/health |
-| Food | http://localhost:3004/health |
-| Booking | http://localhost:3005/health |
-| Order | http://localhost:3006/health |
-| Payment | http://localhost:3007/health |
-| Review | http://localhost:3008/health |
-| Search | http://localhost:3009/health |
-| Location | http://localhost:3010/health |
-| Notification | http://localhost:3011/health |
-| Admin | http://localhost:3012/health |
-| Analytics | http://localhost:3013/health |
-
----
-
-## RabbitMQ Dashboard
-
-When running locally via Docker:
-- URL: http://localhost:15672
-- Username: `quickbite`
-- Password: `quickbite_secret`
-
----
-
-## License
-
-MIT © QuickBite
+> QuickBite aims to provide a modern, scalable, and intelligent restaurant management solution that connects restaurant owners, employees, kitchens, and customers through one unified platform.

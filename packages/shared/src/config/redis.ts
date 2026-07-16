@@ -13,15 +13,19 @@ export const createRedisClient = (): Redis => {
   const port = parseInt(process.env.REDIS_PORT || '6379');
   const password = process.env.REDIS_PASSWORD || undefined;
 
-  // Use TLS for known cloud Redis providers, non-default ports, or explicit flag
-  const useTLS =
-    process.env.REDIS_TLS === 'true' ||
+  // TLS decision — explicit env var always wins
+  // REDIS_TLS=false  → never use TLS
+  // REDIS_TLS=true   → always use TLS
+  // unset            → auto-detect from scheme / hostname / port
+  const tlsExplicit = process.env.REDIS_TLS;
+  const autoTLS =
     port === 6380 ||
-    port !== 6379 ||
     host.includes('upstash') ||
-    host.includes('redislabs') ||
-    host.includes('.io') ||
-    host.includes('.com');
+    host.includes('redislabs');
+  const useTLS =
+    tlsExplicit === 'false' ? false :
+    tlsExplicit === 'true'  ? true  :
+    autoTLS;
 
   const commonOptions = {
     retryStrategy: (times: number) => {
@@ -37,8 +41,12 @@ export const createRedisClient = (): Redis => {
   };
 
   if (redisUrl) {
-    // REDIS_URL takes priority — detect TLS from rediss:// scheme or non-6379 port in URL
-    const isTLSUrl = redisUrl.startsWith('rediss://') || process.env.REDIS_TLS === 'true' || useTLS;
+    // REDIS_URL takes priority
+    // Use TLS if explicit override says so, or if URL uses rediss:// scheme
+    const isTLSUrl =
+      tlsExplicit === 'false' ? false :
+      tlsExplicit === 'true'  ? true  :
+      redisUrl.startsWith('rediss://');
     redisClient = new Redis(redisUrl, {
       ...commonOptions,
       tls: isTLSUrl ? {} : undefined,
