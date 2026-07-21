@@ -93,9 +93,9 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input label="Full Name" placeholder="John Doe" leftIcon={<User className="h-4 w-4" />} error={errors.name?.message} {...register('name')} />
-            <Input label="Email" type="email" placeholder="you@example.com" leftIcon={<Mail className="h-4 w-4" />} error={errors.email?.message} {...register('email')} />
-            <Input label="Phone (optional)" type="tel" placeholder="+91 9876543210" leftIcon={<Phone className="h-4 w-4" />} error={errors.phone?.message} {...register('phone')} />
+            <Input label="Full Name" placeholder="John Doe" autoComplete="name" leftIcon={<User className="h-4 w-4" />} error={errors.name?.message} {...register('name')} />
+            <Input label="Email" type="email" placeholder="you@example.com" autoComplete="email" leftIcon={<Mail className="h-4 w-4" />} error={errors.email?.message} {...register('email')} />
+            <Input label="Phone (optional)" type="tel" placeholder="+91 9876543210" autoComplete="tel" leftIcon={<Phone className="h-4 w-4" />} error={errors.phone?.message} {...register('phone')} />
             <Input
               label="Password"
               type={showPassword ? 'text' : 'password'}

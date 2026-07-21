@@ -84,7 +84,7 @@ export default function LoginPage() {
 
           {!otpMode ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <Input label="Email" type="email" placeholder="you@example.com" leftIcon={<Mail className="h-4 w-4" />} error={errors.email?.message} {...register('email')} />
+              <Input label="Email" type="email" placeholder="you@example.com" autoComplete="email" leftIcon={<Mail className="h-4 w-4" />} error={errors.email?.message} {...register('email')} />
               <Input
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
