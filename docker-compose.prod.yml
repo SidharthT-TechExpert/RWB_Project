@@ -1,28 +1,8 @@
-# Production docker-compose — uses pre-built images from GitHub Container Registry
-# MongoDB Atlas + Upstash Redis (external) — only RabbitMQ runs locally
-# Deployed to AWS EC2 via GitHub Actions
+# Production — uses pre-built image from GitHub Container Registry
+# MongoDB Atlas + Upstash Redis (external managed services)
 
 services:
-  # ─── RabbitMQ (local — no managed free tier available) ────
-  rabbitmq:
-    image: rabbitmq:3.13-alpine
-    container_name: quickbite-rabbitmq
-    restart: always
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-quickbite}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - quickbite-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # ─── Nginx reverse proxy ──────────────────────────────────
+  # ─── Nginx reverse proxy ──────────────────────────────────────
   nginx:
     image: nginx:alpine
     container_name: quickbite-nginx
@@ -36,18 +16,19 @@ services:
       - certbot_data:/var/www/certbot:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - api-gateway
+      - api
     networks:
       - quickbite-network
 
-  # ─── API Gateway ──────────────────────────────────────────
-  api-gateway:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-api-gateway:${IMAGE_TAG:-latest}
-    container_name: quickbite-api-gateway
+  # ─── API (monolith) ───────────────────────────────────────────
+  api:
+    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-api:${IMAGE_TAG:-latest}
+    container_name: quickbite-api
     restart: always
     env_file: .env.docker
     environment:
-      API_GATEWAY_PORT: 3000
+      PORT: 3000
+      NODE_ENV: production
     networks:
       - quickbite-network
     healthcheck:
@@ -57,157 +38,8 @@ services:
       retries: 5
       start_period: 30s
 
-  # ─── Microservices ────────────────────────────────────────
-  auth-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-auth-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-auth-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      AUTH_SERVICE_PORT: 3001
-    networks:
-      - quickbite-network
-
-  user-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-user-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-user-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      USER_SERVICE_PORT: 3002
-    networks:
-      - quickbite-network
-
-  restaurant-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-restaurant-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-restaurant-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      RESTAURANT_SERVICE_PORT: 3003
-    networks:
-      - quickbite-network
-
-  food-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-food-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-food-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      FOOD_SERVICE_PORT: 3004
-    networks:
-      - quickbite-network
-
-  booking-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-booking-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-booking-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      BOOKING_SERVICE_PORT: 3005
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - quickbite-network
-
-  order-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-order-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-order-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      ORDER_SERVICE_PORT: 3006
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - quickbite-network
-
-  payment-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-payment-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-payment-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      PAYMENT_SERVICE_PORT: 3007
-    networks:
-      - quickbite-network
-
-  review-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-review-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-review-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      REVIEW_SERVICE_PORT: 3008
-    networks:
-      - quickbite-network
-
-  search-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-search-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-search-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      SEARCH_SERVICE_PORT: 3009
-    networks:
-      - quickbite-network
-
-  location-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-location-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-location-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      LOCATION_SERVICE_PORT: 3010
-    networks:
-      - quickbite-network
-
-  notification-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-notification-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-notification-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      NOTIFICATION_SERVICE_PORT: 3011
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - quickbite-network
-
-  admin-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-admin-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-admin-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      ADMIN_SERVICE_PORT: 3012
-    networks:
-      - quickbite-network
-
-  analytics-service:
-    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-analytics-service:${IMAGE_TAG:-latest}
-    container_name: quickbite-analytics-service
-    restart: always
-    env_file: .env.docker
-    environment:
-      ANALYTICS_SERVICE_PORT: 3013
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - quickbite-network
-
-  # ─── Web App (hosted on Vercel — not deployed here) ─────
-  # web container removed — frontend is deployed to Vercel
-  # nginx proxies API only
-
 volumes:
-  rabbitmq_data:
   certbot_data:
-  certbot_certs:
 
 networks:
   quickbite-network:

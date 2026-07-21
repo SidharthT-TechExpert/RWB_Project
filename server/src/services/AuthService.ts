@@ -1,0 +1,238 @@
+import { v4 as uuidv4 } from 'uuid';
+import { User, IUser } from '../models/User';
+import { OTP } from '../models/OTP';
+import { UserProfile } from '../models/UserProfile';
+import { emailService } from './EmailService';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import { hashPassword, comparePassword, generateToken, generateOTP, addHours } from '../utils';
+import { setCache, getCache } from '../config/redis';
+import { AuthenticationError, ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
+import { ROLES } from '../constants';
+import { logger } from '../config/logger';
+
+export class AuthService {
+  private generateTokens(user: IUser) {
+    const payload = { userId: user._id.toString(), email: user.email, role: user.role, sessionId: uuidv4() };
+    return {
+      accessToken: generateAccessToken(payload),
+      refreshToken: generateRefreshToken(payload),
+    };
+  }
+
+  async register(data: { name: string; email: string; password: string; phone?: string; role?: string }) {
+    const existingUser = await User.findOne({ email: data.email.toLowerCase() });
+    if (existingUser) throw new ConflictError('An account with this email already exists');
+
+    if (data.phone) {
+      const existingPhone = await User.findOne({ phone: data.phone });
+      if (existingPhone) throw new ConflictError('An account with this phone number already exists');
+    }
+
+    const hashedPassword = await hashPassword(data.password);
+    const verificationToken = generateToken();
+
+    const user = await User.create({
+      name: data.name,
+      email: data.email.toLowerCase(),
+      password: hashedPassword,
+      phone: data.phone,
+      role: (data.role as IUser['role']) || ROLES.CUSTOMER,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpiry: addHours(new Date(), 24),
+    });
+
+    // Create user profile
+    await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email, phone: user.phone });
+
+    emailService.sendVerificationEmail(user.email, user.name, verificationToken)
+      .catch((err) => logger.error('Failed to send verification email:', err));
+
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+
+    logger.info(`User registered: ${user.email}`);
+    return { user: user.toJSON(), tokens };
+  }
+
+  async login(data: { email: string; password: string }) {
+    const user = await User.findOne({ email: data.email.toLowerCase() }).select('+password +refreshTokens');
+    if (!user) throw new AuthenticationError('Invalid email or password');
+
+    if (user.isSuspended) throw new AppError('Your account has been suspended.', 403);
+
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      const minutesLeft = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
+      throw new AppError(`Account locked. Try again in ${minutesLeft} minutes.`, 429);
+    }
+
+    if (!user.password) throw new AuthenticationError('Please use Google sign-in');
+
+    const isPasswordValid = await comparePassword(data.password, user.password);
+    if (!isPasswordValid) {
+      if (user.loginAttempts >= 4) {
+        await User.findByIdAndUpdate(user._id, {
+          $inc: { loginAttempts: 1 },
+          $set: { lockUntil: new Date(Date.now() + 30 * 60 * 1000) },
+        });
+        throw new AppError('Account locked due to too many failed attempts. Try again in 30 minutes.', 429);
+      }
+      await User.findByIdAndUpdate(user._id, {
+        $inc: { loginAttempts: 1 },
+        $set: { lockUntil: new Date(Date.now() + 30 * 60 * 1000) },
+      });
+      throw new AuthenticationError('Invalid email or password');
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      $set: { loginAttempts: 0, lastLogin: new Date() },
+      $unset: { lockUntil: 1 },
+    });
+
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+
+    logger.info(`User logged in: ${user.email}`);
+    return { user: user.toJSON(), tokens };
+  }
+
+  async logout(userId: string, refreshToken: string): Promise<void> {
+    await User.findByIdAndUpdate(userId, { $pull: { refreshTokens: refreshToken } });
+    await setCache(`blacklist:${refreshToken}`, true, 7 * 24 * 60 * 60);
+    logger.info(`User logged out: ${userId}`);
+  }
+
+  async refreshTokens(refreshToken: string) {
+    const isBlacklisted = await getCache(`blacklist:${refreshToken}`);
+    if (isBlacklisted) throw new AuthenticationError('Token has been revoked');
+
+    const decoded = verifyRefreshToken(refreshToken);
+    const user = await User.findOne({ email: decoded.email }).select('+refreshTokens');
+    if (!user || !user.refreshTokens.includes(refreshToken)) throw new AuthenticationError('Invalid refresh token');
+
+    await User.findByIdAndUpdate(user._id, { $pull: { refreshTokens: refreshToken } });
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+    return tokens;
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpiry: { $gt: new Date() },
+    }).select('+emailVerificationToken +emailVerificationExpiry');
+    if (!user) throw new ValidationError('Invalid or expired verification token');
+
+    await User.findByIdAndUpdate(user._id, {
+      isEmailVerified: true,
+      $unset: { emailVerificationToken: 1, emailVerificationExpiry: 1 },
+    });
+    emailService.sendWelcomeEmail(user.email, user.name).catch(() => {});
+  }
+
+  async sendOTP(identifier: string): Promise<void> {
+    const otp = generateOTP();
+    await OTP.updateMany({ identifier, isUsed: false }, { isUsed: true });
+    await OTP.create({
+      identifier, otp, purpose: 'login',
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    if (identifier.includes('@')) {
+      const user = await User.findOne({ email: identifier.toLowerCase() });
+      await emailService.sendOTPEmail(identifier, user?.name || 'there', otp);
+    }
+    logger.info(`OTP sent to ${identifier}`);
+  }
+
+  async verifyOTP(identifier: string, otp: string) {
+    const otpRecord = await OTP.findOne({
+      identifier, otp, purpose: 'login', isUsed: false,
+      expiresAt: { $gt: new Date() },
+    });
+    if (!otpRecord) throw new AuthenticationError('Invalid or expired OTP');
+    if (otpRecord.attempts >= 5) throw new AppError('Too many OTP attempts', 429);
+
+    await OTP.findByIdAndUpdate(otpRecord._id, { isUsed: true });
+
+    let user = await User.findOne({ email: identifier.toLowerCase() });
+    if (!user) {
+      user = await User.create({
+        email: identifier.toLowerCase(),
+        name: identifier.split('@')[0],
+        isEmailVerified: true,
+        role: ROLES.CUSTOMER,
+      });
+      await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email });
+    }
+
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+    return { user: user.toJSON(), tokens };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return; // prevent email enumeration
+    const resetToken = generateToken();
+    await User.findByIdAndUpdate(user._id, {
+      passwordResetToken: resetToken,
+      passwordResetExpiry: addHours(new Date(), 1),
+    });
+    emailService.sendPasswordResetEmail(user.email, user.name, resetToken).catch(() => {});
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpiry: { $gt: new Date() },
+    }).select('+passwordResetToken +passwordResetExpiry');
+    if (!user) throw new ValidationError('Invalid or expired reset token');
+
+    const hashed = await hashPassword(newPassword);
+    await User.findByIdAndUpdate(user._id, {
+      password: hashed,
+      $unset: { passwordResetToken: 1, passwordResetExpiry: 1 },
+      $set: { refreshTokens: [] },
+    });
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await User.findById(userId).select('+password');
+    if (!user?.password) throw new AppError('No password set for this account', 400);
+    const isValid = await comparePassword(currentPassword, user.password);
+    if (!isValid) throw new AuthenticationError('Current password is incorrect');
+    const hashed = await hashPassword(newPassword);
+    await User.findByIdAndUpdate(userId, { password: hashed, $set: { refreshTokens: [] } });
+  }
+
+  async getMe(userId: string): Promise<IUser> {
+    const user = await User.findById(userId);
+    if (!user) throw new NotFoundError('User');
+    return user;
+  }
+
+  async googleAuth(profile: { googleId: string; email: string; name: string; avatar?: string }) {
+    let user = await User.findOne({ googleId: profile.googleId });
+    if (!user) {
+      user = await User.findOne({ email: profile.email.toLowerCase() });
+      if (user) {
+        await User.findByIdAndUpdate(user._id, { googleId: profile.googleId });
+      } else {
+        user = await User.create({
+          name: profile.name,
+          email: profile.email.toLowerCase(),
+          googleId: profile.googleId,
+          avatar: profile.avatar,
+          isEmailVerified: true,
+          role: ROLES.CUSTOMER,
+        });
+        await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email, avatar: user.avatar });
+      }
+    }
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+    return { user: user.toJSON(), tokens };
+  }
+}
+
+export const authService = new AuthService();

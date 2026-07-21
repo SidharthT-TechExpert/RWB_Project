@@ -2,63 +2,30 @@
   "name": "quickbite",
   "version": "1.0.0",
   "private": true,
-  "description": "Production-ready restaurant pre-booking platform",
-  "workspaces": [
-    "packages/*",
-    "services/*",
-    "apps/web"
-  ],
+  "description": "QuickBite — restaurant pre-booking platform (monolith)",
   "scripts": {
-    "install:all": "npm install",
-    "infra:up": "docker compose up mongodb redis rabbitmq -d",
-    "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f",
-    "dev:gateway": "npm run dev --workspace=services/api-gateway",
-    "dev:auth": "npm run dev --workspace=services/auth-service",
-    "dev:user": "npm run dev --workspace=services/user-service",
-    "dev:restaurant": "npm run dev --workspace=services/restaurant-service",
-    "dev:food": "npm run dev --workspace=services/food-service",
-    "dev:booking": "npm run dev --workspace=services/booking-service",
-    "dev:order": "npm run dev --workspace=services/order-service",
-    "dev:payment": "npm run dev --workspace=services/payment-service",
-    "dev:review": "npm run dev --workspace=services/review-service",
-    "dev:search": "npm run dev --workspace=services/search-service",
-    "dev:notification": "npm run dev --workspace=services/notification-service",
-    "dev:admin": "npm run dev --workspace=services/admin-service",
-    "dev:analytics": "npm run dev --workspace=services/analytics-service",
-    "dev:web": "npm run dev --workspace=apps/web",
-    "dev:core": "concurrently --names \"GATEWAY,AUTH,USER,RESTAURANT,FOOD,BOOKING\" --prefix-colors \"cyan,green,yellow,blue,magenta,red\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:user\" \"npm run dev:restaurant\" \"npm run dev:food\" \"npm run dev:booking\"",
-    "dev:all": "npm run dev:core & npm run dev:web",
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
+    "dev:api":      "infisical run --env=dev -- npm run dev --prefix server",
+    "dev:web":      "npm run dev --prefix apps/web",
+    "build:api":    "npm run build --prefix server",
+    "build:web":    "npm run build --prefix apps/web",
+    "start:api":    "infisical run --env=prod -- npm run start --prefix server",
+    "infra:up":     "docker compose up mongodb redis -d",
+    "infra:down":   "docker compose down",
+    "docker:up":    "docker compose up -d",
+    "docker:down":  "docker compose down",
     "docker:build": "docker compose build",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:stop": "pm2 stop all",
-    "pm2:logs": "pm2 logs",
-    "pm2:delete": "pm2 delete all"
+    "format":       "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
     "prettier": "^3.2.5",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "typescript": "^5.4.5",
     "@commitlint/cli": "^19.3.0",
-    "@commitlint/config-conventional": "^19.2.2",
-    "dotenv": "^16.4.5"
+    "@commitlint/config-conventional": "^19.2.2"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yaml,yml}": [
-      "prettier --write"
-    ]
+    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,yaml,yml}": ["prettier --write"]
   },
   "engines": {
     "node": ">=20.0.0",
