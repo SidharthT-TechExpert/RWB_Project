@@ -11,8 +11,16 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, leftIcon, rightIcon, id, ...props }, ref) => {
+  ({ className, label, error, hint, leftIcon, rightIcon, id, type, autoComplete, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s/g, '-');
+
+    // Default sensible autoComplete values per input type
+    const defaultAutoComplete =
+      autoComplete ??
+      (type === 'email'    ? 'email'        :
+       type === 'password' ? 'current-password' :
+       type === 'tel'      ? 'tel'          :
+       type === 'search'   ? 'off'          : 'on');
     return (
       <div className="w-full space-y-1.5">
         {label && (
@@ -33,6 +41,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             id={inputId}
             ref={ref}
+            type={type}
+            autoComplete={defaultAutoComplete}
             className={cn(
               'flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background',
               'file:border-0 file:bg-transparent file:text-sm file:font-medium',
