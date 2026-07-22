@@ -54,15 +54,15 @@ export default function LandingPage() {
     <div className="flex flex-col w-full max-w-[100vw] overflow-x-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F5F2EC] dark:from-[#0B0A09] dark:to-[#0F0E0D] font-sans transition-colors duration-300">
       
       {/* Hero Section */}
-      <section className="relative w-full max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 lg:px-16 pt-12 pb-24 lg:pt-20 lg:pb-36 2xl:pt-28 2xl:pb-44 3xl:pt-36 3xl:pb-56 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+      <section className="relative w-full max-w-7xl 2xl:max-w-[85rem] 3xl:max-w-[110rem] mx-auto px-4 sm:px-8 md:px-12 lg:px-16 pt-4 pb-12 lg:pt-8 lg:pb-16 2xl:pt-12 2xl:pb-20 flex flex-col lg:flex-row items-center gap-8 lg:gap-14">
         
         {/* Advanced Ambient Glows */}
-        <div className="absolute top-1/4 -left-32 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-gradient-to-tr from-brand-500/15 to-orange-500/5 dark:from-brand-500/10 dark:to-transparent rounded-full blur-[90px] sm:blur-[120px] -z-10 pointer-events-none"></div>
-        <div className="absolute bottom-10 right-10 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-brand-500/5 dark:bg-brand-500/5 rounded-full blur-[80px] sm:blur-[100px] -z-10 pointer-events-none"></div>
+        <div className="absolute top-1/4 -left-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gradient-to-tr from-brand-500/15 to-orange-500/5 dark:from-brand-500/10 dark:to-transparent rounded-full blur-[90px] sm:blur-[120px] -z-10 pointer-events-none"></div>
+        <div className="absolute bottom-10 right-10 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-brand-500/5 dark:bg-brand-500/5 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
 
         {/* Left Side Content */}
         <motion.div 
-          className="flex-1 flex flex-col items-start gap-6 sm:gap-7 z-10 w-full max-w-2xl 2xl:max-w-3xl"
+          className="flex-1 flex flex-col items-start gap-4 sm:gap-5 z-10 w-full max-w-2xl 2xl:max-w-3xl"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -70,34 +70,34 @@ export default function LandingPage() {
           {/* Badge */}
           <motion.div 
             variants={fadeUp} 
-            className="inline-flex items-center px-4.5 py-1.5 gap-2 bg-brand-500/10 dark:bg-brand-500/20 rounded-full border border-brand-500/15 dark:border-brand-500/10 shadow-[0_4px_12px_rgba(255,107,53,0.08)]"
+            className="inline-flex items-center px-3.5 py-1 gap-2 bg-brand-500/10 dark:bg-brand-500/20 rounded-full border border-brand-500/15 dark:border-brand-500/10 shadow-[0_4px_12px_rgba(255,107,53,0.08)]"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-500 shadow-[0_0_8px_#FF6B35]"></span>
-            <span className="text-brand-600 dark:text-brand-400 text-xs font-black tracking-wider uppercase">NOW LIVE IN NEW YORK</span>
+            <span className="w-2 h-2 rounded-full bg-brand-500 shadow-[0_0_8px_#FF6B35]"></span>
+            <span className="text-brand-600 dark:text-brand-400 text-[11px] font-black tracking-wider uppercase">NOW LIVE IN NEW YORK</span>
           </motion.div>
 
-          {/* Headline (Fluid, Bold Typography for TV Scaling) */}
+          {/* Headline (Optimized for standard viewport heights) */}
           <motion.h1 
             variants={fadeUp} 
-            className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-[5.75rem] 3xl:text-[7rem] font-black text-foreground leading-[1.08] tracking-tight text-balance"
+            className="text-3.5xl xs:text-4.5xl sm:text-5.5xl lg:text-6.5xl xl:text-7xl font-black text-foreground leading-[1.08] tracking-tight text-balance"
           >
             Skip the Wait.<br/>
             <span className="text-brand-500 drop-shadow-sm">Eat Faster.</span>
           </motion.h1>
 
           {/* Subtext */}
-          <motion.p variants={fadeUp} className="text-base sm:text-lg lg:text-xl text-muted-foreground/90 max-w-lg 2xl:max-w-xl leading-relaxed text-balance font-medium">
+          <motion.p variants={fadeUp} className="text-sm sm:text-base lg:text-lg text-muted-foreground/90 max-w-lg leading-relaxed text-balance font-medium">
             The premium dining experience for people who value their time. No queues. No waiting. Just great food.
           </motion.p>
 
           {/* Search Box Container */}
           <motion.div 
             variants={fadeUp} 
-            className="w-full max-w-xl bg-card/75 dark:bg-card/45 backdrop-blur-xl rounded-[2rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:shadow-none border border-border mt-3 relative z-20"
+            className="w-full max-w-xl bg-card/75 dark:bg-card/45 backdrop-blur-xl rounded-[1.75rem] p-2.5 shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-none border border-border mt-1 relative z-20"
           >
             {/* Interactive Tabs with Horizontal scroll on small devices */}
             <div 
-              className="flex items-center gap-1.5 sm:gap-2 mb-4 px-1 sm:px-2 relative overflow-x-auto whitespace-nowrap pb-1"
+              className="flex items-center gap-1 sm:gap-1.5 mb-3 px-1 relative overflow-x-auto whitespace-nowrap pb-0.5"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {tabs.map((tab) => {
@@ -107,7 +107,7 @@ export default function LandingPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center justify-center px-4 py-2.5 text-xs sm:text-sm font-extrabold transition-colors z-10 rounded-xl ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
+                    className={`relative flex items-center justify-center px-3.5 py-2 text-xs sm:text-sm font-extrabold transition-colors z-10 rounded-xl ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div
@@ -117,7 +117,7 @@ export default function LandingPage() {
                         transition={{ type: "spring", stiffness: 380, damping: 28 }}
                       />
                     )}
-                    <Icon className="w-4 h-4 mr-2 relative z-10" />
+                    <Icon className="w-3.5 h-3.5 mr-1.5 relative z-10" />
                     <span className="relative z-10">{tab.id}</span>
                   </button>
                 );
@@ -125,38 +125,38 @@ export default function LandingPage() {
             </div>
 
             {/* Input Row */}
-            <div className="flex flex-col sm:flex-row items-stretch gap-3">
-              <div className="flex-1 flex items-center justify-between bg-muted/60 dark:bg-muted/40 rounded-2xl px-4 py-3 sm:py-2.5 border border-transparent focus-within:border-brand-500/30 focus-within:ring-4 focus-within:ring-brand-500/5 transition-all shadow-inner">
+            <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
+              <div className="flex-1 flex items-center justify-between bg-muted/60 dark:bg-muted/40 rounded-xl px-3.5 py-2.5 sm:py-2 border border-transparent focus-within:border-brand-500/30 focus-within:ring-4 focus-within:ring-brand-500/5 transition-all shadow-inner">
                 <div className="flex items-center flex-1 min-w-0">
-                  <Search className="w-5 h-5 text-muted-foreground mr-2.5 shrink-0" />
+                  <Search className="w-4.5 h-4.5 text-muted-foreground mr-2 shrink-0" />
                   <input 
                     type="text" 
                     placeholder="Search restaurants..." 
-                    className="bg-transparent w-full outline-none text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 min-w-0"
+                    className="bg-transparent w-full outline-none text-xs sm:text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 min-w-0"
                   />
                 </div>
-                <button className="flex items-center gap-1.5 text-brand-500 hover:text-brand-600 font-extrabold text-xs sm:text-sm px-2 py-1 transition-colors shrink-0">
-                  <Locate className="w-4 h-4" />
+                <button className="flex items-center gap-1 text-brand-500 hover:text-brand-600 font-extrabold text-xs px-1.5 py-0.5 transition-colors shrink-0">
+                  <Locate className="w-3.5 h-3.5" />
                   <span className="hidden xs:inline">Near Me</span>
                 </button>
               </div>
-              <button className="flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-2xl transition-all hover:shadow-[0_8px_24px_rgba(255,107,53,0.35)] hover:scale-[1.02] active:scale-95 whitespace-nowrap text-sm sm:text-base">
+              <button className="flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl transition-all hover:shadow-[0_6px_20px_rgba(255,107,53,0.3)] hover:scale-[1.02] active:scale-95 whitespace-nowrap text-xs sm:text-sm">
                 <span>Book Now</span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
             
             {/* Popular Options Tag */}
-            <div className="mt-3.5 px-2 sm:px-3 flex items-center gap-2">
-              <ChevronRight className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground/70 truncate">Popular: Sushi, Pizza, Burgers</span>
+            <div className="mt-2.5 px-2 flex items-center gap-1.5">
+              <ChevronRight className="w-3 h-3 text-brand-500 shrink-0" />
+              <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 truncate">Popular: Sushi, Pizza, Burgers</span>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Right Side Visual (Premium Border Box & Glass badges) */}
+        {/* Right Side Visual (Proportioned Height) */}
         <motion.div 
-          className="flex-1 relative w-full h-[320px] xs:h-[390px] sm:h-[490px] lg:h-[620px] 2xl:h-[700px] 3xl:h-[800px] rounded-[2.75rem] bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80 p-3 sm:p-4 lg:p-5 overflow-visible group"
+          className="flex-1 relative w-full h-[280px] xs:h-[340px] sm:h-[420px] lg:h-[480px] xl:h-[520px] rounded-[2.25rem] bg-card/50 dark:bg-card/20 shadow-xl border border-border/80 p-2.5 sm:p-3.5 lg:p-4 overflow-visible group"
           initial={{ opacity: 0, x: 50, rotate: -2 }}
           animate={{ opacity: 1, x: 0, rotate: 0 }}
           transition={{ duration: 0.9, type: "spring", bounce: 0.25 }}
