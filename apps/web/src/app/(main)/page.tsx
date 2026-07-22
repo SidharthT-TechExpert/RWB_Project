@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, MapPin, Star, AlertCircle, CheckCircle2, 
   ChevronRight, Apple, Play, ArrowRight, Utensils, Navigation, 
-  Map as MapIcon, XCircle, Ban, Hourglass, ShieldCheck, ArrowUp
+  Map as MapIcon, XCircle, Ban, Hourglass, ShieldCheck, ArrowUp,
+  Armchair, Layers, Locate
 } from 'lucide-react';
 
 // Animation variants
@@ -28,7 +29,7 @@ const scaleIn = {
 };
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState('Dine-in');
+  const [activeTab, setActiveTab] = useState('Table + Food');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -44,9 +45,9 @@ export default function LandingPage() {
   };
 
   const tabs = [
-    { id: 'Delivery', icon: Utensils },
-    { id: 'Pickup', icon: Search },
-    { id: 'Dine-in', icon: MapPin },
+    { id: 'Table', icon: Armchair },
+    { id: 'Food', icon: Utensils },
+    { id: 'Table + Food', icon: Layers },
   ];
 
   return (
@@ -66,31 +67,26 @@ export default function LandingPage() {
           animate="visible"
         >
           {/* Badge */}
-          <motion.div variants={fadeUp} className="inline-flex items-center px-4 py-2 gap-2 bg-brand-500/10 dark:bg-brand-500/20 rounded-full border border-brand-500/20 shadow-[0_0_15px_rgba(255,107,53,0.15)] relative overflow-hidden">
-            <motion.div 
-              className="absolute inset-0 bg-white/20 -translate-x-full"
-              animate={{ translateX: ['-100%', '100%'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 3 }}
-            />
-            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-            <span className="text-brand-600 dark:text-brand-400 text-xs font-bold tracking-widest uppercase">Premium Dining Experience</span>
+          <motion.div variants={fadeUp} className="inline-flex items-center px-4 py-1.5 gap-2 bg-brand-500/10 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-brand-500"></span>
+            <span className="text-brand-500 text-xs font-bold tracking-wider uppercase">NOW LIVE IN NEW YORK</span>
           </motion.div>
 
           {/* Headline */}
           <motion.h1 variants={fadeUp} className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight tracking-tight text-balance">
             Skip the Wait.<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-orange-400 drop-shadow-sm">Eat Faster.</span>
+            <span className="text-brand-500">Eat Faster.</span>
           </motion.h1>
 
           {/* Subtext */}
           <motion.p variants={fadeUp} className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed text-balance">
-            The premium dining experience for people who value their time. No queues. No waiting. Just good food.
+            The premium dining experience for people who value their time. No queues. No waiting. Just great food.
           </motion.p>
 
           {/* Search Box Container */}
           <motion.div variants={fadeUp} className="w-full max-w-xl bg-card rounded-3xl p-3 shadow-2xl shadow-brand-500/10 dark:shadow-none border border-border mt-4 relative z-20">
             {/* Interactive Tabs */}
-            <div className="flex items-center gap-2 mb-3 px-2 relative">
+            <div className="flex items-center gap-2 mb-4 px-2 relative">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -98,12 +94,12 @@ export default function LandingPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center justify-center px-4 py-2 text-sm font-semibold transition-colors z-10 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`relative flex items-center justify-center px-4 py-2.5 text-sm font-bold transition-colors z-10 rounded-xl ${isActive ? 'text-brand-500' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-brand-500/10 dark:bg-brand-500/20 rounded-xl"
+                        className="absolute inset-0 bg-brand-500/10 rounded-xl"
                         initial={false}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
@@ -117,16 +113,23 @@ export default function LandingPage() {
 
             {/* Input Row */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex-1 flex items-center bg-muted/50 rounded-2xl px-4 py-4 sm:py-3 border border-transparent focus-within:border-brand-500/50 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all shadow-inner">
-                <Search className="w-5 h-5 text-muted-foreground mr-3" />
-                <input 
-                  type="text" 
-                  placeholder="Search restaurants..." 
-                  className="bg-transparent w-full outline-none text-sm font-medium text-foreground placeholder:text-muted-foreground/70"
-                />
+              <div className="flex-1 flex items-center justify-between bg-muted/50 rounded-2xl px-4 py-4 sm:py-3 border border-transparent focus-within:border-brand-500/50 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all shadow-inner">
+                <div className="flex items-center flex-1">
+                  <Search className="w-5 h-5 text-muted-foreground mr-3" />
+                  <input 
+                    type="text" 
+                    placeholder="Search restaurants..." 
+                    className="bg-transparent w-full outline-none text-sm font-medium text-foreground placeholder:text-muted-foreground/70"
+                  />
+                </div>
+                <button className="flex items-center gap-1.5 text-brand-500 hover:text-brand-600 font-bold text-sm px-2 py-1 transition-colors whitespace-nowrap">
+                  <Locate className="w-4 h-4" />
+                  <span>Near Me</span>
+                </button>
               </div>
-              <button className="flex items-center justify-center px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl transition-all hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] active:scale-95">
-                Search
+              <button className="flex items-center justify-center gap-2 px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl transition-all hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] active:scale-95 whitespace-nowrap">
+                <span>Book Now</span>
+                <ArrowRight className="w-5 h-5" />
               </button>
             </div>
             
