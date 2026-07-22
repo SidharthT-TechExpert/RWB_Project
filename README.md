@@ -17,7 +17,7 @@ A production-ready restaurant pre-booking & food ordering platform.
 - [Secret Management — Infisical CLI](#secret-management--infisical-cli)
 - [Available Scripts](#available-scripts)
 - [API Endpoints](#api-endpoints)      
-- [Server Structure](#server-structure)    
+- [Server Structure](#server-structure)         
 - [Docker](#docker)
 - [Production Deployment](#production-deployment-aws-ec2)
 - [User Roles](#user-roles)
