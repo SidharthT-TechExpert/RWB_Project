@@ -12,9 +12,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn, getInitials } from '@/lib/utils';
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/restaurants', label: 'Restaurants' },
-  { href: '/search', label: 'Explore' },
+  { href: '#find-table', label: 'Find a table' },
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#explore', label: 'Explore options' },
+  { href: '#partners', label: 'For partners' },
 ];
 
 export function Navbar() {
@@ -182,10 +183,10 @@ export function Navbar() {
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Link href="/auth/login">
-                <Button variant="ghost" size="sm">Sign In</Button>
+                <Button variant="ghost" size="sm" className="font-semibold text-foreground hover:text-brand-500">Log in</Button>
               </Link>
               <Link href="/auth/register">
-                <Button size="sm">Get Started</Button>
+                <Button size="sm" className="bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl px-5">Sign up</Button>
               </Link>
             </div>
           )}
