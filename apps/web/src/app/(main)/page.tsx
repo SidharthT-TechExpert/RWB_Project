@@ -562,9 +562,9 @@ export default function LandingPage() {
              whileInView={{ opacity: 1, y: 0 }} 
              viewport={{ once: true }} 
              transition={{ duration: 0.8, type: "spring" }}
-             className="flex-1 w-[260px] xs:w-[280px] sm:w-[310px] relative aspect-[9/18.5] bg-black rounded-[3.25rem] p-3 shadow-2xl border-[6px] border-[#FF6B35] group shrink-0"
+             className="w-[200px] xs:w-[220px] sm:w-[250px] md:w-[270px] relative aspect-[9/18.5] bg-black rounded-[2.75rem] p-2 sm:p-2.5 shadow-2xl border-[5px] border-[#FF6B35] group shrink-0"
            >
-             <div className="w-full h-full bg-[#121212] rounded-[2.5rem] overflow-hidden relative shadow-inner">
+             <div className="w-full h-full bg-[#121212] rounded-[2.1rem] overflow-hidden relative shadow-inner">
                 {/* App Screen Content */}
                 <div className="w-full h-full flex flex-col pt-10 pb-5 px-5 select-none">
                    {/* Top Notch bar */}
