@@ -54,7 +54,7 @@ export default function LandingPage() {
     <div className="flex flex-col w-full max-w-[100vw] overflow-x-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F5F2EC] dark:from-[#0B0A09] dark:to-[#0F0E0D] font-sans transition-colors duration-300">
       
       {/* Hero Section */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-8 md:px-12 lg:px-16 pt-12 pb-24 lg:pt-20 lg:pb-36 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+      <section className="relative w-full max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 lg:px-16 pt-12 pb-24 lg:pt-20 lg:pb-36 2xl:pt-28 2xl:pb-44 3xl:pt-36 3xl:pb-56 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
         
         {/* Advanced Ambient Glows */}
         <div className="absolute top-1/4 -left-32 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-gradient-to-tr from-brand-500/15 to-orange-500/5 dark:from-brand-500/10 dark:to-transparent rounded-full blur-[90px] sm:blur-[120px] -z-10 pointer-events-none"></div>
@@ -62,7 +62,7 @@ export default function LandingPage() {
 
         {/* Left Side Content */}
         <motion.div 
-          className="flex-1 flex flex-col items-start gap-6 sm:gap-7 z-10 w-full max-w-2xl"
+          className="flex-1 flex flex-col items-start gap-6 sm:gap-7 z-10 w-full max-w-2xl 2xl:max-w-3xl"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -76,17 +76,17 @@ export default function LandingPage() {
             <span className="text-brand-600 dark:text-brand-400 text-xs font-black tracking-wider uppercase">NOW LIVE IN NEW YORK</span>
           </motion.div>
 
-          {/* Headline (Fluid, Bold Typography) */}
+          {/* Headline (Fluid, Bold Typography for TV Scaling) */}
           <motion.h1 
             variants={fadeUp} 
-            className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-[5.75rem] font-black text-foreground leading-[1.08] tracking-tight text-balance"
+            className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-[5.75rem] 3xl:text-[7rem] font-black text-foreground leading-[1.08] tracking-tight text-balance"
           >
             Skip the Wait.<br/>
             <span className="text-brand-500 drop-shadow-sm">Eat Faster.</span>
           </motion.h1>
 
           {/* Subtext */}
-          <motion.p variants={fadeUp} className="text-base sm:text-lg lg:text-xl text-muted-foreground/90 max-w-lg leading-relaxed text-balance font-medium">
+          <motion.p variants={fadeUp} className="text-base sm:text-lg lg:text-xl text-muted-foreground/90 max-w-lg 2xl:max-w-xl leading-relaxed text-balance font-medium">
             The premium dining experience for people who value their time. No queues. No waiting. Just great food.
           </motion.p>
 
@@ -95,8 +95,11 @@ export default function LandingPage() {
             variants={fadeUp} 
             className="w-full max-w-xl bg-card/75 dark:bg-card/45 backdrop-blur-xl rounded-[2rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:shadow-none border border-border mt-3 relative z-20"
           >
-            {/* Interactive Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 px-1 sm:px-2 relative">
+            {/* Interactive Tabs with Horizontal scroll on small devices */}
+            <div 
+              className="flex items-center gap-1.5 sm:gap-2 mb-4 px-1 sm:px-2 relative overflow-x-auto whitespace-nowrap pb-1"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -104,12 +107,12 @@ export default function LandingPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center justify-center px-4 py-2 text-xs sm:text-sm font-extrabold transition-colors z-10 rounded-xl ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
+                    className={`relative flex items-center justify-center px-4 py-2.5 text-xs sm:text-sm font-extrabold transition-colors z-10 rounded-xl ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-brand-500/10 dark:bg-brand-500/20 rounded-xl"
+                        className="absolute inset-0 bg-brand-500/10 rounded-xl"
                         initial={false}
                         transition={{ type: "spring", stiffness: 380, damping: 28 }}
                       />
@@ -153,7 +156,7 @@ export default function LandingPage() {
 
         {/* Right Side Visual (Premium Border Box & Glass badges) */}
         <motion.div 
-          className="flex-1 relative w-full h-[320px] xs:h-[390px] sm:h-[490px] lg:h-[620px] rounded-[2.75rem] bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80 p-3 sm:p-4 lg:p-5 overflow-visible group"
+          className="flex-1 relative w-full h-[320px] xs:h-[390px] sm:h-[490px] lg:h-[620px] 2xl:h-[700px] 3xl:h-[800px] rounded-[2.75rem] bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80 p-3 sm:p-4 lg:p-5 overflow-visible group"
           initial={{ opacity: 0, x: 50, rotate: -2 }}
           animate={{ opacity: 1, x: 0, rotate: 0 }}
           transition={{ duration: 0.9, type: "spring", bounce: 0.25 }}
@@ -220,7 +223,7 @@ export default function LandingPage() {
         variants={fadeUp}
         className="w-full bg-card/60 dark:bg-card/25 backdrop-blur-md border-y border-border transition-colors duration-300 relative z-10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 py-12">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 py-12">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-x divide-border">
             <div className="flex flex-col items-center justify-center gap-1 hover:scale-[1.03] transition-transform duration-300">
               <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tighter">50K+</h3>
@@ -245,11 +248,11 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Comparison Section */}
-      <section className="relative w-full bg-zinc-950 dark:bg-card border-y border-border py-24 lg:py-32 transition-colors duration-300 overflow-hidden">
+      <section className="relative w-full bg-zinc-950 dark:bg-card border-y border-border py-24 lg:py-32 2xl:py-36 3xl:py-44 transition-colors duration-300 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.015)_1px,_transparent_1px)] bg-[length:24px_24px] opacity-60"></div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 flex flex-col items-center gap-14 relative z-10">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col items-center gap-14 relative z-10">
           
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
@@ -259,7 +262,7 @@ export default function LandingPage() {
             <p className="text-base sm:text-lg text-zinc-400 dark:text-muted-foreground font-medium">Compare the dining experience and see the difference.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl 2xl:max-w-6xl">
             {/* Traditional Card */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
@@ -321,10 +324,10 @@ export default function LandingPage() {
       </section>
 
       {/* How it Works Section */}
-      <section id="how-it-works" className="relative w-full bg-background py-24 lg:py-32 transition-colors duration-300">
+      <section id="how-it-works" className="relative w-full bg-background py-24 lg:py-32 2xl:py-36 3xl:py-44 transition-colors duration-300">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-brand-500/5 rounded-full blur-[100px] sm:blur-[120px] -z-10 pointer-events-none"></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 flex flex-col items-center gap-14 lg:gap-20">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col items-center gap-14 lg:gap-20">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
             className="text-center max-w-2xl mx-auto space-y-3"
@@ -360,7 +363,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg sm:text-xl font-extrabold text-foreground mb-1.5 group-hover:text-brand-500 transition-colors">{step.title}</h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1.5 group-hover:text-brand-500 transition-colors">{step.title}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground/80 px-2 font-medium leading-relaxed">{step.desc}</p>
                     </div>
                   </motion.div>
@@ -372,12 +375,12 @@ export default function LandingPage() {
       </section>
 
       {/* Maps & Discovery Section */}
-      <section id="find-table" className="w-full bg-muted/20 py-24 lg:py-32 border-y border-border transition-colors duration-300 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
+      <section id="find-table" className="w-full bg-muted/20 py-24 lg:py-32 2xl:py-36 3xl:py-44 border-y border-border transition-colors duration-300 overflow-hidden">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
           {/* Mock Map Image */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-            className="flex-1 w-full relative h-[300px] xs:h-[350px] sm:h-[450px] lg:h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-muted dark:bg-muted/50 group border border-border"
+            className="flex-1 w-full relative h-[300px] xs:h-[350px] sm:h-[450px] lg:h-[500px] 2xl:h-[550px] rounded-[2.5rem] overflow-hidden shadow-2xl bg-muted dark:bg-muted/50 group border border-border"
           >
              <Image 
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80" 
@@ -460,8 +463,8 @@ export default function LandingPage() {
       </section>
 
       {/* Chef's Recommendations */}
-      <section id="explore" className="w-full bg-background py-24 lg:py-32 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 flex flex-col gap-12">
+      <section id="explore" className="w-full bg-background py-24 lg:py-32 2xl:py-36 3xl:py-44 transition-colors duration-300">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col gap-12">
           
           <div className="flex justify-between items-end">
             <motion.h2 
@@ -489,7 +492,7 @@ export default function LandingPage() {
           >
             {/* Item 1 */}
             <motion.div variants={fadeUp} className="group cursor-pointer flex flex-col">
-              <div className="relative w-full h-64 sm:h-72 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
+              <div className="relative w-full h-64 sm:h-72 lg:h-80 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
                  <Image src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80" alt="Salad Bowl" fill className="object-cover group-hover:scale-103 transition-transform duration-700" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                  <div className="absolute top-4.5 right-4.5 bg-card/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-border transition-transform group-hover:scale-105">
@@ -508,7 +511,7 @@ export default function LandingPage() {
 
             {/* Item 2 */}
             <motion.div variants={fadeUp} className="group cursor-pointer flex flex-col">
-              <div className="relative w-full h-64 sm:h-72 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
+              <div className="relative w-full h-64 sm:h-72 lg:h-80 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
                  <Image src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80" alt="Pizza" fill className="object-cover group-hover:scale-103 transition-transform duration-700" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                  <div className="absolute top-4.5 right-4.5 bg-card/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-border transition-transform group-hover:scale-105">
@@ -527,7 +530,7 @@ export default function LandingPage() {
 
             {/* Item 3 */}
             <motion.div variants={fadeUp} className="group cursor-pointer flex flex-col">
-              <div className="relative w-full h-64 sm:h-72 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
+              <div className="relative w-full h-64 sm:h-72 lg:h-80 rounded-[2.25rem] overflow-hidden bg-muted mb-5 shadow-md group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] border border-border transition-shadow duration-500">
                  <Image src="https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80" alt="Wagyu Beef" fill className="object-cover group-hover:scale-103 transition-transform duration-700" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                  <div className="absolute top-4.5 right-4.5 bg-card/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-border transition-transform group-hover:scale-105">
@@ -548,12 +551,12 @@ export default function LandingPage() {
       </section>
 
       {/* Mobile App Promo */}
-      <section className="w-full bg-zinc-950 dark:bg-card py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+      <section className="w-full bg-zinc-950 dark:bg-card py-24 lg:py-32 2xl:py-36 3xl:py-44 relative overflow-hidden transition-colors duration-300">
         {/* Glow Spheres */}
         <div className="absolute -top-40 -right-40 w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] bg-brand-500/15 rounded-full blur-[110px] pointer-events-none"></div>
         <div className="absolute -bottom-40 -left-40 w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] bg-brand-500/5 rounded-full blur-[110px] pointer-events-none"></div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 relative z-10">
+        <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 relative z-10">
            {/* Mock Phone Display */}
            <motion.div 
              initial={{ opacity: 0, y: 50, rotate: 5 }} whileInView={{ opacity: 1, y: 0, rotate: -3 }} viewport={{ once: true }} transition={{ duration: 1, type: "spring" }}
@@ -646,8 +649,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section id="partners" className="w-full bg-background py-24 lg:py-32 transition-colors duration-300">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 text-center">
+      <section id="partners" className="w-full bg-background py-24 lg:py-32 2xl:py-36 3xl:py-44 transition-colors duration-300">
+        <div className="max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 md:px-8 text-center">
            <motion.div 
              initial={{ opacity: 0, scale: 0.95, y: 30 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
              className="bg-gradient-to-br from-brand-500 to-orange-600 rounded-[2.5rem] sm:rounded-[3.5rem] p-8 sm:p-16 lg:p-24 flex flex-col items-center justify-center gap-8 shadow-[0_30px_60px_-15px_rgba(255,107,53,0.3)] dark:shadow-none relative overflow-hidden group"
