@@ -551,96 +551,109 @@ export default function LandingPage() {
       </section>
 
       {/* Mobile App Promo */}
-      <section className="w-full bg-zinc-950 dark:bg-card py-24 lg:py-32 2xl:py-36 3xl:py-44 relative overflow-hidden transition-colors duration-300">
-        {/* Glow Spheres */}
-        <div className="absolute -top-40 -right-40 w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] bg-brand-500/15 rounded-full blur-[110px] pointer-events-none"></div>
-        <div className="absolute -bottom-40 -left-40 w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] bg-brand-500/5 rounded-full blur-[110px] pointer-events-none"></div>
+      <section className="w-full bg-[#0A0A0A] py-24 lg:py-32 2xl:py-36 3xl:py-44 relative overflow-hidden transition-colors duration-300">
+        {/* Warm Ambient Glow */}
+        <div className="absolute top-0 right-0 w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] bg-brand-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         
         <div className="max-w-7xl 2xl:max-w-[90rem] 3xl:max-w-[120rem] mx-auto px-4 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 relative z-10">
-           {/* Mock Phone Display */}
+           {/* Mock Phone Display (Upright, Orange Bezel Frame) */}
            <motion.div 
-             initial={{ opacity: 0, y: 50, rotate: 5 }} whileInView={{ opacity: 1, y: 0, rotate: -3 }} viewport={{ once: true }} transition={{ duration: 1, type: "spring" }}
-             className="flex-1 w-[260px] xs:w-[290px] sm:w-[340px] relative aspect-[9/19] bg-gradient-to-tr from-brand-600 to-orange-400 rounded-[3rem] sm:rounded-[3.5rem] p-3 sm:p-4 shadow-2xl hover:rotate-0 hover:-translate-y-2 transition-all duration-500 cursor-pointer group shrink-0 border border-white/10"
+             initial={{ opacity: 0, y: 50 }} 
+             whileInView={{ opacity: 1, y: 0 }} 
+             viewport={{ once: true }} 
+             transition={{ duration: 0.8, type: "spring" }}
+             className="flex-1 w-[260px] xs:w-[280px] sm:w-[310px] relative aspect-[9/18.5] bg-black rounded-[3.25rem] p-3 shadow-2xl border-[6px] border-[#FF6B35] group shrink-0"
            >
-             <div className="w-full h-full bg-black rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden border-[4px] sm:border-[6px] border-black relative shadow-inner">
-                {/* App Screen content */}
-                <div className="w-full h-full bg-background flex flex-col pt-10 sm:pt-12 pb-5 sm:pb-6 px-4 sm:px-6">
-                   <div className="w-1/3 h-1 bg-foreground/10 absolute top-4 left-1/3 rounded-full"></div>
-                   <div className="mb-6 sm:mb-8">
-                     <h4 className="text-lg sm:text-2xl font-black text-foreground tracking-tight">VIP Platinum</h4>
-                     <p className="text-[10px] text-brand-500 font-bold tracking-widest mt-1">MEMBER SINCE 2024</p>
+             <div className="w-full h-full bg-[#121212] rounded-[2.5rem] overflow-hidden relative shadow-inner">
+                {/* App Screen Content */}
+                <div className="w-full h-full flex flex-col pt-10 pb-5 px-5 select-none">
+                   {/* Top Notch bar */}
+                   <div className="w-1/3 h-1 bg-white/10 absolute top-4 left-1/3 rounded-full"></div>
+                   
+                   <div className="mb-6">
+                     <h4 className="text-lg font-black text-white tracking-tight">VIP Platinum</h4>
+                     <p className="text-[9px] text-[#FF6B35] font-black tracking-widest mt-1">MEMBER SINCE 2024</p>
                    </div>
-                   <div className="space-y-3 sm:space-y-4 flex-1">
-                     <div className="w-full h-24 sm:h-28 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-[1.02] transition-transform">
-                       <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-md" />
+                   
+                   <div className="space-y-3.5 flex-1">
+                     {/* Orange Button with Map Pin */}
+                     <div className="w-full h-12 bg-[#FF6B35] rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-[1.02]">
+                       <MapPin className="w-5 h-5 text-white" />
                      </div>
-                     <div className="w-full h-10 sm:h-14 bg-muted/70 rounded-xl"></div>
-                     <div className="w-full h-10 sm:h-14 bg-muted/70 rounded-xl"></div>
-                     <div className="w-full h-10 sm:h-14 bg-muted/70 rounded-xl"></div>
+                     
+                     {/* Grey Placeholder Bars */}
+                     <div className="w-full h-11 bg-[#242424] rounded-xl"></div>
+                     <div className="w-full h-11 bg-[#242424] rounded-xl"></div>
+                     <div className="w-full h-11 bg-[#242424] rounded-xl"></div>
                    </div>
-                   <div className="w-full h-12 sm:h-16 bg-muted/50 rounded-2xl mt-4"></div>
                 </div>
              </div>
-             {/* Floating App Badge */}
+             
+             {/* Floating App Badge (Overlapping Right Bezel) */}
              <motion.div 
-               animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-               className="absolute top-1/4 -right-6 sm:-right-8 bg-card rounded-2xl shadow-xl p-3 sm:p-4 flex items-center gap-3 border border-border z-25"
+               animate={{ y: [0, -8, 0] }} 
+               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute top-[28%] -right-8 bg-[#1A1A1A] rounded-xl shadow-2xl px-3 py-2.5 flex items-center gap-2.5 border border-zinc-800 z-20"
              >
-                <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center shrink-0">
-                   <ShieldCheck className="w-5 h-5 text-green-500" />
+                <div className="w-5 h-5 bg-green-500/10 rounded-full flex items-center justify-center shrink-0">
+                   <ShieldCheck className="w-4 h-4 text-green-500" />
                 </div>
-                <div>
-                  <p className="text-[8px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Status</p>
-                  <p className="text-xs sm:text-sm font-black text-foreground whitespace-nowrap">Priority Waitlist</p>
+                <div className="leading-tight">
+                  <p className="text-[7px] text-green-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>Status
+                  </p>
+                  <p className="text-[10px] font-black text-white whitespace-nowrap mt-0.5">Priority Waitlist</p>
                 </div>
              </motion.div>
            </motion.div>
 
+           {/* Features & Copy Content */}
            <motion.div 
              variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}
              className="flex-1 w-full text-left space-y-6 sm:space-y-8"
            >
-              <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white dark:text-foreground tracking-tight leading-tight text-balance">
+              <motion.h2 variants={fadeUp} className="text-3.5xl sm:text-4.5xl lg:text-5xl font-black text-white leading-[1.1] tracking-tight text-balance">
                 Elevate Every<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-orange-400">Dining Moment.</span>
+                <span className="text-[#FF6B35]">Dining Moment.</span>
               </motion.h2>
-              <motion.p variants={fadeUp} className="text-base sm:text-lg lg:text-xl text-zinc-300 dark:text-muted-foreground max-w-lg leading-relaxed text-balance font-semibold">
+              <motion.p variants={fadeUp} className="text-sm sm:text-base text-zinc-400 max-w-lg leading-relaxed text-balance font-medium">
                 Download the QuickBite app to unlock priority seating, exclusive partner menus, and pay the check silently from your phone.
               </motion.p>
               
-              <motion.ul variants={staggerContainer} className="space-y-5 max-w-md pt-2 sm:pt-4">
+              <motion.ul variants={staggerContainer} className="space-y-5 max-w-md pt-2">
                 {[
                   { icon: Hourglass, title: "Priority Reservations", desc: "Never wait for a table again." },
                   { icon: Apple, title: "Touchless Payments", desc: "Secure, instant payments via Apple Pay." }
                 ].map((item, idx) => {
                   const Icon = item.icon;
                   return (
-                    <motion.li key={idx} variants={fadeUp} className="flex items-center gap-4 sm:gap-5">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center shrink-0 border border-brand-500/10">
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-brand-400" />
+                    <motion.li key={idx} variants={fadeUp} className="flex items-center gap-4">
+                      <div className="w-11 h-11 rounded-xl bg-[#1A1513] flex items-center justify-center shrink-0 border border-[#3E2218]">
+                        <Icon className="w-5 h-5 text-[#FF6B35]" />
                       </div>
                       <div>
-                        <h4 className="text-lg sm:text-xl font-extrabold text-white dark:text-foreground mb-0.5 sm:mb-1">{item.title}</h4>
-                        <p className="text-sm sm:text-base text-zinc-400 dark:text-muted-foreground font-medium">{item.desc}</p>
+                        <h4 className="text-base sm:text-lg font-black text-white mb-0.5">{item.title}</h4>
+                        <p className="text-xs sm:text-sm text-zinc-400 font-medium">{item.desc}</p>
                       </div>
                     </motion.li>
                   );
                 })}
               </motion.ul>
 
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                 <button className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white dark:bg-foreground hover:bg-gray-100 dark:hover:bg-foreground/90 text-zinc-950 dark:text-background px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-extrabold transition-all hover:scale-105 active:scale-95 shadow-lg text-sm sm:text-base">
-                    <Apple className="w-6 h-6 sm:w-7 sm:h-7" />
+              {/* App Badge Downloads */}
+              <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3 pt-2">
+                 <button className="flex items-center gap-2.5 bg-white hover:bg-gray-100 text-black px-5 py-2.5 rounded-xl font-extrabold transition-all hover:scale-105 active:scale-95 shadow-md">
+                    <Apple className="w-5 h-5 fill-black text-black" />
                     <div className="text-left leading-tight">
-                       <p className="text-[9px] sm:text-[10px] font-bold opacity-70 uppercase tracking-widest">Download on the</p>
-                       <p className="text-base sm:text-lg font-black">App Store</p>
+                       <p className="text-[7px] font-extrabold opacity-75 uppercase tracking-wider">Download on the</p>
+                       <p className="text-xs font-black">App Store</p>
                     </div>
                  </button>
-                 <button className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white/5 dark:bg-muted dark:hover:bg-muted/80 hover:bg-white/10 text-white dark:text-foreground border border-white/20 dark:border-transparent px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-extrabold transition-all hover:scale-105 active:scale-95 backdrop-blur-sm text-sm sm:text-base">
-                    <Play className="w-6 h-6 sm:w-7 sm:h-7 text-brand-400" />
+                 <button className="flex items-center gap-2.5 bg-transparent border border-zinc-800 hover:border-zinc-600 hover:bg-white/5 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all hover:scale-105 active:scale-95">
+                    <Play className="w-5 h-5 text-[#FF6B35] fill-[#FF6B35]" />
                     <div className="text-left leading-tight">
-                       <p className="text-[9px] sm:text-[10px] font-bold opacity-70 uppercase tracking-widest">Get it on</p>
-                       <p className="text-base sm:text-lg font-black">Google Play</p>
+                       <p className="text-[7px] font-extrabold opacity-75 uppercase tracking-wider">GET IT ON</p>
+                       <p className="text-xs font-black">Google Play</p>
                     </div>
                  </button>
               </motion.div>
