@@ -24,11 +24,11 @@ export class AuthController {
     catch (error) { next(error); }
   }
   async sendOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try { await authService.sendOTP(req.body.identifier); sendSuccess(res, 'OTP sent successfully'); }
+    try { sendSuccess(res, 'OTP sent successfully', await authService.sendOTP(req.body.identifier)); }
     catch (error) { next(error); }
   }
   async verifyOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try { sendSuccess(res, 'OTP verified', await authService.verifyOTP(req.body.identifier, req.body.otp)); }
+    try { sendSuccess(res, 'OTP verified', await authService.verifyOTP(req.body.identifier, req.body.otp, req.body.name)); }
     catch (error) { next(error); }
   }
   async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
