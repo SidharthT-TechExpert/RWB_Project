@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,17 +25,109 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
 };
 
+/* ─── Animated Counter Component (1 to target number throw loop) ─── */
+function AnimatedCounter({
+  target,
+  suffix = '',
+  prefix = '',
+  decimals = 0,
+}: {
+  target: number;
+  suffix?: string;
+  prefix?: string;
+  decimals?: number;
+}) {
+  const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const nodeRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const node = nodeRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number | null = null;
+          const duration = 3800; // 3.8s relaxed, readable counting speed
+
+          const step = (currentTime: number) => {
+            if (!startTime) startTime = currentTime;
+            const progress = Math.min((currentTime - startTime) / duration, 1);
+            // Ease-out cubic curve for steady, gentle number iteration
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            setCount(easedProgress * target);
+
+            if (progress < 1) {
+              requestAnimationFrame(step);
+            }
+          };
+
+          requestAnimationFrame(step);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [target, hasAnimated]);
+
+  return (
+    <span ref={nodeRef} className="tabular-nums">
+      {prefix}
+      {decimals > 0
+        ? count.toFixed(decimals)
+        : Math.floor(count).toLocaleString()}
+      {suffix}
+    </span>
+  );
+}
+
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('Table + Food');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setShowScrollTop(currentScroll > 300);
+      if (totalHeight > 0) {
+        setScrollProgress(Math.min(Math.max((currentScroll / totalHeight) * 100, 0), 100));
+      }
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => {
+    const startY = window.scrollY || window.pageYOffset;
+    if (startY === 0) return;
+    // Ultra-smooth, gentle travel duration (scaled between 1.8s and 2.6s for relaxed travel)
+    const duration = Math.min(Math.max(Math.abs(startY) * 0.8, 1800), 2600);
+    const startTime = performance.now();
+
+    // Smooth Quintic Easing curve for ultra-gentle, gradual acceleration and deceleration
+    const easeInOutQuint = (t: number) =>
+      t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+
+    const animateScroll = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutQuint(progress);
+
+      window.scrollTo(0, startY * (1 - easedProgress));
+
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    };
+
+    requestAnimationFrame(animateScroll);
+  };
 
   const tabs = [
     { id: 'Table',       icon: Armchair },
@@ -201,19 +293,19 @@ export default function LandingPage() {
                 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
                 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
               ].map((src, i) => (
-                <div key={i} className="w-6 h-6 xs:w-7 xs:h-7 rounded-full border-2 border-background overflow-hidden shadow-sm bg-muted shrink-0 relative">
+                <div key={i} className="w-6.5 h-6.5 xs:w-7.5 xs:h-7.5 rounded-full border-2 border-background overflow-hidden shadow-sm bg-muted shrink-0 relative">
                   <Image src={src} alt="User" fill unoptimized className="object-cover" />
                 </div>
               ))}
-              <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full border-2 border-background bg-brand-500 flex items-center justify-center text-white font-black text-[8px] xs:text-[9px] shrink-0">
-                +K
+              <div className="h-6.5 px-1.5 xs:px-2 rounded-full border-2 border-background bg-brand-500 flex items-center justify-center text-white font-black text-[9px] xs:text-[10px] shrink-0 shadow-sm">
+                +50K
               </div>
             </div>
             <div>
               <div className="flex items-center gap-0.5">
                 {[1,2,3,4,5].map((s) => <Star key={s} className="w-2.5 h-2.5 xs:w-3 xs:h-3 fill-yellow-400 text-yellow-400" />)}
               </div>
-              <p className="text-[9px] xs:text-[10px] sm:text-xs font-bold text-muted-foreground/80 mt-0.5">
+              <p className="text-[10px] xs:text-xs font-bold text-muted-foreground/80 mt-0.5">
                 Trusted by <span className="text-foreground font-black">50K+</span> happy diners
               </p>
             </div>
@@ -224,8 +316,8 @@ export default function LandingPage() {
         <motion.div
           className="
             flex-1 relative w-full
-            min-h-[240px] xs:min-h-[280px] sm:min-h-[340px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[540px] 2xl:min-h-[600px] 3xl:min-h-[680px]
-            h-[240px] xs:h-[280px] sm:h-[340px] md:h-[400px] lg:h-[480px] xl:h-[540px] 2xl:h-[600px] 3xl:h-[680px]
+            min-h-[270px] xs:min-h-[310px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[540px] 2xl:min-h-[600px] 3xl:min-h-[680px]
+            h-[270px] xs:h-[310px] sm:h-[360px] md:h-[400px] lg:h-[480px] xl:h-[540px] 2xl:h-[600px] 3xl:h-[680px]
             rounded-[1.5rem] xs:rounded-[1.75rem] sm:rounded-[2.25rem]
             bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80
             p-1.5 xs:p-2 sm:p-3
@@ -268,7 +360,7 @@ export default function LandingPage() {
               <CheckCircle2 className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-green-500" />
             </div>
             <div>
-              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Status</p>
+              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-wider">Status</p>
               <p className="text-[9px] xs:text-[10px] sm:text-xs font-black text-foreground whitespace-nowrap">Table Ready ✓</p>
             </div>
           </motion.div>
@@ -291,7 +383,7 @@ export default function LandingPage() {
               <Star className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-brand-500 fill-brand-500" />
             </div>
             <div>
-              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Rating</p>
+              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-wider">Rating</p>
               <p className="text-[9px] xs:text-[10px] sm:text-xs font-black text-foreground whitespace-nowrap">4.9 / 5.0</p>
             </div>
           </motion.div>
@@ -313,7 +405,7 @@ export default function LandingPage() {
               <Zap className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-yellow-500 fill-yellow-500" />
             </div>
             <div>
-              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Wait Saved</p>
+              <p className="text-[7px] xs:text-[8px] font-black text-muted-foreground/60 uppercase tracking-wider">Wait Saved</p>
               <p className="text-[10px] xs:text-xs font-black text-yellow-500 whitespace-nowrap leading-tight">-30 mins</p>
             </div>
           </motion.div>
@@ -337,23 +429,23 @@ export default function LandingPage() {
         variants={fadeUp}
         className="w-full bg-card/60 dark:bg-card/25 backdrop-blur-md border-y border-border transition-colors duration-300 relative z-10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]"
       >
-        <div className="max-w-7xl 3xl:max-w-[100rem] 4xl:max-w-[130rem] mx-auto px-4 xs:px-5 sm:px-6 lg:px-8 xl:px-10 3xl:px-20 py-10 sm:py-12 3xl:py-16">
+        <div className="max-w-7xl 3xl:max-w-[100rem] 4xl:max-w-[130rem] mx-auto px-3.5 xs:px-5 sm:px-6 lg:px-8 xl:px-10 3xl:px-20 py-8 sm:py-12 3xl:py-16">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 xs:gap-6 sm:gap-8 3xl:gap-12">
             {[
-              { value: '50K+',   label: 'Active Users'        },
-              { value: '1,200+', label: 'Partner Restaurants' },
-              { value: '250K+',  label: 'Orders Delivered'    },
-              { value: null,     label: 'App Rating'          },
+              { target: 50,    suffix: 'K+', label: 'Active Users',        decimals: 0 },
+              { target: 1200,  suffix: '+',  label: 'Partner Restaurants', decimals: 0 },
+              { target: 250,   suffix: 'K+', label: 'Orders Delivered',    decimals: 0 },
+              { target: 4.9,   suffix: '★',  label: 'App Rating',          decimals: 1, isRating: true },
             ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center justify-center gap-1 hover:scale-[1.03] transition-transform duration-300 py-2">
-                {stat.value ? (
-                  <h3 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl 4xl:text-7xl font-black text-foreground tracking-tighter">{stat.value}</h3>
-                ) : (
-                  <h3 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl 4xl:text-7xl font-black text-brand-500 tracking-tighter flex items-center">
-                    4.9<Star className="ml-1 w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7 3xl:w-8 3xl:h-8 fill-brand-500 shadow-sm" />
-                  </h3>
-                )}
-                <p className="text-[9px] xs:text-[10px] sm:text-xs 3xl:text-sm font-extrabold text-muted-foreground/70 tracking-widest uppercase text-center">{stat.label}</p>
+              <div key={i} className="flex flex-col items-center justify-center gap-1 hover:scale-[1.05] transition-transform duration-300 py-1.5 sm:py-2">
+                <h3 className={`text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl 4xl:text-7xl font-black ${stat.isRating ? 'text-brand-500' : 'text-foreground'} tracking-tight flex items-center`}>
+                  <AnimatedCounter
+                    target={stat.target}
+                    suffix={stat.suffix}
+                    decimals={stat.decimals}
+                  />
+                </h3>
+                <p className="text-[10px] xs:text-xs 3xl:text-sm font-black text-muted-foreground/80 tracking-wider uppercase text-center leading-tight">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -843,7 +935,7 @@ export default function LandingPage() {
         <div className="max-w-5xl 3xl:max-w-6xl 4xl:max-w-7xl mx-auto px-3.5 xs:px-5 sm:px-6 md:px-8 3xl:px-12 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 28 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-            className="bg-gradient-to-br from-brand-500 via-[#FF5520] to-orange-600 rounded-[1.75rem] xs:rounded-[2.25rem] sm:rounded-[2.75rem] lg:rounded-[3.25rem] p-5 xs:p-7 sm:p-10 lg:p-14 xl:p-16 flex flex-col items-center justify-center gap-4 xs:gap-5 sm:gap-7 shadow-[0_25px_60px_-15px_rgba(255,107,53,0.35)] dark:shadow-none relative overflow-hidden group"
+            className="bg-gradient-to-br from-brand-500 via-[#FF5520] to-orange-600 rounded-[1.75rem] xs:rounded-[2.25rem] sm:rounded-[2.75rem] lg:rounded-[3.25rem] px-4 pt-8 pb-6 xs:p-7 sm:p-10 lg:p-14 xl:p-16 flex flex-col items-center justify-center gap-4 xs:gap-5 sm:gap-7 shadow-[0_25px_60px_-15px_rgba(255,107,53,0.35)] dark:shadow-none relative overflow-hidden group"
           >
             {/* Grid pattern overlay */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
@@ -854,15 +946,15 @@ export default function LandingPage() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
             {/* Trust badges row — compact inline pills */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 relative z-10">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 relative z-10 pt-1">
               {[
                 { val: '50K+',   label: 'Happy Diners'      },
                 { val: '4.9★',   label: 'App Rating'        },
                 { val: '1,200+', label: 'Partners'          },
               ].map((badge) => (
-                <div key={badge.val} className="flex items-center gap-1.5 bg-white/15 backdrop-blur border border-white/20 rounded-full px-2.5 xs:px-3 py-0.5 xs:py-1 whitespace-nowrap">
-                  <span className="text-[11px] xs:text-xs sm:text-sm font-black text-white">{badge.val}</span>
-                  <span className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-white/80 uppercase tracking-wide">{badge.label}</span>
+                <div key={badge.val} className="flex items-center gap-1.5 bg-white/15 backdrop-blur border border-white/20 rounded-full px-2.5 xs:px-3 py-1 shadow-sm whitespace-nowrap">
+                  <span className="text-[10px] xs:text-xs sm:text-sm font-black text-white">{badge.val}</span>
+                  <span className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wide">{badge.label}</span>
                 </div>
               ))}
             </div>
@@ -894,19 +986,53 @@ export default function LandingPage() {
       </section>
 
 
-      {/* Scroll-to-top FAB */}
+      {/* Scroll-to-top FAB with Dynamic Circular Progress & Hover Tooltip */}
       <AnimatePresence>
         {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0, y: 20 }}
-            onClick={scrollToTop}
-            className="fixed bottom-5 right-5 xs:bottom-6 xs:right-6 sm:bottom-8 sm:right-8 z-50 p-3 xs:p-3.5 sm:p-4 bg-brand-500 hover:bg-brand-600 text-white rounded-full shadow-2xl border border-brand-400/40 transition-all hover:-translate-y-1 active:scale-95"
-            aria-label="Scroll to top"
+            exit={{ opacity: 0, scale: 0.6, y: 30 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-6 right-5 xs:bottom-7 xs:right-6 sm:bottom-8 sm:right-8 z-50 group flex items-center gap-2"
           >
-            <ArrowUp className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
-          </motion.button>
+            {/* Desktop hover label pill */}
+            <span className="hidden sm:inline-block opacity-0 group-hover:opacity-100 transition-all duration-250 bg-zinc-950/90 dark:bg-white/90 text-white dark:text-zinc-950 text-[11px] font-black px-3 py-1.5 rounded-full shadow-lg backdrop-blur pointer-events-none whitespace-nowrap -translate-x-1 group-hover:translate-x-0">
+              Back to Top
+            </span>
+
+            {/* Circular button with progress ring */}
+            <button
+              onClick={scrollToTop}
+              className="relative w-12 h-12 xs:w-13 xs:h-13 sm:w-14 sm:h-14 rounded-full bg-card/90 dark:bg-card/90 backdrop-blur-xl border border-border/80 shadow-[0_10px_35px_rgba(255,107,53,0.3)] hover:shadow-[0_14px_45px_rgba(255,107,53,0.5)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+              aria-label="Scroll smoothly to top of page"
+            >
+              {/* SVG Circular Progress Ring */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90 p-0.5" viewBox="0 0 36 36">
+                <path
+                  className="text-muted/40 dark:text-muted/20"
+                  strokeWidth="2.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-brand-500 transition-all duration-150 ease-out"
+                  strokeDasharray={`${scrollProgress}, 100`}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+
+              {/* Inner glowing orange icon container */}
+              <div className="w-8.5 h-8.5 xs:w-9.5 xs:h-9.5 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#FF4D0F] flex items-center justify-center text-white shadow-md group-hover:from-[#e85a25] group-hover:to-[#f03205] transition-colors">
+                <ArrowUp className="w-4.5 h-4.5 xs:w-5 xs:h-5 text-white transition-transform group-hover:-translate-y-0.5 duration-250" />
+              </div>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

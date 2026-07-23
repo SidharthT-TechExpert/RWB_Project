@@ -224,13 +224,13 @@ export function Navbar() {
             </div>
           ) : (
             /* ── Get Started CTA ── */
-            <div className="hidden xs:flex items-center shrink-0">
+            <div className="flex items-center shrink-0">
               <Button
                 size="sm"
-                className="relative overflow-hidden bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#e85a25] hover:to-[#ff7a40] text-white font-bold rounded-2xl px-3.5 sm:px-5 lg:px-6 3xl:px-8 py-2 3xl:py-3 shadow-[0_4px_20px_rgba(255,107,53,0.4)] hover:shadow-[0_6px_28px_rgba(255,107,53,0.55)] transition-all duration-200 active:scale-[0.97] text-xs sm:text-[13px] 3xl:text-base tracking-wide whitespace-nowrap"
+                className="relative overflow-hidden bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#e85a25] hover:to-[#ff7a40] text-white font-bold rounded-xl xs:rounded-2xl px-2.5 xs:px-4 sm:px-5 lg:px-6 3xl:px-8 py-1.5 xs:py-2 3xl:py-3 shadow-[0_4px_16px_rgba(255,107,53,0.35)] transition-all duration-200 active:scale-[0.97] text-[11px] xs:text-xs sm:text-[13px] 3xl:text-base tracking-wide whitespace-nowrap"
                 onClick={openModal}
               >
-                <span className="relative z-10">Get Started →</span>
+                <span className="relative z-10">Get Started</span>
               </Button>
             </div>
           )}
