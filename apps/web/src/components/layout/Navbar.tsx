@@ -127,22 +127,24 @@ export function Navbar() {
             </Link>
           )}
 
-          {/* Cart */}
-          <Link href="/cart" className="relative">
-            <Button variant="ghost" size="icon" aria-label="Cart"
-              className="3xl:w-11 3xl:h-11 4xl:w-13 4xl:h-13">
-              <ShoppingCart className="h-5 w-5 3xl:h-6 3xl:w-6" />
-              {itemCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 h-5 w-5 3xl:h-6 3xl:w-6 rounded-full bg-brand-500 text-white text-xs 3xl:text-sm flex items-center justify-center font-bold"
-                >
-                  {itemCount > 9 ? '9+' : itemCount}
-                </motion.span>
-              )}
-            </Button>
-          </Link>
+          {/* Cart (authenticated) */}
+          {isAuthenticated && (
+            <Link href="/cart" className="relative">
+              <Button variant="ghost" size="icon" aria-label="Cart"
+                className="3xl:w-11 3xl:h-11 4xl:w-13 4xl:h-13">
+                <ShoppingCart className="h-5 w-5 3xl:h-6 3xl:w-6" />
+                {itemCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 h-5 w-5 3xl:h-6 3xl:w-6 rounded-full bg-brand-500 text-white text-xs 3xl:text-sm flex items-center justify-center font-bold"
+                  >
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </motion.span>
+                )}
+              </Button>
+            </Link>
+          )}
 
           {/* Auth — user dropdown (desktop) / Get Started CTA */}
           {isAuthenticated ? (
