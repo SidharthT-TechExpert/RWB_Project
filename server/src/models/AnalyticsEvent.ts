@@ -10,7 +10,7 @@ const EventSchema = new Schema<IAnalyticsEvent>({
   userId: { type: String, index: true },
   restaurantId: { type: String, index: true },
   data: { type: Schema.Types.Mixed, default: {} },
-  timestamp: { type: Date, default: Date.now, index: true },
+  timestamp: { type: Date, default: Date.now },
 });
 
 EventSchema.index({ timestamp: 1 }, { expireAfterSeconds: 90 * 24 * 3600 }); // 90-day TTL
