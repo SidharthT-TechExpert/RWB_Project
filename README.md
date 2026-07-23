@@ -47,7 +47,7 @@ quickbite/
 │   └── mobile/               ← Expo React Native
 ├── nginx/nginx.conf          ← Reverse proxy (SSL, rate limiting)
 ├── docker-compose.yml        ← Local dev (API + MongoDB + Redis)
-├── docker-compose.prod.yml   ← Production (pre-built image + nginx)
+├── docker-compose.prod.yml   ← Production (web + API images + nginx)
 └── .github/workflows/        ← CI typecheck/build + CD deploy to EC2
 ```
 
@@ -771,6 +771,15 @@ curl http://localhost:3000/health
 
 ## Production Deployment (AWS EC2)
 
+Frontend (Next.js) and backend (Express) run on **one EC2** behind nginx:
+
+| Host | Serves |
+|---|---|
+| `qickbite.com` / `www.qickbite.com` | Next.js web + `/api` → Express |
+| `api.qickbite.com` | Express API only (mobile / legacy clients) |
+
+MongoDB Atlas and Upstash Redis stay external. No separate Vercel host is required.
+
 ### Step 1 — EC2 setup (one-time)
 
 ```bash
@@ -779,7 +788,17 @@ bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/quickbite/main/sc
 exit && ssh -i your-key.pem ubuntu@YOUR_EC2_IP
 ```
 
-### Step 2 — GitHub Secrets
+### Step 2 — DNS
+
+Point these A records at your EC2 public IP:
+
+- `qickbite.com`
+- `www.qickbite.com`
+- `api.qickbite.com`
+
+If the apex domain previously pointed at Vercel, update (or remove) those records so traffic reaches EC2. After cutover, disable or delete the Vercel project for this app.
+
+### Step 3 — GitHub Secrets
 
 Go to repo → **Settings → Secrets and variables → Actions**
 
@@ -790,34 +809,63 @@ Go to repo → **Settings → Secrets and variables → Actions**
 | `EC2_HOST` | EC2 public IP |
 | `EC2_USER` | `ubuntu` |
 | `EC2_SSH_KEY` | Full `.pem` private key contents |
-| `DOMAIN` | e.g. `api.qickbite.com` |
+| `DOMAIN` | Apex domain, e.g. `qickbite.com` (not `api.…`) |
 | `MONGODB_URI` | MongoDB Atlas URI |
 | `REDIS_URL` | Upstash Redis URL |
 | `JWT_ACCESS_SECRET` | 64-char random string |
 | `JWT_REFRESH_SECRET` | 64-char random string |
 
-**Additional secrets** (add as needed for features):
+**API feature secrets** (add as needed):
 `SMTP_USER`, `SMTP_PASS`, `FIREBASE_*`, `RAZORPAY_*`, `STRIPE_*`, `GOOGLE_*`, `CLOUDINARY_*`
 
-### Step 3 — SSL
+**Web build secrets** (baked into the Next.js image at build time):
+
+| Secret | Purpose |
+|---|---|
+| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Maps |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Razorpay checkout |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase client |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | FCM sender |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app id |
+
+`NEXT_PUBLIC_API_URL` is set automatically to `https://<DOMAIN>/api/v1` during the web image build.
+
+Update Google OAuth authorized redirect URI to:
+`https://qickbite.com/api/v1/auth/google/callback`
+
+### Step 4 — SSL
+
+Stop containers briefly if port 80 is in use, then on EC2:
 
 ```bash
-# On EC2
-sudo certbot certonly --standalone -d api.yourdomain.com
+sudo certbot certonly --standalone \
+  -d qickbite.com \
+  -d www.qickbite.com \
+  -d api.qickbite.com
 ```
 
-### Step 4 — Deploy
+Certs are expected at:
+
+- `/etc/letsencrypt/live/qickbite.com/` (apex + www)
+- `/etc/letsencrypt/live/api.qickbite.com/` (API subdomain)
+
+### Step 5 — Deploy
 
 ```bash
 git push origin main
 ```
 
 GitHub Actions runs automatically:
-1. TypeScript type check
-2. Docker build + push to `ghcr.io`
-3. SSH to EC2 → pull image → restart container → health check
+1. TypeScript type check (API)
+2. Docker build + push `quickbite-api` and `quickbite-web` to `ghcr.io`
+3. SCP compose / nginx / `.env.docker` to EC2
+4. Pull both images → restart stack → health check via `http://localhost:8080/health`
 
 ---
+
 
 ## User Roles
 
