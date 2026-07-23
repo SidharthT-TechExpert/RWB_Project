@@ -1,5 +1,6 @@
-# Production — uses pre-built image from GitHub Container Registry
+# Production — uses pre-built images from GitHub Container Registry
 # MongoDB Atlas + Upstash Redis (external managed services)
+# Web (Next.js) + API (Express) behind nginx on one EC2
 
 services:
   # ─── Nginx reverse proxy ──────────────────────────────────────
@@ -17,6 +18,19 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - api
+      - web
+    networks:
+      - quickbite-network
+
+  # ─── Web (Next.js) ────────────────────────────────────────────
+  web:
+    image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-web:${IMAGE_TAG:-latest}
+    container_name: quickbite-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      HOSTNAME: 0.0.0.0
     networks:
       - quickbite-network
 

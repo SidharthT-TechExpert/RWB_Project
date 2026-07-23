@@ -6,7 +6,7 @@ import {
   Search, MapPin, Star, AlertCircle, CheckCircle2, 
   ChevronRight, Apple, Play, ArrowRight, Utensils, Navigation, 
   Map as MapIcon, XCircle, Ban, Hourglass, ShieldCheck, ArrowUp,
-  Armchair, Layers, Locate
+  Armchair, Layers, Locate, Zap, X
 } from 'lucide-react';
 
 // Highly-tuned Animation Variants
@@ -266,20 +266,20 @@ export default function LandingPage() {
             {/* Traditional Card */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
-              className="bg-zinc-900/40 backdrop-blur-lg dark:bg-background/40 border border-zinc-800/80 dark:border-border/60 rounded-[2.5rem] p-7 sm:p-10 flex flex-col gap-10 hover:border-zinc-700 transition-all duration-300"
+              className="bg-zinc-900/50 backdrop-blur-lg dark:bg-background/50 border border-zinc-800/80 dark:border-border/60 rounded-[2.5rem] p-7 sm:p-10 flex flex-col gap-10 hover:border-zinc-700 transition-all duration-300"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/5">
-                  <Ban className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20">
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-white dark:text-foreground tracking-tight">Traditional Way</h3>
               </div>
               <ul className="space-y-4 sm:space-y-5">
                 {[
-                  "Wait 30+ minutes for a table during peak hours",
-                  "Uncertainty around seating availability",
-                  "Wait again for the menu and to place an order",
-                  "Wasted time that you could have enjoyed"
+                  "Wait 45+ minutes for a table during peak hours",
+                  "Struggle to get the waiter's attention to order",
+                  "Food takes 20+ mins after ordering to arrive",
+                  "Rush through your meal due to the crowd"
                 ].map((text, i) => (
                   <li key={i} className="flex items-start gap-3 sm:gap-4">
                     <XCircle className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-red-500/70 shrink-0 mt-0.5" />
@@ -292,25 +292,25 @@ export default function LandingPage() {
             {/* QuickBite Card */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}
-              className="relative bg-gradient-to-br from-brand-500 to-orange-500 rounded-[2.5rem] p-7 sm:p-10 flex flex-col gap-10 shadow-[0_20px_50px_-12px_rgba(255,107,53,0.35)] dark:shadow-none overflow-hidden group hover:scale-[1.01] transition-all duration-300 border border-white/10"
+              className="relative bg-gradient-to-br from-[#FF6B35] to-[#FF4D0F] rounded-[2.5rem] p-7 sm:p-10 flex flex-col gap-10 shadow-[0_25px_60px_-15px_rgba(255,107,53,0.4)] dark:shadow-none overflow-hidden group hover:scale-[1.01] transition-all duration-300 border border-white/15"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/15 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-800 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
               
-              <div className="absolute top-6 right-6 sm:top-8 sm:right-8 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/15">
-                Pro Vibe
+              <div className="absolute top-6 right-6 sm:top-8 sm:right-8 bg-white/20 backdrop-blur px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
+                THE FUTURE
               </div>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center shrink-0">
-                  <Star className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-white" />
+                  <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-white" />
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">QuickBite Experience</h3>
               </div>
               <ul className="space-y-4 sm:space-y-5 relative z-10">
                 {[
                   "Walk directly to your reserved table. No wait.",
-                  "Pre-order your meal before you even arrive.",
-                  "Food is served hot exactly when you sit down.",
-                  "Gain back your time and enjoy the moment."
+                  "Order pre-prep in app before you even arrive.",
+                  "Food served within 2 minutes of sitting down.",
+                  "One-tap mobile payment and VIP rewards."
                 ].map((text, i) => (
                   <li key={i} className="flex items-start gap-3 sm:gap-4">
                     <CheckCircle2 className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-white shrink-0 mt-0.5 drop-shadow-md" />
