@@ -335,11 +335,12 @@ function OtpNewStep() {
   const fullPhone = `${countryCode}${phone}`;
 
   const handleSubmit = async () => {
-    if (!name.trim()) { toast.error('Please enter your name'); return; }
     if (otp.length < 6) { toast.error('Enter the 6-digit OTP'); return; }
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/verify-otp', { identifier: fullPhone, otp, name: name.trim() });
+      const payload: { identifier: string; otp: string; name?: string } = { identifier: fullPhone, otp };
+      if (name.trim()) payload.name = name.trim();
+      const { data } = await api.post('/auth/verify-otp', payload);
       const { user, tokens } = data.data;
       setAuthTokens(tokens.accessToken, tokens.refreshToken);
       setUser(user);
@@ -368,21 +369,23 @@ function OtpNewStep() {
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">
           Let&apos;s Get<br />Started
         </h2>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Complete your profile in a few seconds.</p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Complete your verification in a few seconds.</p>
       </div>
 
-      {/* Name */}
+      {/* Name (Optional) */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-widest text-gray-400">Full Name</label>
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400">Full Name</label>
+          <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full uppercase tracking-wider">Optional</span>
+        </div>
         <div className="flex items-center gap-3 px-4 py-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 focus-within:border-[#FF6B35] focus-within:shadow-[0_0_0_4px_rgba(255,107,53,0.1)] transition-all bg-white dark:bg-gray-900/80">
           <User className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             type="text"
-            placeholder="John Mathew"
+            placeholder="John Mathew (Optional)"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="flex-1 text-base font-semibold bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600"
-            autoFocus
           />
         </div>
       </div>
@@ -405,7 +408,7 @@ function OtpNewStep() {
         </div>
       </div>
 
-      <PrimaryBtn onClick={handleSubmit} loading={loading} disabled={otp.length < 6 || !name.trim()}>
+      <PrimaryBtn onClick={handleSubmit} loading={loading} disabled={otp.length < 6}>
         <CheckCircle2 className="w-4 h-4" /> Create Account
       </PrimaryBtn>
 
