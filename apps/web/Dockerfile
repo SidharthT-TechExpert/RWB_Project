@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY apps/web/package.json apps/web/package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN npm ci --ignore-scripts
 
 # ─── Stage 2: Build Next.js (standalone) ─────────────────────
@@ -12,7 +12,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY apps/web/ .
+COPY . .
 
 ARG NEXT_PUBLIC_API_URL=https://qickbite.com/api/v1
 ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY=
