@@ -2,8 +2,10 @@ import mongoose from 'mongoose';
 import { logger } from './logger';
 
 export const connectDatabase = async (): Promise<void> => {
-  const uri = (process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quickbite')
-    .replace('mongodb://localhost:', 'mongodb://127.0.0.1:');
+  let rawUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quickbite';
+  // Strip quotes and trailing/leading whitespace
+  rawUri = rawUri.trim().replace(/^["']|["']$/g, '');
+  const uri = rawUri.replace('mongodb://localhost:', 'mongodb://127.0.0.1:');
 
   try {
     await mongoose.connect(uri, {

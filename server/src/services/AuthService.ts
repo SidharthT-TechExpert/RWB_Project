@@ -3,6 +3,7 @@ import { User, IUser } from '../models/User';
 import { OTP } from '../models/OTP';
 import { UserProfile } from '../models/UserProfile';
 import { emailService } from './EmailService';
+import { smsService } from './SmsService';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { hashPassword, comparePassword, generateToken, generateOTP, addHours } from '../utils';
 import { setCache, getCache } from '../config/redis';
@@ -129,7 +130,7 @@ export class AuthService {
     emailService.sendWelcomeEmail(user.email, user.name).catch(() => {});
   }
 
-  async sendOTP(identifier: string): Promise<void> {
+  async sendOTP(identifier: string) {
     const otp = generateOTP();
     await OTP.updateMany({ identifier, isUsed: false }, { isUsed: true });
     await OTP.create({
@@ -137,14 +138,25 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    if (identifier.includes('@')) {
-      const user = await User.findOne({ email: identifier.toLowerCase() });
-      await emailService.sendOTPEmail(identifier, user?.name || 'there', otp);
+    const isEmail = identifier.includes('@');
+    let existingUser = null;
+
+    if (isEmail) {
+      existingUser = await User.findOne({ email: identifier.toLowerCase() });
+      await emailService.sendOTPEmail(identifier, existingUser?.name || 'there', otp);
+    } else {
+      existingUser = await User.findOne({ phone: identifier });
+      await smsService.sendOTP(identifier, otp);
     }
-    logger.info(`OTP sent to ${identifier}`);
+
+    logger.info(`OTP generated for ${identifier}`);
+    return {
+      isNewUser: !existingUser,
+      user: existingUser ? { name: existingUser.name, avatar: existingUser.avatar } : null,
+    };
   }
 
-  async verifyOTP(identifier: string, otp: string) {
+  async verifyOTP(identifier: string, otp: string, name?: string) {
     const otpRecord = await OTP.findOne({
       identifier, otp, purpose: 'login', isUsed: false,
       expiresAt: { $gt: new Date() },
@@ -154,15 +166,28 @@ export class AuthService {
 
     await OTP.findByIdAndUpdate(otpRecord._id, { isUsed: true });
 
-    let user = await User.findOne({ email: identifier.toLowerCase() });
+    const isEmail = identifier.includes('@');
+    let user = isEmail
+      ? await User.findOne({ email: identifier.toLowerCase() })
+      : await User.findOne({ phone: identifier });
+
     if (!user) {
+      const cleanPhone = identifier.replace(/\D/g, '');
+      const userEmail = isEmail ? identifier.toLowerCase() : `${cleanPhone}@user.quickbite.com`;
+      const userName = name?.trim() || (isEmail ? identifier.split('@')[0] : 'Customer');
+
       user = await User.create({
-        email: identifier.toLowerCase(),
-        name: identifier.split('@')[0],
-        isEmailVerified: true,
+        email: userEmail,
+        phone: isEmail ? undefined : identifier,
+        name: userName,
+        isEmailVerified: isEmail,
+        isPhoneVerified: !isEmail,
         role: ROLES.CUSTOMER,
       });
-      await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email });
+      await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email, phone: user.phone });
+    } else if (name?.trim() && user.name !== name.trim()) {
+      user.name = name.trim();
+      await user.save();
     }
 
     const tokens = this.generateTokens(user);

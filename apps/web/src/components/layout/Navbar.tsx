@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthModalStore } from '@/store/authModalStore';
 import { cn, getInitials } from '@/lib/utils';
 
 const navLinks = [
@@ -23,6 +24,7 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, isAuthenticated } = useAuthStore();
   const { logout } = useAuth();
+  const { openModal } = useAuthModalStore();
   const itemCount = useCartStore((s) => s.getItemCount());
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -182,12 +184,13 @@ export function Navbar() {
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">
-              <Link href="/auth/login">
-                <Button variant="ghost" size="sm" className="font-semibold text-foreground hover:text-brand-500">Log in</Button>
-              </Link>
-              <Link href="/auth/register">
-                <Button size="sm" className="bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl px-5">Sign up</Button>
-              </Link>
+              <Button
+                size="sm"
+                className="relative overflow-hidden bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#e85a25] hover:to-[#ff7a40] text-white font-bold rounded-2xl px-7 py-2.5 shadow-[0_4px_20px_rgba(255,107,53,0.4)] hover:shadow-[0_6px_28px_rgba(255,107,53,0.55)] transition-all duration-200 active:scale-[0.97] text-[13px] tracking-wide"
+                onClick={openModal}
+              >
+                <span className="relative z-10">Get Started →</span>
+              </Button>
             </div>
           )}
 
@@ -230,13 +233,13 @@ export function Navbar() {
                 </Link>
               ))}
               {!isAuthenticated && (
-                <div className="pt-2 flex flex-col gap-2">
-                  <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">Sign In</Button>
-                  </Link>
-                  <Link href="/auth/register" onClick={() => setMenuOpen(false)}>
-                    <Button className="w-full">Get Started</Button>
-                  </Link>
+                <div className="pt-3">
+                  <Button
+                    className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#e85a25] hover:to-[#ff7a40] text-white font-bold rounded-2xl py-3 shadow-[0_4px_16px_rgba(255,107,53,0.35)] text-[14px] tracking-wide"
+                    onClick={() => { openModal(); setMenuOpen(false); }}
+                  >
+                    Get Started →
+                  </Button>
                 </div>
               )}
               {isAuthenticated && (

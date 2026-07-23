@@ -22,7 +22,7 @@ const forgotPasswordSchema = z.object({ email: emailSchema });
 const resetPasswordSchema = z.object({ token: z.string().min(1), password: passwordSchema, confirmPassword: z.string() }).refine((d) => d.password === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] });
 const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema, confirmPassword: z.string() }).refine((d) => d.newPassword === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] });
 const sendOTPSchema = z.object({ identifier: z.string().min(1) });
-const verifyOTPSchema = z.object({ identifier: z.string().min(1), otp: z.string().length(6) });
+const verifyOTPSchema = z.object({ identifier: z.string().min(1), otp: z.string().length(6), name: z.string().optional() });
 const refreshTokenSchema = z.object({ refreshToken: z.string().min(1) });
 
 router.post('/register', validate(registerSchema), authController.register.bind(authController));
