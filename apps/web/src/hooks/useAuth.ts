@@ -33,6 +33,7 @@ export function useAuth() {
     enabled: isAuthenticated,
     retry: false,
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
   });
 
   const registerMutation = useMutation({

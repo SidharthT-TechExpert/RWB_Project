@@ -52,11 +52,12 @@ api.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         processQueue(error);
-        // Clear auth and redirect
+        // Clear stale tokens — middleware will redirect if route is protected
         if (typeof window !== 'undefined') {
           Cookies.remove('accessToken');
           Cookies.remove('refreshToken');
-          window.location.href = '/auth/login';
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
         }
         return Promise.reject(error);
       }
@@ -75,10 +76,12 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
+        // Clear stale tokens — middleware will redirect if route is protected
         if (typeof window !== 'undefined') {
           Cookies.remove('accessToken');
           Cookies.remove('refreshToken');
-          window.location.href = '/auth/login';
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
         }
         return Promise.reject(refreshError);
       } finally {
