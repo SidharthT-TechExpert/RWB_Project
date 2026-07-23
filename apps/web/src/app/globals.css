@@ -50,9 +50,37 @@
 }
 
 @layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; }
-  html { scroll-behavior: smooth; }
+  * { @apply border-border box-border; }
+
+  html {
+    scroll-behavior: smooth;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* Better tap highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent font size inflation on rotation */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    /* Safe area insets for notched / island iPhones */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Remove button tap delay on mobile */
+  button, a {
+    touch-action: manipulation;
+  }
+
+  /* Better image defaults */
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 @layer utilities {
@@ -65,4 +93,26 @@
   .brand-gradient {
     @apply bg-gradient-to-r from-brand-400 to-brand-600;
   }
+
+  /* Fluid type utilities — scale smoothly from mobile to TV */
+  .text-fluid-xs  { font-size: clamp(0.65rem,  1.5vw, 0.875rem); }
+  .text-fluid-sm  { font-size: clamp(0.75rem,  1.8vw, 1rem);     }
+  .text-fluid-base{ font-size: clamp(0.875rem, 2vw,   1.125rem);  }
+  .text-fluid-lg  { font-size: clamp(1rem,     2.5vw, 1.5rem);   }
+  .text-fluid-xl  { font-size: clamp(1.25rem,  3vw,   2rem);     }
+  .text-fluid-2xl { font-size: clamp(1.5rem,   4vw,   3rem);     }
+  .text-fluid-3xl { font-size: clamp(2rem,     5vw,   4.5rem);   }
+  .text-fluid-hero{ font-size: clamp(2rem,     6vw,   6rem);     }
+
+  /* Safe-area padding helpers for notched phones */
+  .pb-safe  { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe  { padding-top:    env(safe-area-inset-top);    }
+  .px-safe  { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+  /* Hide scrollbar but allow scrolling */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* TV-safe max content width clamp */
+  .tv-container { max-width: min(120rem, 95vw); margin-inline: auto; }
 }
