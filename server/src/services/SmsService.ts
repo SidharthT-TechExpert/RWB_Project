@@ -15,11 +15,11 @@ export class SmsService {
    * API Doc: https://2factor.in/v3/documentation
    */
   async sendOTP(phone: string, otp: string): Promise<boolean> {
-    // Sanitize phone number (remove + and spaces)
+    // Sanitize phone number (remove + and non-digits)
     const cleanPhone = phone.replace(/\D/g, '');
 
-    if (!this.apiKey) {
-      logger.info(`[2FACTOR SMS MOCK] API Key missing. OTP for ${cleanPhone} is: ${otp}`);
+    if (!this.apiKey || this.apiKey === 'mock_api_key' || this.apiKey === 'YOUR_2FACTOR_API_KEY') {
+      logger.info(`[2FACTOR SMS MOCK] API Key missing or mock. OTP for ${cleanPhone} is: ${otp}`);
       return true;
     }
 
@@ -32,14 +32,14 @@ export class SmsService {
       const response = await axios.get(url, { timeout: 10000 });
 
       if (response.data?.Status === 'Success') {
-        logger.info(`[2FACTOR SMS] OTP sent successfully to ${cleanPhone}`);
+        logger.info(`[2FACTOR SMS SUCCESS] OTP sent to ${cleanPhone}`);
         return true;
       } else {
-        logger.error(`[2FACTOR SMS ERROR] Failed to send OTP to ${cleanPhone}:`, response.data);
+        logger.warn(`[2FACTOR SMS WARNING] Gateway response for ${cleanPhone}:`, response.data);
         return false;
       }
     } catch (error: unknown) {
-      const errMessage = (error as { message?: string })?.message || String(error);
+      const errMessage = (error as { message?: string; response?: { data?: unknown } })?.response?.data || (error as { message?: string })?.message || String(error);
       logger.error(`[2FACTOR SMS EXCEPTION] Error calling 2Factor API for ${cleanPhone}:`, errMessage);
       return false;
     }
