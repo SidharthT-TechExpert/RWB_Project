@@ -4,7 +4,7 @@ RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 COPY server/package.json server/package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts --omit=optional
 
 # ─── Stage 2: Build TypeScript ────────────────────────────────
 FROM node:20-alpine AS builder
