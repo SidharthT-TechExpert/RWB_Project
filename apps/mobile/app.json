@@ -4,6 +4,7 @@
     "slug": "quickbite",
     "version": "1.0.0",
     "orientation": "portrait",
+    "newArchEnabled": false,
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -54,7 +55,7 @@
     "scheme": "quickbite",
     "extra": {
       "router": { "origin": false },
-      "eas": { "projectId": "your-eas-project-id" }
+      "eas": { "projectId": "2503f131-e4e6-4207-bd4c-91574e3dd2fc" }
     }
   }
 }
