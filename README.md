@@ -158,7 +158,10 @@ All secrets are managed in Infisical — no `.env` file needed.
 **Install the CLI first** (see [Secret Management — Infisical CLI](#secret-management--infisical-cli)):
 
 ```bash
-# Mac
+# Via npm (Universal - Windows / Mac / Linux)
+npm install -g @infisical/cli
+
+# Mac (Homebrew)
 brew install infisical/get-cli/infisical
 
 # Linux
@@ -426,7 +429,12 @@ infisical run --env=dev -- npm run dev
 
 ### 1. Install Infisical CLI
 
-**Mac:**
+**Via npm (Universal - Windows / Mac / Linux):**
+```bash
+npm install -g @infisical/cli
+```
+
+**Mac (Homebrew):**
 ```bash
 brew install infisical/get-cli/infisical
 ```
@@ -437,7 +445,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh
 sudo apt-get install -y infisical
 ```
 
-**Windows (requires [Scoop](https://scoop.sh)):**
+**Windows (via Scoop):**
 ```powershell
 scoop install infisical
 ```
@@ -525,16 +533,19 @@ Or update `package.json` once so the team uses the same command every time:
 
 ```json
 "scripts": {
-  "dev:api":   "infisical run --env=dev -- npm run dev --prefix server",
-  "start:api": "infisical run --env=prod -- npm run start --prefix server",
-  "dev:web":   "npm run dev --prefix apps/web"
+  "dev:api":            "npm run dev --prefix server",
+  "dev:api:infisical":  "infisical run --env=dev -- npm run dev --prefix server",
+  "dev:web":            "npm run dev --prefix apps/web",
+  "start:api":          "npm run start --prefix server",
+  "start:api:infisical":"infisical run --env=prod -- npm run start --prefix server"
 }
 ```
 
 Then just:
 ```bash
-npm run dev:api    # Terminal 1 — API with secrets injected
-npm run dev:web    # Terminal 2 — Web app
+npm run dev:api            # Terminal 1 — API (local .env / Infisical SDK)
+npm run dev:api:infisical  # Terminal 1 — API via Infisical CLI
+npm run dev:web            # Terminal 2 — Web app (port 3001)
 ```
 
 ---
@@ -570,11 +581,13 @@ All commands run from the **project root**.
 
 | Command | Description |
 |---|---|
-| `npm run dev:api` | Start API with Infisical secrets injected (hot reload) |
+| `npm run dev:api` | Start API with local `.env` or Node Infisical SDK (hot reload) |
+| `npm run dev:api:infisical` | Start API with Infisical CLI secret injection |
 | `npm run dev:web` | Start Next.js web app on port 3001 |
 | `npm run build:api` | Compile TypeScript → `server/dist/` |
 | `npm run build:web` | Production build of web app |
-| `npm run start:api` | Run compiled API with production secrets |
+| `npm run start:api` | Run compiled API |
+| `npm run start:api:infisical` | Run compiled API via Infisical CLI |
 | `npm run infra:up` | Start MongoDB + Redis via Docker |
 | `npm run infra:down` | Stop Docker infrastructure |
 | `npm run docker:up` | Start full stack (API + MongoDB + Redis) |
