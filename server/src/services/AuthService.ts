@@ -72,7 +72,7 @@ export class AuthService {
 
     if (!user.password) throw new AuthenticationError('Please use Google sign-in');
 
-    const isPasswordValid = await comparePassword(data.password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       if (user.loginAttempts >= 4) {
         await User.findByIdAndUpdate(user._id, {
