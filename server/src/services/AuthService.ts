@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { User, IUser } from '../models/User';
 import { OTP } from '../models/OTP';
+import { DailyOTPCount } from '../models/DailyOTPCount';
 import { UserProfile } from '../models/UserProfile';
 import { emailService } from './EmailService';
 import { smsService } from './SmsService';
@@ -131,6 +132,14 @@ export class AuthService {
   }
 
   async sendOTP(identifier: string) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const maxDailyLimit = parseInt(process.env.MAX_DAILY_OTP || '40', 10);
+
+    const dailyLog = await DailyOTPCount.findOne({ date: todayStr });
+    if (dailyLog && dailyLog.count >= maxDailyLimit) {
+      throw new AppError(`Daily limit of ${maxDailyLimit} OTPs reached for today. Please try again tomorrow.`, 429);
+    }
+
     const otp = generateOTP();
     await OTP.updateMany({ identifier, isUsed: false }, { isUsed: true });
     await OTP.create({
@@ -151,6 +160,12 @@ export class AuthService {
         logger.warn(`[SMS GATEWAY NOTICE] Could not send SMS via 2Factor to ${identifier}. Test OTP 123456 or DB OTP enabled.`);
       }
     }
+
+    await DailyOTPCount.findOneAndUpdate(
+      { date: todayStr },
+      { $inc: { count: 1 } },
+      { upsert: true }
+    );
 
     logger.info(`OTP generated for ${identifier}: ${otp}`);
     return {
