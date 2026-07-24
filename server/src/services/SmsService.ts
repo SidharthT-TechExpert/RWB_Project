@@ -15,18 +15,23 @@ export class SmsService {
    * API Doc: https://2factor.in/v3/documentation
    */
   async sendOTP(phone: string, otp: string): Promise<boolean> {
-    // Sanitize phone number (remove + and non-digits)
-    const cleanPhone = phone.replace(/\D/g, '');
+    // Read & sanitize API key / template name (strip quotes and whitespace)
+    const apiKey = (process.env.TWOFACTOR_API_KEY || this.apiKey).trim().replace(/^["']|["']$/g, '');
+    const templateName = (process.env.TWOFACTOR_OTP_TEMPLATE || this.templateName).trim().replace(/^["']|["']$/g, '');
 
-    if (!this.apiKey || this.apiKey === 'mock_api_key' || this.apiKey === 'YOUR_2FACTOR_API_KEY') {
+    // Extract 10-digit mobile number (remove country code +91 or non-digits)
+    const digits = phone.replace(/\D/g, '');
+    const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
+
+    if (!apiKey || apiKey === 'mock_api_key' || apiKey === 'YOUR_2FACTOR_API_KEY') {
       logger.info(`[2FACTOR SMS MOCK] API Key missing or mock. OTP for ${cleanPhone} is: ${otp}`);
       return true;
     }
 
     try {
-      let url = `https://2factor.in/API/V1/${this.apiKey}/SMS/${cleanPhone}/${otp}`;
-      if (this.templateName) {
-        url += `/${encodeURIComponent(this.templateName)}`;
+      let url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanPhone}/${otp}`;
+      if (templateName) {
+        url += `/${encodeURIComponent(templateName)}`;
       }
 
       const response = await axios.get(url, { timeout: 10000 });
