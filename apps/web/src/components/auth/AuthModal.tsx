@@ -277,6 +277,13 @@ function PhoneStep() {
             </motion.div>
           )}
         </div>
+        {rawPhone.length > 0 && !isValid && (
+          <p className="text-[11px] font-mono text-amber-500 font-semibold px-1 pt-1">
+            {selected.code === '+91'
+              ? `Enter valid 10-digit Indian mobile number (${rawPhone.length}/10 digits)`
+              : `Enter valid mobile number (${rawPhone.length} digits)`}
+          </p>
+        )}
       </div>
 
       {/* Trust Badge */}
