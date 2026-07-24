@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { setAdminAuthTokens } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import {
   Utensils,
@@ -47,6 +48,9 @@ export default function AdminLoginPage() {
       { email: cleanEmail, password: cleanPassword },
       {
         onSuccess: (res: any) => {
+          if (res?.tokens) {
+            setAdminAuthTokens(res.tokens.accessToken, res.tokens.refreshToken);
+          }
           toast.success('Welcome to QuickBite Admin Portal');
           router.push('/admin');
         },
