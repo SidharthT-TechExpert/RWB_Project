@@ -58,7 +58,9 @@ export class AuthService {
   }
 
   async login(data: { email: string; password: string }) {
-    const user = await User.findOne({ email: data.email.toLowerCase() }).select('+password +refreshTokens');
+    const email = (data.email || '').trim().toLowerCase();
+    const password = (data.password || '').trim();
+    const user = await User.findOne({ email }).select('+password +refreshTokens');
     if (!user) throw new AuthenticationError('Invalid email or password');
 
     if (user.isSuspended) throw new AppError('Your account has been suspended.', 403);
@@ -70,7 +72,7 @@ export class AuthService {
 
     if (!user.password) throw new AuthenticationError('Please use Google sign-in');
 
-    const isPasswordValid = await comparePassword(data.password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       if (user.loginAttempts >= 4) {
         await User.findByIdAndUpdate(user._id, {
@@ -81,7 +83,6 @@ export class AuthService {
       }
       await User.findByIdAndUpdate(user._id, {
         $inc: { loginAttempts: 1 },
-        $set: { lockUntil: new Date(Date.now() + 30 * 60 * 1000) },
       });
       throw new AuthenticationError('Invalid email or password');
     }

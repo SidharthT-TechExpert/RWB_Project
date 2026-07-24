@@ -3,25 +3,34 @@ import type { NextRequest } from 'next/server';
 
 const PROTECTED_ROUTES = ['/profile', '/bookings', '/orders', '/wallet', '/notifications', '/cart'];
 const DASHBOARD_ROUTES = ['/dashboard'];
-const ADMIN_ROUTES = ['/admin'];
-const AUTH_ROUTES = ['/auth/login', '/auth/register'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get('accessToken')?.value;
   const isAuthenticated = !!accessToken;
 
-  // Redirect authenticated users away from auth pages
-  if (isAuthenticated && AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
+  // Always allow /admin/login
+  if (pathname === '/admin/login') {
+    return NextResponse.next();
+  }
+
+  // Redirect authenticated users away from customer auth pages
+  if (isAuthenticated && ['/auth/login', '/auth/register'].some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Protect routes that require authentication
   if (!isAuthenticated) {
+    // If accessing any /admin route (except /admin/login), redirect to /admin/login
+    if (pathname.startsWith('/admin')) {
+      const adminLoginUrl = new URL('/admin/login', request.url);
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+
     const needsAuth = [
       ...PROTECTED_ROUTES,
       ...DASHBOARD_ROUTES,
-      ...ADMIN_ROUTES,
     ].some((route) => pathname.startsWith(route));
 
     if (needsAuth) {
