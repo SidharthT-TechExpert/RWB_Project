@@ -21,6 +21,7 @@
 
 import { InfisicalSDK } from '@infisical/sdk';
 import { logger } from './logger';
+import { isProduction } from './env';
 
 export const loadSecretsFromInfisical = async (): Promise<void> => {
   const clientId = process.env.INFISICAL_CLIENT_ID;
@@ -35,7 +36,7 @@ export const loadSecretsFromInfisical = async (): Promise<void> => {
 
   const siteUrl = process.env.INFISICAL_SITE_URL || 'https://app.infisical.com';
   const environment = process.env.INFISICAL_ENV ||
-    (process.env.NODE_ENV === 'production' ? 'prod' :
+    (isProduction() ? 'prod' :
      process.env.NODE_ENV === 'staging' ? 'staging' : 'dev');
 
   logger.info(`Loading secrets from Infisical [env: ${environment}]...`);
@@ -62,7 +63,7 @@ export const loadSecretsFromInfisical = async (): Promise<void> => {
 
     for (const secret of secrets) {
       // Only inject if not already set (local env takes precedence in dev)
-      if (process.env.NODE_ENV !== 'production' && process.env[secret.secretKey] !== undefined) {
+      if (!isProduction() && process.env[secret.secretKey] !== undefined) {
         continue; // local .env overrides Infisical in development
       }
       process.env[secret.secretKey] = secret.secretValue;
@@ -73,7 +74,7 @@ export const loadSecretsFromInfisical = async (): Promise<void> => {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    if (process.env.NODE_ENV === 'production') {
+    if (isProduction()) {
       // In production, fail hard — secrets are required
       logger.error(`Failed to load secrets from Infisical: ${message}`);
       process.exit(1);

@@ -15,3 +15,12 @@ import path from 'path';
 // when loadSecretsFromInfisical() is called from server.ts
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });       // server/.env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });         // root .env (fallback)
+
+/**
+ * Helper to check if current environment is production ('production' or 'prod')
+ */
+export const isProduction = (): boolean => {
+  const env = (process.env.NODE_ENV || '').toLowerCase();
+  return env === 'production' || env === 'prod';
+};
+

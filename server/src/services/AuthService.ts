@@ -11,6 +11,7 @@ import { setCache, getCache } from '../config/redis';
 import { AuthenticationError, ConflictError, NotFoundError, ValidationError, AppError } from '../errors';
 import { ROLES } from '../constants';
 import { logger } from '../config/logger';
+import { isProduction } from '../config/env';
 
 export class AuthService {
   private generateTokens(user: IUser) {
@@ -181,7 +182,7 @@ export class AuthService {
     });
 
     // Fallback for demo/test OTP "123456" in dev mode, demo mode, or gateway issues
-    if (!otpRecord && (otp === '123456' || process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEMO_OTP === 'true')) {
+    if (!otpRecord && (otp === '123456' || !isProduction() || process.env.ENABLE_DEMO_OTP === 'true')) {
       otpRecord = await OTP.findOne({
         identifier, purpose: 'login', isUsed: false,
         expiresAt: { $gt: new Date() },

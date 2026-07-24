@@ -1,10 +1,11 @@
 import winston from 'winston';
+import { isProduction } from './env';
 
 export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  level: process.env.LOG_LEVEL || (isProduction() ? 'info' : 'debug'),
   format: winston.format.combine(
     winston.format.timestamp(),
-    process.env.NODE_ENV === 'production'
+    isProduction()
       ? winston.format.json()
       : winston.format.combine(
           winston.format.colorize(),
@@ -16,7 +17,7 @@ export const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    ...(process.env.NODE_ENV === 'production'
+    ...(isProduction()
       ? [
           new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
           new winston.transports.File({ filename: 'logs/combined.log' }),
