@@ -82,29 +82,29 @@ export function AdminSidebar() {
   const { logout } = useAuth();
 
   return (
-    <aside className="w-64 h-screen bg-[#070D1E] border-r border-slate-800/80 text-slate-300 flex flex-col shrink-0 sticky top-0 font-sans select-none z-30">
+    <aside className="w-64 h-screen bg-white dark:bg-[#070D1E] border-r border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 flex flex-col shrink-0 sticky top-0 font-sans select-none z-30 transition-colors duration-200">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800/60 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
             <Utensils className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-white text-base tracking-tight">QuickBite</span>
+              <span className="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">QuickBite</span>
             </div>
-            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 px-1.5 py-0.2 rounded uppercase">
               ADMIN HQ
             </span>
           </div>
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 custom-scrollbar">
+      {/* Navigation Links (Custom sleek scrollbar) */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
         {navSections.map((section) => (
           <div key={section.title} className="space-y-1.5">
-            <h3 className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+            <h3 className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
               {section.title}
             </h3>
             <div className="space-y-0.5">
@@ -117,15 +117,15 @@ export function AdminSidebar() {
                     className={cn(
                       'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 group',
                       isActive
-                        ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-md shadow-blue-500/10 font-bold'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                        ? 'bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 shadow-sm font-bold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Icon
                         className={cn(
                           'w-4 h-4 shrink-0 transition-colors',
-                          isActive ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'
+                          isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'
                         )}
                       />
                       <span className="truncate">{label}</span>
@@ -149,14 +149,14 @@ export function AdminSidebar() {
       </div>
 
       {/* Footer Storage & Meta */}
-      <div className="p-4 border-t border-slate-800/60 bg-[#050914]/80 space-y-3">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-[#050914]/80 space-y-3">
         {/* Storage Bar */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-[11px] font-bold font-mono">
-            <span className="text-slate-400 uppercase tracking-wider">STORAGE</span>
-            <span className="text-blue-400">82%</span>
+            <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">STORAGE</span>
+            <span className="text-blue-600 dark:text-blue-400">82%</span>
           </div>
-          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 rounded-full w-[82%] shadow-sm shadow-blue-500" />
           </div>
         </div>
@@ -164,16 +164,16 @@ export function AdminSidebar() {
         {/* Footer Meta & Sign Out */}
         <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
           <span>Version v1.0.4</span>
-          <div className="flex items-center gap-2 text-slate-400">
-            <span className="hover:text-white cursor-pointer">Docs</span>
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+            <span className="hover:text-slate-900 dark:hover:text-white cursor-pointer">Docs</span>
             <span>•</span>
-            <span className="hover:text-white cursor-pointer">API</span>
+            <span className="hover:text-slate-900 dark:hover:text-white cursor-pointer">API</span>
           </div>
         </div>
 
         <button
           onClick={() => logout()}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold transition-colors mt-1"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-xl text-xs font-bold transition-colors mt-1"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>
