@@ -150,6 +150,13 @@ export class AuthService {
     });
 
     const isEmail = identifier.includes('@');
+    if (!isEmail) {
+      const digits = identifier.replace(/\D/g, '');
+      if (digits.length < 10) {
+        throw new ValidationError('Please enter a valid 10-digit mobile number');
+      }
+    }
+
     let existingUser = null;
 
     if (isEmail) {

@@ -149,14 +149,16 @@ function PhoneStep() {
   const selected = COUNTRIES.find((c) => c.code === countryCode) || COUNTRIES[0];
 
   const rawPhone = phone.replace(/\D/g, '');
-  const isValid = rawPhone.length >= 7;
+  const isValid = selected.code === '+91'
+    ? (/^[6-9]\d{9}$/.test(rawPhone))
+    : (rawPhone.length >= 8 && rawPhone.length <= 12);
 
   const filteredCountries = COUNTRIES.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.includes(search)
   );
 
   const handleContinue = async () => {
-    if (!isValid) { toast.error('Enter a valid mobile number'); return; }
+    if (!isValid) { toast.error('Enter a valid 10-digit mobile number'); return; }
     setLoading(true);
     try {
       const fullPhone = `${countryCode}${rawPhone}`;
@@ -264,7 +266,7 @@ function PhoneStep() {
             onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
             onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
             className="flex-1 px-3.5 py-3.5 text-sm sm:text-base font-bold bg-transparent outline-none text-foreground placeholder:text-muted-foreground/40 font-mono tracking-wide"
-            maxLength={15}
+            maxLength={selected.code === '+91' ? 10 : 15}
             autoFocus
           />
 
