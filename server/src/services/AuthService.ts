@@ -58,7 +58,9 @@ export class AuthService {
   }
 
   async login(data: { email: string; password: string }) {
-    const user = await User.findOne({ email: data.email.toLowerCase() }).select('+password +refreshTokens');
+    const email = (data.email || '').trim().toLowerCase();
+    const password = (data.password || '').trim();
+    const user = await User.findOne({ email }).select('+password +refreshTokens');
     if (!user) throw new AuthenticationError('Invalid email or password');
 
     if (user.isSuspended) throw new AppError('Your account has been suspended.', 403);

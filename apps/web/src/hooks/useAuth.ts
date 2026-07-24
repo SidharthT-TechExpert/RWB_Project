@@ -63,7 +63,11 @@ export function useAuth() {
       setUser(user);
       queryClient.setQueryData(['auth', 'me'], user);
       toast.success(`Welcome back, ${user.name}!`);
-      router.push('/');
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });

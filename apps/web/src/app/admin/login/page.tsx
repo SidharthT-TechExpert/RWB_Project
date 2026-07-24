@@ -35,13 +35,16 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email || !password) {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
       toast.error('Please enter admin credentials');
       return;
     }
 
     login(
-      { email, password },
+      { email: cleanEmail, password: cleanPassword },
       {
         onSuccess: (res: any) => {
           toast.success('Welcome to QuickBite Admin Portal');
@@ -206,6 +209,8 @@ export default function AdminLoginPage() {
                     </div>
                     <input
                       type="email"
+                      name="email"
+                      autoComplete="username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter admin email"
@@ -234,6 +239,8 @@ export default function AdminLoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
