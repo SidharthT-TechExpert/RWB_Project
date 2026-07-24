@@ -10,17 +10,25 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor — attach access token
+// Request interceptor — attach access token (except for public auth routes)
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = Cookies.get('accessToken') || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    const isAuthEndpoint = config.url?.includes('/auth/login') ||
+                           config.url?.includes('/auth/register') ||
+                           config.url?.includes('/auth/send-otp') ||
+                           config.url?.includes('/auth/verify-otp') ||
+                           config.url?.includes('/auth/refresh');
+
+    if (!isAuthEndpoint) {
+      const token = Cookies.get('accessToken') || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — auto-refresh on 401
+// Response interceptor — auto-refresh on 401 for protected APIs
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
 
@@ -33,8 +41,11 @@ api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
+                           originalRequest?.url?.includes('/auth/refresh') ||
+                           originalRequest?.url?.includes('/auth/register');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
