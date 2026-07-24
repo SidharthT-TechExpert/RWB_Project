@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { logger } from './logger';
+import { isProduction } from './env';
 
 export const connectDatabase = async (): Promise<void> => {
   let rawUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quickbite';
@@ -7,14 +8,17 @@ export const connectDatabase = async (): Promise<void> => {
   rawUri = rawUri.trim().replace(/^["']|["']$/g, '');
   const uri = rawUri.replace('mongodb://localhost:', 'mongodb://127.0.0.1:');
 
+  const dbName = process.env.MONGODB_DB_NAME || (isProduction() ? 'qickbite_prod' : 'quickbite');
+
   try {
     await mongoose.connect(uri, {
+      dbName,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4,
     });
-    logger.info(`MongoDB connected: ${uri}`);
+    logger.info(`MongoDB connected: ${uri} [dbName: ${dbName}]`);
   } catch (error) {
     logger.error('MongoDB connection failed:', error);
     process.exit(1);
