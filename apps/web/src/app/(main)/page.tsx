@@ -159,7 +159,7 @@ export default function LandingPage() {
 
         {/* ── Left: copy + search box ── */}
         <motion.div
-          className="flex-1 flex flex-col items-start gap-3 xs:gap-3.5 sm:gap-4 lg:gap-5 z-10 w-full md:max-w-[48%] lg:max-w-xl xl:max-w-2xl 3xl:max-w-3xl shrink-0"
+          className="flex-1 flex flex-col items-start justify-center gap-6 xs:gap-7 sm:gap-8 lg:gap-10 z-10 w-full md:max-w-[52%] lg:max-w-xl xl:max-w-2xl 3xl:max-w-3xl shrink-0"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -167,10 +167,10 @@ export default function LandingPage() {
           {/* Badge */}
           <motion.div
             variants={fadeUp}
-            className="inline-flex items-center px-2.5 xs:px-3.5 py-0.5 xs:py-1 gap-1.5 xs:gap-2 bg-brand-500/10 dark:bg-brand-500/20 rounded-full border border-brand-500/15 shadow-[0_4px_12px_rgba(255,107,53,0.08)]"
+            className="inline-flex items-center px-3.5 xs:px-4 py-1 xs:py-1.5 gap-2 bg-brand-500/10 dark:bg-brand-500/20 rounded-full border border-brand-500/20 shadow-[0_4px_16px_rgba(255,107,53,0.12)]"
           >
-            <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 rounded-full bg-brand-500 shadow-[0_0_8px_#FF6B35] shrink-0 animate-pulse" />
-            <span className="text-brand-600 dark:text-brand-400 text-[9px] xs:text-[10px] sm:text-[11px] font-black tracking-wider uppercase">
+            <span className="w-2 h-2 rounded-full bg-brand-500 shadow-[0_0_10px_#FF6B35] shrink-0 animate-pulse" />
+            <span className="text-brand-600 dark:text-brand-400 text-[10px] xs:text-[11px] sm:text-xs font-black tracking-wider uppercase">
               NOW LIVE IN NEW YORK
             </span>
           </motion.div>
@@ -179,53 +179,30 @@ export default function LandingPage() {
           <motion.h1
             variants={fadeUp}
             className="
-              text-[1.8rem] xs:text-[2.2rem] sm:text-[2.8rem] md:text-[2.2rem]
-              lg:text-[3.2rem] xl:text-[4rem] 2xl:text-[4.8rem]
-              3xl:text-[6rem] 4xl:text-[7.5rem]
-              font-black text-foreground leading-[1.05] tracking-tight
+              text-[2.4rem] xs:text-[3rem] sm:text-[3.8rem] md:text-[3.2rem]
+              lg:text-[4.4rem] xl:text-[5.4rem] 2xl:text-[6.4rem]
+              3xl:text-[7.5rem] 4xl:text-[9rem]
+              font-black text-foreground leading-[1.02] tracking-tight
             "
           >
             Skip the Wait.<br />
             <span className="text-brand-500 drop-shadow-sm">Eat Faster.</span>
           </motion.h1>
 
-          {/* Subtext */}
-          <motion.p
-            variants={fadeUp}
-            className="text-xs xs:text-sm sm:text-base lg:text-base xl:text-lg text-muted-foreground/90 leading-relaxed font-medium"
-          >
-            The premium dining experience for people who value their time.
-            No queues. No waiting. Just great food.
-          </motion.p>
-
-          {/* Feature pills */}
-          <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-1.5 xs:gap-2">
-            {[
-              { icon: CheckCircle2, label: 'Instant Booking', color: 'text-green-500' },
-              { icon: Zap,          label: 'Pre-order Food',  color: 'text-brand-500' },
-              { icon: Star,         label: '4.9★ Rated',      color: 'text-yellow-500' },
-            ].map(({ icon: Icon, label, color }) => (
-              <span key={label} className="flex items-center gap-1 xs:gap-1.5 px-2 xs:px-2.5 py-0.5 xs:py-1 bg-muted/60 dark:bg-muted/30 rounded-full border border-border/60 text-[9px] xs:text-[10px] sm:text-xs font-bold text-foreground/80">
-                <Icon className={`w-3 h-3 ${color} shrink-0`} />
-                {label}
-              </span>
-            ))}
-          </motion.div>
-
           {/* ── Search Box ── */}
           <motion.div
             variants={fadeUp}
             className="
               w-full
-              bg-card/80 dark:bg-card/50 backdrop-blur-xl
-              rounded-[1.25rem] xs:rounded-[1.5rem] sm:rounded-[1.75rem]
-              p-1.5 xs:p-2 sm:p-2.5
-              shadow-[0_15px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
-              border border-border mt-0.5 relative z-20
+              bg-card/85 dark:bg-card/60 backdrop-blur-2xl
+              rounded-[1.5rem] xs:rounded-[1.75rem] sm:rounded-[2rem]
+              p-3 xs:p-4 sm:p-5
+              shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.4)]
+              border border-border/80 relative z-20 my-1 sm:my-3
             "
           >
             {/* Tabs */}
-            <div className="flex items-center gap-1 mb-2 px-0.5 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 mb-3 px-0.5 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -233,17 +210,17 @@ export default function LandingPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center justify-center px-2 xs:px-3 py-1 xs:py-1.5 text-[10px] xs:text-[11px] sm:text-xs font-extrabold transition-colors z-10 rounded-lg xs:rounded-xl shrink-0 ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
+                    className={`relative flex items-center justify-center px-3 xs:px-4 py-1.5 xs:py-2 text-xs sm:text-sm font-extrabold transition-colors z-10 rounded-xl xs:rounded-2xl shrink-0 ${isActive ? 'text-brand-500' : 'text-muted-foreground/80 hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-brand-500/10 rounded-lg xs:rounded-xl"
+                        className="absolute inset-0 bg-brand-500/10 rounded-xl xs:rounded-2xl"
                         initial={false}
                         transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                       />
                     )}
-                    <Icon className="w-3 h-3 mr-1 relative z-10 shrink-0" />
+                    <Icon className="w-3.5 h-3.5 mr-1.5 relative z-10 shrink-0" />
                     <span className="relative z-10 whitespace-nowrap">{tab.id}</span>
                   </button>
                 );
@@ -251,65 +228,40 @@ export default function LandingPage() {
             </div>
 
             {/* Input row */}
-            <div className="flex flex-col xs:flex-row items-stretch gap-1.5 xs:gap-2">
-              <div className="flex-1 flex items-center justify-between bg-muted/60 dark:bg-muted/40 rounded-xl px-2.5 xs:px-3 py-2 border border-transparent focus-within:border-brand-500/40 focus-within:ring-4 focus-within:ring-brand-500/8 transition-all">
+            <div className="flex flex-col xs:flex-row items-stretch gap-2.5 xs:gap-3">
+              <div className="flex-1 flex items-center justify-between bg-muted/70 dark:bg-muted/50 rounded-2xl px-3.5 xs:px-4 py-3 border border-transparent focus-within:border-brand-500/50 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all">
                 <div className="flex items-center flex-1 min-w-0">
-                  <Search className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-muted-foreground mr-1.5 shrink-0" />
+                  <Search className="w-4 h-4 xs:w-4.5 xs:h-4.5 text-muted-foreground mr-2 shrink-0" />
                   <input
                     type="text"
-                    placeholder="Search restaurants..."
-                    className="bg-transparent w-full outline-none text-xs xs:text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 min-w-0"
+                    placeholder="Search restaurants, cuisines..."
+                    className="bg-transparent w-full outline-none text-xs xs:text-sm sm:text-base font-semibold text-foreground placeholder:text-muted-foreground/60 min-w-0"
                   />
                 </div>
-                <button className="flex items-center gap-0.5 text-brand-500 hover:text-brand-600 font-extrabold text-[11px] px-1 py-0.5 transition-colors shrink-0">
-                  <Locate className="w-3 h-3 shrink-0" />
+                <button className="flex items-center gap-1 text-brand-500 hover:text-brand-600 font-extrabold text-xs px-2 py-1 transition-colors shrink-0">
+                  <Locate className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Near Me</span>
                 </button>
               </div>
-              <button className="flex items-center justify-center gap-1.5 px-4 xs:px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl transition-all hover:shadow-[0_6px_20px_rgba(255,107,53,0.35)] hover:scale-[1.02] active:scale-95 whitespace-nowrap text-xs xs:text-sm">
+              <button className="flex items-center justify-center gap-2 px-6 xs:px-7 py-3 bg-brand-500 hover:bg-brand-600 text-white font-black rounded-2xl transition-all hover:shadow-[0_8px_25px_rgba(255,107,53,0.4)] hover:scale-[1.02] active:scale-95 whitespace-nowrap text-xs xs:text-sm sm:text-base">
                 <span>Book Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
             {/* Popular tags */}
-            <div className="mt-1.5 xs:mt-2 px-1 flex items-center gap-1 overflow-x-auto no-scrollbar">
-              <ChevronRight className="w-3 h-3 text-brand-500 shrink-0" />
-              <span className="text-[9px] xs:text-[10px] font-bold text-muted-foreground/70 whitespace-nowrap">Popular:</span>
+            <div className="mt-2.5 xs:mt-3 px-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <ChevronRight className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+              <span className="text-[10px] xs:text-xs font-bold text-muted-foreground/70 whitespace-nowrap">Popular:</span>
               {['Sushi', 'Pizza', 'Burgers', 'Italian', 'Thai'].map((t) => (
-                <button key={t} className="text-[9px] xs:text-[10px] font-bold text-muted-foreground/70 hover:text-brand-500 transition-colors whitespace-nowrap px-1.5 py-0.5 rounded-full hover:bg-brand-500/8">
+                <button key={t} className="text-[10px] xs:text-xs font-bold text-muted-foreground/70 hover:text-brand-500 transition-colors whitespace-nowrap px-2 py-0.5 rounded-full hover:bg-brand-500/10">
                   {t}
                 </button>
               ))}
             </div>
           </motion.div>
 
-          {/* Social proof row */}
-          <motion.div variants={fadeUp} className="flex items-center gap-2.5 xs:gap-3">
-            <div className="flex -space-x-2">
-              {[
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-              ].map((src, i) => (
-                <div key={i} className="w-6.5 h-6.5 xs:w-7.5 xs:h-7.5 rounded-full border-2 border-background overflow-hidden shadow-sm bg-muted shrink-0 relative">
-                  <Image src={src} alt="User" fill unoptimized className="object-cover" />
-                </div>
-              ))}
-              <div className="h-6.5 px-1.5 xs:px-2 rounded-full border-2 border-background bg-brand-500 flex items-center justify-center text-white font-black text-[9px] xs:text-[10px] shrink-0 shadow-sm">
-                +50K
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-0.5">
-                {[1,2,3,4,5].map((s) => <Star key={s} className="w-2.5 h-2.5 xs:w-3 xs:h-3 fill-yellow-400 text-yellow-400" />)}
-              </div>
-              <p className="text-[10px] xs:text-xs font-bold text-muted-foreground/80 mt-0.5">
-                Trusted by <span className="text-foreground font-black">50K+</span> happy diners
-              </p>
-            </div>
-          </motion.div>
+
         </motion.div>
 
         {/* ── Right: Restaurant image with floating cards ── */}
