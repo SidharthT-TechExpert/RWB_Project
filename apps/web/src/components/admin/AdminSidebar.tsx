@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { clearAdminAuthTokens } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 interface NavSection {
   title: string;
@@ -79,7 +81,12 @@ const navSections: NavSection[] = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleAdminSignOut = () => {
+    clearAdminAuthTokens();
+    router.push('/admin/login');
+  };
 
   return (
     <aside className="w-64 h-screen bg-white dark:bg-[#070D1E] border-r border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 flex flex-col shrink-0 sticky top-0 font-sans select-none z-30 transition-colors duration-200">
@@ -172,7 +179,7 @@ export function AdminSidebar() {
         </div>
 
         <button
-          onClick={() => logout()}
+          onClick={handleAdminSignOut}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-xl text-xs font-bold transition-colors mt-1"
         >
           <LogOut className="w-3.5 h-3.5" />
