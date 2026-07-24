@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { logger } from '../config/logger';
+import { isProduction } from '../config/env';
 
 export class SmsService {
   private apiKey: string;
@@ -23,8 +24,8 @@ export class SmsService {
     const digits = phone.replace(/\D/g, '');
     const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
 
-    // In development mode (NODE_ENV !== 'production') or if mock key, bypass real SMS API call to save credits
-    if (process.env.NODE_ENV !== 'production' || !apiKey || apiKey === 'mock_api_key' || apiKey === 'YOUR_2FACTOR_API_KEY') {
+    // In development mode (not production/prod) or if mock key, bypass real SMS API call to save credits
+    if (!isProduction() || !apiKey || apiKey === 'mock_api_key' || apiKey === 'YOUR_2FACTOR_API_KEY') {
       logger.info(`[DEV MODE SMS MOCK] Real SMS skipped in development mode. Demo OTP for ${cleanPhone} is: ${otp} (or use test code: 123456)`);
       return true;
     }
