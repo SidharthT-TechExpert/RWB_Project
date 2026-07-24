@@ -81,7 +81,6 @@ export class AuthService {
       }
       await User.findByIdAndUpdate(user._id, {
         $inc: { loginAttempts: 1 },
-        $set: { lockUntil: new Date(Date.now() + 30 * 60 * 1000) },
       });
       throw new AuthenticationError('Invalid email or password');
     }
