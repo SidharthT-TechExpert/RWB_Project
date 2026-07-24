@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { User, IUser } from '../models/User';
 import { OTP } from '../models/OTP';
+import { DailyOTPCount } from '../models/DailyOTPCount';
 import { UserProfile } from '../models/UserProfile';
 import { emailService } from './EmailService';
 import { smsService } from './SmsService';
@@ -131,6 +132,14 @@ export class AuthService {
   }
 
   async sendOTP(identifier: string) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const maxDailyLimit = parseInt(process.env.MAX_DAILY_OTP || '40', 10);
+
+    const dailyLog = await DailyOTPCount.findOne({ date: todayStr });
+    if (dailyLog && dailyLog.count >= maxDailyLimit) {
+      throw new AppError(`Daily limit of ${maxDailyLimit} OTPs reached for today. Please try again tomorrow.`, 429);
+    }
+
     const otp = generateOTP();
     await OTP.updateMany({ identifier, isUsed: false }, { isUsed: true });
     await OTP.create({
@@ -152,6 +161,12 @@ export class AuthService {
       }
     }
 
+    await DailyOTPCount.findOneAndUpdate(
+      { date: todayStr },
+      { $inc: { count: 1 } },
+      { upsert: true }
+    );
+
     logger.info(`OTP generated for ${identifier}: ${otp}`);
     return {
       isNewUser: !existingUser,
@@ -165,8 +180,8 @@ export class AuthService {
       expiresAt: { $gt: new Date() },
     });
 
-    // Fallback for demo/test OTP "123456" or if SMS Gateway had delivery issues on hosted server
-    if (!otpRecord && (otp === '123456' || process.env.ENABLE_DEMO_OTP === 'true')) {
+    // Fallback for demo/test OTP "123456" in dev mode, demo mode, or gateway issues
+    if (!otpRecord && (otp === '123456' || process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEMO_OTP === 'true')) {
       otpRecord = await OTP.findOne({
         identifier, purpose: 'login', isUsed: false,
         expiresAt: { $gt: new Date() },
