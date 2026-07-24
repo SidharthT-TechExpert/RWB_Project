@@ -226,17 +226,9 @@ export default function AdminLoginPage() {
 
                 {/* Password Input */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      Password
-                    </label>
-                    <Link
-                      href="/auth/forgot-password"
-                      className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    Password
+                  </label>
                   <div className="relative flex items-center bg-[#060D1E] border border-slate-700/80 rounded-xl focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all overflow-hidden">
                     <div className="pl-3.5 pr-2 text-slate-400">
                       <Lock className="w-4 h-4" />
