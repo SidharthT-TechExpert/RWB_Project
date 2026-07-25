@@ -23,6 +23,7 @@ export class SmsService {
     // Extract 10-digit number
     const digits = phone.replace(/\D/g, '');
     const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
+    const formattedPhone = `+91${cleanPhone}`;
 
     const provider = (process.env.SMS_PROVIDER || 'fast2sms').trim().toLowerCase();
 
