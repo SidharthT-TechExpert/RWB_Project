@@ -9,8 +9,9 @@ export class RestaurantController {
   }
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { city, cuisineTypes, priceRange, rating, features, sortBy, page, limit } = req.query;
+      const { status, city, cuisineTypes, priceRange, rating, features, sortBy, page, limit } = req.query;
       const result = await restaurantService.getRestaurants({
+        status: status as string,
         city: city as string,
         cuisineTypes: cuisineTypes ? String(cuisineTypes).split(',') : undefined,
         priceRange: priceRange ? String(priceRange).split(',').map(Number) : undefined,
