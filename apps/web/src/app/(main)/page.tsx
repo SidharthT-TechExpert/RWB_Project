@@ -270,7 +270,7 @@ export default function LandingPage() {
             min-h-[270px] xs:min-h-[310px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[540px] 2xl:min-h-[600px] 3xl:min-h-[680px]
             h-[270px] xs:h-[310px] sm:h-[360px] md:h-[400px] lg:h-[480px] xl:h-[540px] 2xl:h-[600px] 3xl:h-[680px]
             rounded-[1.5rem] xs:rounded-[1.75rem] sm:rounded-[2.25rem]
-            bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80
+            bg-background dark:bg-background border border-border/30 dark:border-border/10 shadow-xl
             p-1.5 xs:p-2 sm:p-3
             overflow-hidden xl:overflow-visible
             group md:max-w-[48%] lg:max-w-[580px] xl:max-w-none shrink-0
