@@ -189,8 +189,8 @@ export class AuthService {
       expiresAt: { $gt: new Date() },
     });
 
-    // Fallback for demo/test OTP "123456" in dev mode, demo mode, or gateway issues
-    if (!otpRecord && (otp === '123456' || !isProduction() || process.env.ENABLE_DEMO_OTP === 'true')) {
+    // Fallback: allow demo OTP "123456" ONLY in non-production environments
+    if (!otpRecord && !isProduction() && (otp === '123456' || process.env.ENABLE_DEMO_OTP === 'true')) {
       otpRecord = await OTP.findOne({
         identifier, purpose: 'login', isUsed: false,
         expiresAt: { $gt: new Date() },
