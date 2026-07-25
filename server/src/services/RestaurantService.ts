@@ -7,15 +7,34 @@ import { logger } from '../config/logger';
 
 export class RestaurantService {
   async createRestaurant(ownerId: string, data: Partial<IRestaurant>): Promise<IRestaurant> {
-    let slug = generateSlug(data.name!);
+    let slug = generateSlug(data.name || 'Restaurant');
     const existing = await Restaurant.findOne({ slug });
     if (existing) slug = `${slug}-${Date.now()}`;
 
     const restaurant = await Restaurant.create({
-      ...data,
-      ownerId: ownerId || 'admin_onboarded',
+      name: data.name,
       slug,
+      description: data.description || `Welcome to ${data.name}`,
+      ownerId: ownerId || 'admin_onboarded',
+      phone: data.phone || '+1 212-555-0100',
+      email: data.email,
+      website: data.website,
       status: data.status || RESTAURANT_STATUS.PENDING,
+      cuisineTypes: data.cuisineTypes?.length ? data.cuisineTypes : ['Restaurant'],
+      priceRange: data.priceRange || 2,
+      address: {
+        street: data.address?.street || '123 Main Street',
+        city: data.address?.city || 'New York',
+        state: data.address?.state || 'NY',
+        country: data.address?.country || 'USA',
+        zipCode: data.address?.zipCode || '10001',
+      },
+      location: {
+        type: 'Point',
+        coordinates: data.location?.coordinates?.length === 2 ? data.location.coordinates : [-73.9857, 40.7484],
+      },
+      logo: data.logo || undefined,
+      coverImage: data.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
       openingHours: data.openingHours || [
         { day: 'monday', isOpen: true, openTime: '09:00', closeTime: '22:00' },
         { day: 'tuesday', isOpen: true, openTime: '09:00', closeTime: '22:00' },
@@ -25,6 +44,10 @@ export class RestaurantService {
         { day: 'saturday', isOpen: true, openTime: '10:00', closeTime: '23:00' },
         { day: 'sunday', isOpen: true, openTime: '10:00', closeTime: '21:00' },
       ],
+      tables: data.tables || [],
+      totalCapacity: data.totalCapacity || 0,
+      features: data.features || [],
+      tags: data.tags || [],
     });
 
     logger.info(`Restaurant created: ${restaurant.name} by owner ${ownerId}`);
