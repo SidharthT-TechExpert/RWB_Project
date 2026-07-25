@@ -231,6 +231,34 @@ export class AuthService {
     return { user: user.toJSON(), tokens };
   }
 
+  async truecallerLogin(data: { payload?: string; signature?: string; signatureAlgorithm?: string; phone: string; name?: string }) {
+    const { phone, name } = data;
+    const cleanPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+    let user = await User.findOne({ phone: cleanPhone });
+    if (!user) {
+      const userEmail = `${cleanPhone.replace(/\D/g, '')}@user.quickbite.com`;
+      const userName = name?.trim() || 'Customer';
+
+      user = await User.create({
+        email: userEmail,
+        phone: cleanPhone,
+        name: userName,
+        isEmailVerified: false,
+        isPhoneVerified: true,
+        role: ROLES.CUSTOMER,
+      });
+      await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email, phone: user.phone });
+    } else if (name?.trim() && user.name !== name.trim()) {
+      user.name = name.trim();
+      await user.save();
+    }
+
+    const tokens = this.generateTokens(user);
+    await User.findByIdAndUpdate(user._id, { $push: { refreshTokens: tokens.refreshToken } });
+    return { user: user.toJSON(), tokens };
+  }
+
   async forgotPassword(email: string): Promise<void> {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return; // prevent email enumeration

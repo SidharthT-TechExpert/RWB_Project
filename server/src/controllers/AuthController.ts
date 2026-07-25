@@ -31,6 +31,10 @@ export class AuthController {
     try { sendSuccess(res, 'OTP verified', await authService.verifyOTP(req.body.identifier, req.body.otp, req.body.name)); }
     catch (error) { next(error); }
   }
+  async truecallerLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try { sendSuccess(res, 'Truecaller authentication successful', await authService.truecallerLogin(req.body)); }
+    catch (error) { next(error); }
+  }
   async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try { await authService.forgotPassword(req.body.email); sendSuccess(res, 'If that email exists, a reset link has been sent'); }
     catch (error) { next(error); }

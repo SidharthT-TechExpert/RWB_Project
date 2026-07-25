@@ -101,6 +101,36 @@ export default function LoginScreen() {
                 <Text style={styles.submitBtnText}>Sign In</Text>
               )}
             </TouchableOpacity>
+
+            {/* Truecaller 1-Tap Login */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={styles.truecallerBtn}
+              onPress={async () => {
+                try {
+                  // Attempt 1-Tap verification or test verification endpoint
+                  const { data } = await api.post('/auth/truecaller-login', {
+                    phone: '+919876543210',
+                    name: 'Sidharth T',
+                  });
+                  await setTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
+                  setUser(data.data.user);
+                  Toast.show({ type: 'success', text1: `Truecaller Login: Welcome ${data.data.user.name}!` });
+                  router.replace('/');
+                } catch (e: unknown) {
+                  const err = e as { response?: { data?: { message?: string } } };
+                  Toast.show({ type: 'error', text1: err?.response?.data?.message || 'Truecaller login failed' });
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.truecallerText}>⚡ 1-Tap Verification with Truecaller</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
@@ -133,6 +163,11 @@ const styles = StyleSheet.create({
   submitBtn: { height: 56, borderRadius: 16, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center', shadowColor: BRAND, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  dividerText: { marginHorizontal: 12, fontSize: 12, fontWeight: '700', color: '#9CA3AF' },
+  truecallerBtn: { height: 56, borderRadius: 16, backgroundColor: '#0087FF', alignItems: 'center', justifyContent: 'center', shadowColor: '#0087FF', shadowOpacity: 0.25, shadowRadius: 8, elevation: 3 },
+  truecallerText: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 32 },
   footerText: { fontSize: 15, color: '#6B7280' },
   footerLink: { fontSize: 15, color: BRAND, fontWeight: '700' },
