@@ -78,7 +78,7 @@ export function Footer() {
               <div className="w-9 h-9 3xl:w-10 3xl:h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center shadow-md">
                 <UtensilsCrossed className="w-4.5 h-4.5 3xl:w-5 3xl:h-5 text-white" />
               </div>
-              <span className="text-brand-500 font-extrabold tracking-tight">QuickBite</span>
+              <span className="font-jakarta font-black text-xl xs:text-2xl 3xl:text-3xl text-brand-500 tracking-[0.01em]">QuickBite</span>
             </Link>
 
             <p className="text-xs xs:text-sm 3xl:text-base text-muted-foreground leading-relaxed max-w-sm">

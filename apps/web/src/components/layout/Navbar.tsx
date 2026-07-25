@@ -74,7 +74,7 @@ export function Navbar() {
           <div className="w-8 h-8 3xl:w-10 3xl:h-10 4xl:w-12 4xl:h-12 brand-gradient rounded-xl flex items-center justify-center">
             <UtensilsCrossed className="w-4 h-4 3xl:w-5 3xl:h-5 4xl:w-6 4xl:h-6 text-white" />
           </div>
-          <span className="text-brand-500 font-extrabold tracking-tight">QuickBite</span>
+          <span className="font-jakarta font-black text-xl xs:text-2xl 3xl:text-3xl text-brand-500 tracking-[0.01em]">QuickBite</span>
         </Link>
 
         {/* ── Desktop nav links (lg+) ── */}
