@@ -16,13 +16,15 @@ export class SmsService {
    * API Doc: https://2factor.in/v3/documentation
    */
   async sendOTP(phone: string, otp: string): Promise<boolean> {
-    // Read & sanitize API key / template name (strip quotes and whitespace)
+    // Read & sanitize API key / template name / sender ID (strip quotes and whitespace)
     const apiKey = (process.env.TWOFACTOR_API_KEY || this.apiKey).trim().replace(/^["']|["']$/g, '');
     const templateName = (process.env.TWOFACTOR_OTP_TEMPLATE || this.templateName).trim().replace(/^["']|["']$/g, '');
+    const senderId = (process.env.TWOFACTOR_SENDER_ID || 'QKBITE').trim().replace(/^["']|["']$/g, '');
 
-    // Extract 10-digit mobile number (remove country code +91 or non-digits)
+    // Extract 10-digit mobile number
     const digits = phone.replace(/\D/g, '');
     const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
+    const formattedPhone = `+91${cleanPhone}`;
 
     // In development mode (not production/prod) or if mock key, bypass real SMS API call to save credits
     if (!isProduction() || !apiKey || apiKey === 'mock_api_key' || apiKey === 'YOUR_2FACTOR_API_KEY') {
@@ -31,7 +33,28 @@ export class SmsService {
     }
 
     try {
-      let url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanPhone}/${otp}`;
+      // 1. Try 2Factor Transactional Text SMS API (TSMS) if template is configured (Guaranteed Text SMS, No Voice Call)
+      if (templateName) {
+        try {
+          const tsmsUrl = `https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`;
+          const tsmsRes = await axios.post(tsmsUrl, {
+            From: senderId,
+            To: cleanPhone,
+            TemplateName: templateName,
+            VAR1: otp,
+          }, { timeout: 8000 });
+
+          if (tsmsRes.data?.Status === 'Success') {
+            logger.info(`[2FACTOR TEXT SMS SUCCESS] TSMS OTP sent to ${cleanPhone}`);
+            return true;
+          }
+        } catch (tsmsErr) {
+          logger.warn(`[2FACTOR TSMS RETRY] TSMS endpoint skipped, trying standard SMS route...`);
+        }
+      }
+
+      // 2. Standard 2Factor SMS OTP URL with +91 prefix
+      let url = `https://2factor.in/API/V1/${apiKey}/SMS/${formattedPhone}/${otp}`;
       if (templateName) {
         url += `/${encodeURIComponent(templateName)}`;
       }
@@ -39,7 +62,7 @@ export class SmsService {
       const response = await axios.get(url, { timeout: 10000 });
 
       if (response.data?.Status === 'Success') {
-        logger.info(`[2FACTOR SMS SUCCESS] OTP sent to ${cleanPhone}`);
+        logger.info(`[2FACTOR SMS SUCCESS] Text SMS OTP sent to ${formattedPhone}`);
         return true;
       } else {
         logger.warn(`[2FACTOR SMS WARNING] Gateway response for ${cleanPhone}:`, response.data);
