@@ -64,7 +64,7 @@ quickbite/
 | Payments | Razorpay, Stripe |
 | Notifications | Firebase Cloud Messaging (push), Nodemailer (email) |
 | Frontend | Next.js 15, Tailwind CSS, Radix UI, Zustand, TanStack Query |
-| Mobile | Expo 51, Expo Router, React Native |
+| Mobile | Expo 57, Expo Router, React Native |
 | Proxy | Nginx (SSL/TLS, rate limiting) |
 | Secrets | Infisical CLI (optional) |
 | Deployment | Docker, AWS EC2, GitHub Actions CI/CD |
@@ -287,17 +287,23 @@ Open **Terminal 3**:
 ```powershell
 cd apps\mobile
 npm install
-npx expo start
+npm start
 ```
 
 **Mac / Linux:**
 ```bash
 cd apps/mobile
 npm install
-npx expo start
+npm start
 ```
 
-Scan the QR code with **Expo Go** on your phone.
+Scan the QR code with the latest **Expo Go** on your phone. This project serves an Expo SDK 57 bundle; older Expo Go installs or older development-client builds will show `Incompatible SDK version`.
+
+For a custom development-client build, run:
+
+```bash
+npm run start:dev-client
+```
 
 > For mobile, set the API URL to your machine's local IP — not `localhost`.
 > Find your IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux).
@@ -584,6 +590,8 @@ All commands run from the **project root**.
 | `npm run dev:api` | Start API with local `.env` or Node Infisical SDK (hot reload) |
 | `npm run dev:api:infisical` | Start API with Infisical CLI secret injection |
 | `npm run dev:web` | Start Next.js web app on port 3001 |
+| `npm run dev:mobile` | Start Expo mobile app in Expo Go mode and clear Metro cache |
+| `npm run dev:mobile:client` | Start Expo mobile app for a custom development client |
 | `npm run build:api` | Compile TypeScript → `server/dist/` |
 | `npm run build:web` | Production build of web app |
 | `npm run start:api` | Run compiled API |
@@ -903,6 +911,7 @@ GitHub Actions runs automatically:
 | API returns 404 for all routes | Confirm API started with `npm run dev:api` from project root |
 | Web app can't reach API | Set `NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1` in `apps/web/.env.local` |
 | Mobile can't reach API | Use machine IP not `localhost` — `http://192.168.x.x:3000/api/v1` in `apps/mobile/.env` |
+| Mobile shows `Incompatible SDK version` | Update Expo Go to a version that supports Expo SDK 57, then restart with `npm run dev:mobile`. If using a development client, rebuild it for the current SDK and start with `npm run dev:mobile:client` |
 | Port 3000 already in use | Change `PORT` secret in Infisical dev env or kill the existing process |
 | `infisical: command not found` | Install CLI — see [Secret Management](#secret-management--infisical-cli) |
 | `infisical init` fails | Run `infisical login` first, then `infisical init` |
