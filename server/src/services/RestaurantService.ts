@@ -12,8 +12,11 @@ export class RestaurantService {
     if (existing) slug = `${slug}-${Date.now()}`;
 
     const restaurant = await Restaurant.create({
-      ...data, ownerId, slug, status: RESTAURANT_STATUS.PENDING,
-      openingHours: [
+      ...data,
+      ownerId: ownerId || 'admin_onboarded',
+      slug,
+      status: data.status || RESTAURANT_STATUS.PENDING,
+      openingHours: data.openingHours || [
         { day: 'monday', isOpen: true, openTime: '09:00', closeTime: '22:00' },
         { day: 'tuesday', isOpen: true, openTime: '09:00', closeTime: '22:00' },
         { day: 'wednesday', isOpen: true, openTime: '09:00', closeTime: '22:00' },
@@ -46,9 +49,15 @@ export class RestaurantService {
     return restaurant;
   }
 
-  async getRestaurants(filters: { city?: string; cuisineTypes?: string[]; priceRange?: number[]; rating?: number; features?: string[]; sortBy?: string; page?: number; limit?: number }) {
+  async getRestaurants(filters: { status?: string; city?: string; cuisineTypes?: string[]; priceRange?: number[]; rating?: number; features?: string[]; sortBy?: string; page?: number; limit?: number }) {
     const { page, limit, skip } = getPaginationParams(filters.page, filters.limit);
-    const query: Record<string, unknown> = { status: RESTAURANT_STATUS.ACTIVE };
+    const query: Record<string, unknown> = {};
+
+    if (filters.status && filters.status !== 'all' && filters.status !== 'ALL') {
+      query.status = filters.status;
+    } else if (filters.status === undefined) {
+      query.status = RESTAURANT_STATUS.ACTIVE;
+    }
     if (filters.city) query['address.city'] = { $regex: filters.city, $options: 'i' };
     if (filters.cuisineTypes?.length) query.cuisineTypes = { $in: filters.cuisineTypes };
     if (filters.priceRange?.length) query.priceRange = { $in: filters.priceRange };

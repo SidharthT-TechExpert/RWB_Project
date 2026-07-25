@@ -90,7 +90,7 @@ export default function AdminRestaurantsPage() {
     queryKey: ['admin', 'restaurants', statusFilter, search],
     queryFn: async () => {
       const { data } = await api.get('/restaurants', {
-        params: { status: statusFilter || undefined, city: search || undefined, limit: 100 },
+        params: { status: statusFilter || 'all', city: search || undefined, limit: 100 },
       });
       return data;
     },
