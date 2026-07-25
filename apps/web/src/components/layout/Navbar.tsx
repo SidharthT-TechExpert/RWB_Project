@@ -19,7 +19,7 @@ const navLinks = [
   { href: '#find-table',   label: 'Find a table'    },
   { href: '#how-it-works', label: 'How it works'    },
   { href: '#explore',      label: 'Explore options' },
-  { href: '#partners',     label: 'For partners'    },
+  { href: '/restaurant/login', label: 'For partners' },
 ];
 
 export function Navbar() {
