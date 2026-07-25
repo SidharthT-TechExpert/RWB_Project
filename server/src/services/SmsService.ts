@@ -6,19 +6,13 @@ import { isProduction } from '../config/env';
  * SMS Service — Multi-provider OTP delivery
  *
  * Priority order:
- *   1. MSG91 (text-only, no voice fallback) — recommended for India
- *   2. 2Factor.in TSMS (transactional text SMS with DLT template)
- *   3. 2Factor.in standard SMS endpoint
+ *   1. Fast2SMS Quick OTP (text-only, no DLT needed, no voice)  SMS_PROVIDER=fast2sms
+ *   2. MSG91 (text-only, DLT required)                          SMS_PROVIDER=msg91
+ *   3. 2Factor.in (may have voice fallback)                     SMS_PROVIDER=2factor
  *
- * To use MSG91:
- *   MSG91_AUTH_KEY=<your msg91 auth key>
- *   MSG91_TEMPLATE_ID=<your approved DLT flow template ID>
- *   SMS_PROVIDER=msg91
- *
- * To use 2Factor:
- *   TWOFACTOR_API_KEY=<your 2factor api key>
- *   TWOFACTOR_OTP_TEMPLATE=<template name>   (optional)
- *   SMS_PROVIDER=2factor
+ * Fast2SMS (current default):
+ *   FAST2SMS_API_KEY=<your api key from fast2sms.com/dev/api>
+ *   SMS_PROVIDER=fast2sms
  */
 export class SmsService {
 
@@ -30,12 +24,14 @@ export class SmsService {
     const digits = phone.replace(/\D/g, '');
     const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
 
-    // Dev/test mode — skip real API calls
-    const provider = (process.env.SMS_PROVIDER || 'msg91').trim().toLowerCase();
+    const provider = (process.env.SMS_PROVIDER || 'fast2sms').trim().toLowerCase();
+
+    const fast2smsKey = (process.env.FAST2SMS_API_KEY || '').trim().replace(/^["']|["']$/g, '');
     const msg91AuthKey = (process.env.MSG91_AUTH_KEY || '').trim().replace(/^["']|["']$/g, '');
     const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim().replace(/^["']|["']$/g, '');
 
     const hasRealProvider =
+      (provider === 'fast2sms' && fast2smsKey) ||
       (provider === 'msg91' && msg91AuthKey && msg91AuthKey !== 'YOUR_MSG91_AUTH_KEY') ||
       (provider === '2factor' && twoFactorApiKey && twoFactorApiKey !== 'YOUR_2FACTOR_API_KEY');
 
@@ -44,7 +40,12 @@ export class SmsService {
       return true;
     }
 
-    // ── Provider: MSG91 (Text SMS only, no voice) ────────────────
+    // ── Provider: Fast2SMS (No DLT, Text-only, Recommended) ──────
+    if (provider === 'fast2sms') {
+      return this.sendViaFast2SMS(cleanPhone, otp, fast2smsKey);
+    }
+
+    // ── Provider: MSG91 ───────────────────────────────────────────
     if (provider === 'msg91') {
       return this.sendViaMSG91(cleanPhone, otp, msg91AuthKey);
     }
@@ -54,12 +55,52 @@ export class SmsService {
   }
 
   /**
+   * Fast2SMS Quick OTP — No DLT registration needed, text SMS only
+   * Docs: https://www.fast2sms.com/dev/api
+   * Uses the "otp" route which sends: "Your OTP is {otp}"
+   */
+  private async sendViaFast2SMS(cleanPhone: string, otp: string, apiKey: string): Promise<boolean> {
+    try {
+      const res = await axios.post(
+        'https://www.fast2sms.com/dev/bulkV2',
+        {
+          route: 'otp',
+          variables_values: otp,
+          flash: 0,
+          numbers: cleanPhone,
+        },
+        {
+          headers: {
+            authorization: apiKey,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        }
+      );
+
+      if (res.data?.return === true || res.data?.status_code === 200) {
+        logger.info(`[FAST2SMS OTP SUCCESS] Text SMS OTP sent to ${cleanPhone}`);
+        return true;
+      } else {
+        logger.warn(`[FAST2SMS OTP WARNING] Response for ${cleanPhone}:`, res.data);
+        return false;
+      }
+    } catch (error: unknown) {
+      const errMsg =
+        (error as { response?: { data?: unknown }; message?: string })?.response?.data ||
+        (error as { message?: string })?.message ||
+        String(error);
+      logger.error(`[FAST2SMS OTP EXCEPTION] Error for ${cleanPhone}:`, errMsg);
+      return false;
+    }
+  }
+
+  /**
    * MSG91 — Flow-based DLT SMS (text only, no voice)
    * Docs: https://docs.msg91.com/reference/send-sms
    */
   private async sendViaMSG91(cleanPhone: string, otp: string, authKey: string): Promise<boolean> {
     const templateId = (process.env.MSG91_TEMPLATE_ID || '').trim().replace(/^["']|["']$/g, '');
-    const senderId = (process.env.MSG91_SENDER_ID || 'QKBITE').trim().replace(/^["']|["']$/g, '');
 
     if (!templateId) {
       logger.error('[MSG91] MSG91_TEMPLATE_ID not set. Cannot send SMS.');
@@ -72,50 +113,40 @@ export class SmsService {
         {
           template_id: templateId,
           short_url: '0',
-          recipients: [
-            {
-              mobiles: `91${cleanPhone}`,
-              otp: otp,
-              var1: otp,
-            }
-          ]
+          recipients: [{ mobiles: `91${cleanPhone}`, otp, var1: otp }],
         },
         {
-          headers: {
-            authkey: authKey,
-            'Content-Type': 'application/json',
-          },
+          headers: { authkey: authKey, 'Content-Type': 'application/json' },
           timeout: 10000,
         }
       );
 
-      if (res.data?.type === 'success' || res.data?.message === 'Message sent successfully') {
+      if (res.data?.type === 'success') {
         logger.info(`[MSG91 SMS SUCCESS] OTP sent to ${cleanPhone}`);
         return true;
       } else {
-        logger.warn(`[MSG91 SMS WARNING] Gateway response for ${cleanPhone}:`, res.data);
+        logger.warn(`[MSG91 SMS WARNING] Response for ${cleanPhone}:`, res.data);
         return false;
       }
     } catch (error: unknown) {
-      const errMsg = (error as { response?: { data?: unknown }; message?: string })?.response?.data
-        || (error as { message?: string })?.message
-        || String(error);
-      logger.error(`[MSG91 SMS EXCEPTION] Error calling MSG91 API for ${cleanPhone}:`, errMsg);
+      const errMsg =
+        (error as { response?: { data?: unknown }; message?: string })?.response?.data ||
+        (error as { message?: string })?.message ||
+        String(error);
+      logger.error(`[MSG91 SMS EXCEPTION] Error for ${cleanPhone}:`, errMsg);
       return false;
     }
   }
 
   /**
-   * 2Factor — Transactional text SMS (TSMS first, standard fallback)
-   * NOTE: Voice call fallback MUST be disabled in your 2Factor account settings.
-   * Contact support@2factor.in to disable voice OTP on your API key.
+   * 2Factor — Transactional SMS
+   * NOTE: Contact support@2factor.in to disable voice OTP fallback on your API key.
    */
   private async sendVia2Factor(cleanPhone: string, otp: string, apiKey: string): Promise<boolean> {
     const templateName = (process.env.TWOFACTOR_OTP_TEMPLATE || '').trim().replace(/^["']|["']$/g, '');
     const senderId = (process.env.TWOFACTOR_SENDER_ID || 'QKBITE').trim().replace(/^["']|["']$/g, '');
 
     try {
-      // Try TSMS (text-only) endpoint if template is configured
       if (templateName) {
         try {
           const tsmsRes = await axios.post(
@@ -132,12 +163,10 @@ export class SmsService {
         }
       }
 
-      // Standard SMS endpoint
       let url = `https://2factor.in/API/V1/${apiKey}/SMS/+91${cleanPhone}/${otp}`;
       if (templateName) url += `/${encodeURIComponent(templateName)}`;
 
       const res = await axios.get(url, { timeout: 10000 });
-
       if (res.data?.Status === 'Success') {
         logger.info(`[2FACTOR SMS SUCCESS] OTP sent to ${cleanPhone}`);
         return true;
@@ -146,9 +175,10 @@ export class SmsService {
         return false;
       }
     } catch (error: unknown) {
-      const errMsg = (error as { response?: { data?: unknown }; message?: string })?.response?.data
-        || (error as { message?: string })?.message
-        || String(error);
+      const errMsg =
+        (error as { response?: { data?: unknown }; message?: string })?.response?.data ||
+        (error as { message?: string })?.message ||
+        String(error);
       logger.error(`[2FACTOR SMS EXCEPTION] Error for ${cleanPhone}:`, errMsg);
       return false;
     }
