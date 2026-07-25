@@ -20,12 +20,10 @@ export class SmsService {
    * Send OTP via SMS (text-only, no voice call)
    */
   async sendOTP(phone: string, otp: string): Promise<boolean> {
-    // Extract 10-digit number
     const digits = phone.replace(/\D/g, '');
     const cleanPhone = digits.length > 10 ? digits.slice(-10) : digits;
-    const formattedPhone = `+91${cleanPhone}`;
 
-    const provider = (process.env.SMS_PROVIDER || 'fast2sms').trim().toLowerCase();
+    const provider = (process.env.SMS_PROVIDER || '2factor').trim().toLowerCase();
 
     const fast2smsKey = (process.env.FAST2SMS_API_KEY || '').trim().replace(/^["']|["']$/g, '');
     const msg91AuthKey = (process.env.MSG91_AUTH_KEY || '').trim().replace(/^["']|["']$/g, '');
@@ -33,26 +31,32 @@ export class SmsService {
 
     const hasRealProvider =
       (provider === 'fast2sms' && fast2smsKey) ||
-      (provider === 'msg91' && msg91AuthKey && msg91AuthKey !== 'YOUR_MSG91_AUTH_KEY') ||
-      (provider === '2factor' && twoFactorApiKey && twoFactorApiKey !== 'YOUR_2FACTOR_API_KEY');
+      (provider === 'msg91' && msg91AuthKey) ||
+      twoFactorApiKey;
 
     if (!isProduction() || !hasRealProvider) {
       logger.info(`[DEV MODE SMS MOCK] OTP for ${cleanPhone}: ${otp} (test code: 123456)`);
       return true;
     }
 
-    // ── Provider: Fast2SMS (No DLT, Text-only, Recommended) ──────
-    if (provider === 'fast2sms') {
-      return this.sendViaFast2SMS(cleanPhone, otp, fast2smsKey);
+    let success = false;
+
+    // 1. Try configured primary provider
+    if (provider === 'fast2sms' && fast2smsKey) {
+      success = await this.sendViaFast2SMS(cleanPhone, otp, fast2smsKey);
+    } else if (provider === 'msg91' && msg91AuthKey) {
+      success = await this.sendViaMSG91(cleanPhone, otp, msg91AuthKey);
+    } else if (twoFactorApiKey) {
+      success = await this.sendVia2Factor(cleanPhone, otp, twoFactorApiKey);
     }
 
-    // ── Provider: MSG91 ───────────────────────────────────────────
-    if (provider === 'msg91') {
-      return this.sendViaMSG91(cleanPhone, otp, msg91AuthKey);
+    // 2. Automatic Fallback to 2Factor if primary fails
+    if (!success && twoFactorApiKey && provider !== '2factor') {
+      logger.info(`[SMS FALLBACK] Primary provider failed for ${cleanPhone}, falling back to 2Factor...`);
+      success = await this.sendVia2Factor(cleanPhone, otp, twoFactorApiKey);
     }
 
-    // ── Provider: 2Factor ─────────────────────────────────────────
-    return this.sendVia2Factor(cleanPhone, otp, twoFactorApiKey);
+    return success;
   }
 
   /**
