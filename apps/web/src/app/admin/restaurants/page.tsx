@@ -12,17 +12,19 @@ import {
   Search,
   Plus,
   EyeOff,
-  Eye,
-  Trash2,
-  Edit,
-  Utensils,
+  Building2,
   MapPin,
   Star,
   Sparkles,
   Phone,
-  Building2,
-  DollarSign,
-  AlertCircle,
+  Mail,
+  User,
+  FileText,
+  Lock,
+  Compass,
+  Info,
+  ShieldCheck,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -37,88 +39,54 @@ const STATUS_COLORS: Record<string, string> = {
   inactive: 'secondary',
 };
 
-const SAMPLE_RESTAURANTS = [
-  {
-    name: 'The Golden Saffron',
-    description: 'Authentic Indian fine dining with signature tandoori & aromatic curries.',
-    cuisineTypes: ['Indian', 'North Indian', 'Mughlai'],
-    priceRange: 3,
-    address: { street: '45 Park Avenue', city: 'New York', state: 'NY', country: 'USA', zipCode: '10016' },
-    phone: '+1 212-555-0199',
-    coverImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-    averageRating: 4.8,
-    status: 'active',
-  },
-  {
-    name: 'Sakura Sushi Bar',
-    description: 'Fresh omakase, handmade ramen, and premium Japanese sakes.',
-    cuisineTypes: ['Japanese', 'Sushi', 'Asian'],
-    priceRange: 3,
-    address: { street: '128 Mercer St', city: 'New York', state: 'NY', country: 'USA', zipCode: '10012' },
-    phone: '+1 212-555-0144',
-    coverImage: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=800&q=80',
-    averageRating: 4.9,
-    status: 'active',
-  },
-  {
-    name: 'Bella Italia Bistro',
-    description: 'Wood-fired Neapolitan pizzas, handmade pastas, and classic tiramisu.',
-    cuisineTypes: ['Italian', 'Pizza', 'Pasta'],
-    priceRange: 2,
-    address: { street: '88 Mulberry St', city: 'New York', state: 'NY', country: 'USA', zipCode: '10013' },
-    phone: '+1 212-555-0182',
-    coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
-    averageRating: 4.7,
-    status: 'active',
-  },
-  {
-    name: 'El Mariachi Taqueria',
-    description: 'Street-style tacos, fresh guacamole, and handcrafted margaritas.',
-    cuisineTypes: ['Mexican', 'Tacos', 'Latin'],
-    priceRange: 2,
-    address: { street: '210 5th Ave', city: 'New York', state: 'NY', country: 'USA', zipCode: '10010' },
-    phone: '+1 212-555-0112',
-    coverImage: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80',
-    averageRating: 4.6,
-    status: 'active',
-  },
-];
+const RESTAURANT_TYPES = ['Restaurant', 'Cafe', 'Bakery', 'Fast Food', 'Food Court'];
 
-interface RestaurantForm {
+interface MinimalRestaurantForm {
   name: string;
-  description: string;
-  cuisineTypes: string;
-  priceRange: number;
+  ownerName: string;
+  phone: string;
+  email: string;
   city: string;
   street: string;
-  phone: string;
-  coverImage: string;
+  gstNumber: string;
+  regNumber: string;
+  latitude: string;
+  longitude: string;
+  restaurantType: string;
   status: string;
+  logo: string;
+  coverImage: string;
+  tempPassword: string;
 }
 
-const DEFAULT_FORM: RestaurantForm = {
+const DEFAULT_MINIMAL_FORM: MinimalRestaurantForm = {
   name: '',
-  description: '',
-  cuisineTypes: 'Indian, Fine Dining',
-  priceRange: 2,
+  ownerName: '',
+  phone: '',
+  email: '',
   city: 'New York',
-  street: '123 Main Street',
-  phone: '+1 212-555-0100',
-  coverImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+  street: '',
+  gstNumber: '',
+  regNumber: '',
+  latitude: '40.7484',
+  longitude: '-73.9857',
+  restaurantType: 'Restaurant',
   status: 'active',
+  logo: '',
+  coverImage: '',
+  tempPassword: 'Welcome@123',
 };
 
 export default function AdminRestaurantsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingRestaurant, setEditingRestaurant] = useState<any | null>(null);
-  const [formData, setFormData] = useState<RestaurantForm>(DEFAULT_FORM);
+  const [formData, setFormData] = useState<MinimalRestaurantForm>(DEFAULT_MINIMAL_FORM);
 
   const qc = useQueryClient();
 
   // Fetch restaurants
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['admin', 'restaurants', statusFilter, search],
     queryFn: async () => {
       const { data } = await api.get('/restaurants', {
@@ -128,7 +96,7 @@ export default function AdminRestaurantsPage() {
     },
   });
 
-  // Actions
+  // Update Status Action
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       if (status === 'active') return api.patch(`/admin/restaurants/${id}/approve`);
@@ -138,22 +106,22 @@ export default function AdminRestaurantsPage() {
     },
     onSuccess: (_, { status }) => {
       qc.invalidateQueries({ queryKey: ['admin', 'restaurants'] });
-      toast.success(`Restaurant status updated to ${status}`);
+      toast.success(`Restaurant status set to ${status}`);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update status');
     },
   });
 
-  // Create Restaurant Mutation
+  // Minimal Onboarding Creation
   const createMutation = useMutation({
-    mutationFn: async (payload: RestaurantForm) => {
+    mutationFn: async (payload: MinimalRestaurantForm) => {
       const formatted = {
         name: payload.name,
         slug: payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4),
-        description: payload.description || 'Welcome to ' + payload.name,
-        cuisineTypes: payload.cuisineTypes.split(',').map((c) => c.trim()).filter(Boolean),
-        priceRange: Number(payload.priceRange),
+        description: `${payload.name} (${payload.restaurantType}) located in ${payload.city}. Managed by ${payload.ownerName}.`,
+        cuisineTypes: [payload.restaurantType],
+        priceRange: 2,
         address: {
           street: payload.street,
           city: payload.city,
@@ -161,25 +129,27 @@ export default function AdminRestaurantsPage() {
           country: 'USA',
           zipCode: '10001',
         },
-        location: { type: 'Point', coordinates: [-73.9857, 40.7484] },
+        location: {
+          type: 'Point',
+          coordinates: [Number(payload.longitude) || -73.9857, Number(payload.latitude) || 40.7484],
+        },
         phone: payload.phone,
-        coverImage: payload.coverImage,
+        email: payload.email,
+        logo: payload.logo || undefined,
+        coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
         status: payload.status,
+        tags: [payload.restaurantType.toLowerCase(), payload.city.toLowerCase()],
         openingHours: [
-          { day: 'monday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'tuesday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'wednesday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'thursday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'friday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'saturday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
-          { day: 'sunday', isOpen: true, openTime: '11:00', closeTime: '23:00' },
+          { day: 'monday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'tuesday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'wednesday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'thursday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'friday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'saturday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
+          { day: 'sunday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
         ],
-        tables: [
-          { tableNumber: 'T1', capacity: 2, isAvailable: true, type: 'indoor' },
-          { tableNumber: 'T2', capacity: 4, isAvailable: true, type: 'indoor' },
-          { tableNumber: 'T3', capacity: 6, isAvailable: true, type: 'outdoor' },
-        ],
-        totalCapacity: 12,
+        tables: [],
+        totalCapacity: 0,
         acceptsPreOrders: true,
         acceptsTableBooking: true,
       };
@@ -188,39 +158,12 @@ export default function AdminRestaurantsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'restaurants'] });
-      toast.success('🎉 Restaurant added successfully!');
+      toast.success('🎉 Restaurant onboarded successfully! Owner can now log in & configure operational details.');
       setIsAddModalOpen(false);
-      setFormData(DEFAULT_FORM);
+      setFormData(DEFAULT_MINIMAL_FORM);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to create restaurant');
-    },
-  });
-
-  // Seed sample restaurants
-  const seedMutation = useMutation({
-    mutationFn: async () => {
-      for (const item of SAMPLE_RESTAURANTS) {
-        try {
-          await createMutation.mutateAsync({
-            name: item.name,
-            description: item.description,
-            cuisineTypes: item.cuisineTypes.join(', '),
-            priceRange: item.priceRange,
-            city: item.address.city,
-            street: item.address.street,
-            phone: item.phone,
-            coverImage: item.coverImage,
-            status: item.status,
-          });
-        } catch {
-          // ignore duplicate slug errors during batch seed
-        }
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin', 'restaurants'] });
-      toast.success('Sample restaurants seeded successfully!');
+      toast.error(err.response?.data?.message || 'Failed to onboard restaurant');
     },
   });
 
@@ -233,10 +176,10 @@ export default function AdminRestaurantsPage() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
             <Building2 className="w-6 h-6 text-brand-500" />
-            Restaurant Management
+            Restaurant Admin Portal
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Manage listings, status approvals, unlist restaurants, and add new locations.
+            Onboard new restaurants with minimum required details. Day-to-day operations are managed by restaurant owners in their dashboard.
           </p>
         </div>
 
@@ -259,23 +202,23 @@ export default function AdminRestaurantsPage() {
             className="h-10 px-3 rounded-xl border border-input bg-background text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           >
             <option value="">All Statuses</option>
-            <option value="active">Active (Public)</option>
-            <option value="pending">Pending Approval</option>
-            <option value="inactive">Inactive / Unlisted</option>
-            <option value="suspended">Suspended</option>
+            <option value="active">Approved / Listed</option>
+            <option value="pending">Pending Onboarding</option>
+            <option value="inactive">Unlisted</option>
+            <option value="suspended">Blocked / Suspended</option>
             <option value="rejected">Rejected</option>
           </select>
 
           {/* Add Restaurant Button */}
           <Button
             onClick={() => {
-              setFormData(DEFAULT_FORM);
+              setFormData(DEFAULT_MINIMAL_FORM);
               setIsAddModalOpen(true);
             }}
             className="h-10 px-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl gap-2 shadow-md hover:shadow-brand-500/20"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Restaurant</span>
+            <span>Onboard Restaurant</span>
           </Button>
         </div>
       </div>
@@ -285,7 +228,7 @@ export default function AdminRestaurantsPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              {['Restaurant', 'City & Address', 'Cuisine & Price', 'Rating', 'Status', 'Admin Actions'].map((h) => (
+              {['Restaurant', 'City & Address', 'Type', 'Rating', 'Status', 'Admin Control'].map((h) => (
                 <th key={h} className="text-left px-4 py-3.5 font-bold text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -311,7 +254,7 @@ export default function AdminRestaurantsPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-11 h-11 rounded-xl bg-cover bg-center shrink-0 border border-border/80 shadow-xs"
-                        style={{ backgroundImage: `url(${r.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80'})` }}
+                        style={{ backgroundImage: `url(${r.logo || r.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80'})` }}
                       />
                       <div>
                         <p className="font-extrabold text-foreground">{r.name}</p>
@@ -332,12 +275,12 @@ export default function AdminRestaurantsPage() {
                     <p className="text-xs text-muted-foreground truncate max-w-[160px]">{r.address?.street}</p>
                   </td>
 
-                  {/* Cuisine & Price */}
+                  {/* Type */}
                   <td className="px-4 py-3.5">
-                    <p className="text-xs font-semibold text-foreground">{r.cuisineTypes?.join(', ') || 'General'}</p>
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {'$'.repeat(r.priceRange || 2)}
-                    </p>
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground">
+                      <Tag className="w-3 h-3 text-brand-500" />
+                      {r.cuisineTypes?.[0] || 'Restaurant'}
+                    </span>
                   </td>
 
                   {/* Rating */}
@@ -354,14 +297,14 @@ export default function AdminRestaurantsPage() {
                       variant={(STATUS_COLORS[r.status] as any) || 'secondary'}
                       className="capitalize font-bold text-xs px-2.5 py-0.5 rounded-lg"
                     >
-                      {r.status}
+                      {r.status === 'active' ? 'Approved' : r.status === 'suspended' ? 'Blocked' : r.status}
                     </Badge>
                   </td>
 
                   {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {/* Approve / Activate */}
+                      {/* Approve / Listed */}
                       {r.status !== 'active' && (
                         <Button
                           size="sm"
@@ -370,11 +313,11 @@ export default function AdminRestaurantsPage() {
                           isLoading={updateStatusMutation.isPending}
                         >
                           <Check className="h-3.5 w-3.5" />
-                          <span>Approve / Listed</span>
+                          <span>Approve</span>
                         </Button>
                       )}
 
-                      {/* Unlist / Inactive */}
+                      {/* Unlist */}
                       {r.status === 'active' && (
                         <Button
                           size="sm"
@@ -388,7 +331,7 @@ export default function AdminRestaurantsPage() {
                         </Button>
                       )}
 
-                      {/* Suspend */}
+                      {/* Block / Suspend */}
                       {r.status !== 'suspended' && r.status !== 'rejected' && (
                         <Button
                           size="sm"
@@ -398,7 +341,7 @@ export default function AdminRestaurantsPage() {
                           isLoading={updateStatusMutation.isPending}
                         >
                           <Pause className="h-3.5 w-3.5" />
-                          <span>Suspend</span>
+                          <span>Block</span>
                         </Button>
                       )}
                     </div>
@@ -412,28 +355,20 @@ export default function AdminRestaurantsPage() {
                     <div className="w-12 h-12 rounded-full bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
                       <Building2 className="w-6 h-6" />
                     </div>
-                    <p className="font-extrabold text-lg text-foreground">No Restaurants Found</p>
+                    <p className="font-extrabold text-lg text-foreground">No Restaurants Onboarded</p>
                     <p className="text-xs text-muted-foreground">
-                      No restaurants match your current status filter ({statusFilter || 'All'}). Click below to seed sample restaurants or add a new one.
+                      No restaurants match your filter ({statusFilter || 'All'}). Click below to onboard a new restaurant with basic details.
                     </p>
                     <div className="flex justify-center gap-3 pt-2">
                       <Button
-                        onClick={() => seedMutation.mutate()}
-                        isLoading={seedMutation.isPending}
+                        onClick={() => {
+                          setFormData(DEFAULT_MINIMAL_FORM);
+                          setIsAddModalOpen(true);
+                        }}
                         className="bg-brand-500 hover:bg-brand-600 text-white font-bold gap-2 text-xs h-9 px-4 rounded-xl"
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Seed Sample Restaurants</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setStatusFilter('');
-                          setSearch('');
-                        }}
-                        className="text-xs h-9 px-4 rounded-xl"
-                      >
-                        Clear Filters
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Onboard Restaurant</span>
                       </Button>
                     </div>
                   </div>
@@ -444,7 +379,7 @@ export default function AdminRestaurantsPage() {
         </table>
       </div>
 
-      {/* ── Add Restaurant Modal ── */}
+      {/* ── Minimal Onboarding Modal (Admin Only) ── */}
       <AnimatePresence>
         {isAddModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -452,19 +387,33 @@ export default function AdminRestaurantsPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card w-full max-w-lg rounded-2xl border p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+              className="bg-card w-full max-w-xl rounded-2xl border p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto"
             >
+              {/* Modal Header */}
               <div className="flex items-center justify-between border-b pb-3">
-                <h2 className="font-black text-xl flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-brand-500" />
-                  Add New Restaurant
-                </h2>
+                <div>
+                  <h2 className="font-black text-xl flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-brand-500" />
+                    Onboard New Restaurant (Basic Only)
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Minimal details for registration. Menus, tables, and staff will be managed by the restaurant.
+                  </p>
+                </div>
                 <button
                   onClick={() => setIsAddModalOpen(false)}
                   className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Info Callout */}
+              <div className="bg-brand-500/8 border border-brand-500/20 rounded-xl p-3 flex items-start gap-2.5 text-xs text-muted-foreground">
+                <Info className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                <span>
+                  Admin only sets up core details. Operating hours, menus, tables, and staff directory are configured in the <strong>Restaurant Dashboard</strong> after approval.
+                </span>
               </div>
 
               <form
@@ -474,81 +423,210 @@ export default function AdminRestaurantsPage() {
                 }}
                 className="space-y-4"
               >
-                <div>
-                  <label className="text-xs font-bold text-foreground">Restaurant Name *</label>
-                  <input
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Royal Taj Bistro"
-                    className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                  />
+                {/* Section 1: Basic Info */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" /> Basic Information
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Restaurant Name *</label>
+                      <input
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="e.g. Ocean Pearl Bistro"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Owner / Manager Name *</label>
+                      <input
+                        required
+                        value={formData.ownerName}
+                        onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                        placeholder="e.g. Marcus Vance"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Phone Number *</label>
+                      <input
+                        required
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+1 212-555-0199"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Email Address *</label>
+                      <input
+                        required
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="owner@restaurant.com"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">City *</label>
+                      <input
+                        required
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="New York"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Full Address *</label>
+                      <input
+                        required
+                        value={formData.street}
+                        onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                        placeholder="45 Park Avenue, Suite 100"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">GST Number (Optional)</label>
+                      <input
+                        value={formData.gstNumber}
+                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                        placeholder="22AAAAA0000A1Z5"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Registration No. (Optional)</label>
+                      <input
+                        value={formData.regNumber}
+                        onChange={(e) => setFormData({ ...formData, regNumber: e.target.value })}
+                        placeholder="REG-884920"
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-foreground">Cuisine Types (comma separated) *</label>
-                  <input
-                    required
-                    value={formData.cuisineTypes}
-                    onChange={(e) => setFormData({ ...formData, cuisineTypes: e.target.value })}
-                    placeholder="e.g. Indian, Tandoori, Mughlai"
-                    className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                  />
+                {/* Section 2: Location */}
+                <div className="space-y-3 pt-2 border-t">
+                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5" /> Location Coordinates
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Latitude</label>
+                      <input
+                        value={formData.latitude}
+                        onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Longitude</label>
+                      <input
+                        value={formData.longitude}
+                        onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Section 3: Restaurant Type & Status */}
+                <div className="space-y-3 pt-2 border-t">
+                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Type & Status
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Restaurant Type *</label>
+                      <select
+                        value={formData.restaurantType}
+                        onChange={(e) => setFormData({ ...formData, restaurantType: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      >
+                        {RESTAURANT_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Initial Status *</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      >
+                        <option value="active">Approved (Listed)</option>
+                        <option value="pending">Pending Review</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="suspended">Blocked</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Branding */}
+                <div className="space-y-3 pt-2 border-t">
+                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" /> Branding (Optional)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Logo URL</label>
+                      <input
+                        value={formData.logo}
+                        onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground">Cover Image URL</label>
+                      <input
+                        value={formData.coverImage}
+                        onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Temporary Password */}
+                <div className="space-y-3 pt-2 border-t">
+                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5" /> Owner Credentials
+                  </h3>
                   <div>
-                    <label className="text-xs font-bold text-foreground">City *</label>
+                    <label className="text-xs font-bold text-foreground">Temporary Owner Password *</label>
                     <input
                       required
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-foreground">Phone *</label>
-                    <input
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                      value={formData.tempPassword}
+                      onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-mono font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-foreground">Street Address *</label>
-                  <input
-                    required
-                    value={formData.street}
-                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-foreground">Cover Image URL</label>
-                  <input
-                    value={formData.coverImage}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-foreground">Description</label>
-                  <textarea
-                    rows={2}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Short description of dining experience..."
-                    className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex justify-end gap-3 pt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
@@ -562,7 +640,7 @@ export default function AdminRestaurantsPage() {
                     isLoading={createMutation.isPending}
                     className="bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl px-5"
                   >
-                    Create Restaurant
+                    Onboard Restaurant
                   </Button>
                 </div>
               </form>
