@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec \"ts-node -r tsconfig-paths/register src/server.ts\" --ext ts",
+    "dev:infisical": "infisical run --env=dev -- npm run dev",
     "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/createAdmin.ts",
     "seed:admin:prod": "node -r module-alias/register dist/scripts/createAdmin.js",
     "build": "tsc",

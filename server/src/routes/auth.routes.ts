@@ -23,10 +23,18 @@ const resetPasswordSchema = z.object({ token: z.string().min(1), password: passw
 const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema, confirmPassword: z.string() }).refine((d) => d.newPassword === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] });
 const sendOTPSchema = z.object({ identifier: z.string().min(1) });
 const verifyOTPSchema = z.object({ identifier: z.string().min(1), otp: z.string().length(6), name: z.string().optional() });
+const truecallerLoginSchema = z.object({
+  payload: z.string().optional(),
+  signature: z.string().optional(),
+  signatureAlgorithm: z.string().optional(),
+  phone: z.string().min(1),
+  name: z.string().optional(),
+});
 const refreshTokenSchema = z.object({ refreshToken: z.string().min(1) });
 
 router.post('/register', validate(registerSchema), authController.register.bind(authController));
 router.post('/login', validate(loginSchema), authController.login.bind(authController));
+router.post('/truecaller-login', validate(truecallerLoginSchema), authController.truecallerLogin.bind(authController));
 router.post('/logout', authenticate, authController.logout.bind(authController));
 router.post('/refresh', validate(refreshTokenSchema), authController.refreshToken.bind(authController));
 router.get('/verify-email', authController.verifyEmail.bind(authController));
