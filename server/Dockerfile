@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 
 # Production deps only
 COPY server/package.json server/package-lock.json* ./
-RUN npm ci --ignore-scripts --omit=dev
+RUN npm install --ignore-scripts --omit=dev --omit=optional
 
 # Compiled output
 COPY --from=builder /app/dist ./dist
