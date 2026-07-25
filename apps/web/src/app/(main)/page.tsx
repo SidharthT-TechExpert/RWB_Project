@@ -106,18 +106,17 @@ export default function LandingPage() {
   const scrollToTop = () => {
     const startY = window.scrollY || window.pageYOffset;
     if (startY === 0) return;
-    // Ultra-smooth, gentle travel duration (scaled between 1.8s and 2.6s for relaxed travel)
-    const duration = Math.min(Math.max(Math.abs(startY) * 0.8, 1800), 2600);
+    // Fast, responsive scroll duration (scaled between 300ms and 500ms)
+    const duration = Math.min(Math.max(Math.abs(startY) * 0.2, 300), 500);
     const startTime = performance.now();
 
-    // Smooth Quintic Easing curve for ultra-gentle, gradual acceleration and deceleration
-    const easeInOutQuint = (t: number) =>
-      t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+    // Fast Ease-Out Cubic curve for quick, snappy scrolling
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
     const animateScroll = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOutQuint(progress);
+      const easedProgress = easeOutCubic(progress);
 
       window.scrollTo(0, startY * (1 - easedProgress));
 
