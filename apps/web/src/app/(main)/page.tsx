@@ -295,8 +295,8 @@ export default function LandingPage() {
 
           {/* Floating card: Table Ready */}
           <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 2.0, repeat: Infinity, ease: 'easeInOut' }}
             className="
               absolute top-2.5 left-2.5 xs:top-3 xs:left-3 xl:top-8 xl:-left-8
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
@@ -318,8 +318,8 @@ export default function LandingPage() {
 
           {/* Floating card: Rating */}
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
             className="
               absolute top-1/2 -translate-y-1/2 right-2.5 xs:right-3 xl:-right-8
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
@@ -341,8 +341,8 @@ export default function LandingPage() {
 
           {/* Floating card: Wait Saved */}
           <motion.div
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
+            animate={{ y: [0, -9, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
             className="
               absolute bottom-2.5 left-2.5 xs:bottom-3 xs:left-3 xl:bottom-8 xl:-left-6
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
