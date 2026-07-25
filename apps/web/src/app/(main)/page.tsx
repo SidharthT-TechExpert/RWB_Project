@@ -106,18 +106,17 @@ export default function LandingPage() {
   const scrollToTop = () => {
     const startY = window.scrollY || window.pageYOffset;
     if (startY === 0) return;
-    // Ultra-smooth, gentle travel duration (scaled between 1.8s and 2.6s for relaxed travel)
-    const duration = Math.min(Math.max(Math.abs(startY) * 0.8, 1800), 2600);
+    // Fast, responsive scroll duration (scaled between 300ms and 500ms)
+    const duration = Math.min(Math.max(Math.abs(startY) * 0.2, 300), 500);
     const startTime = performance.now();
 
-    // Smooth Quintic Easing curve for ultra-gentle, gradual acceleration and deceleration
-    const easeInOutQuint = (t: number) =>
-      t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+    // Fast Ease-Out Cubic curve for quick, snappy scrolling
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
     const animateScroll = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOutQuint(progress);
+      const easedProgress = easeOutCubic(progress);
 
       window.scrollTo(0, startY * (1 - easedProgress));
 
@@ -179,10 +178,9 @@ export default function LandingPage() {
           <motion.h1
             variants={fadeUp}
             className="
-              text-[2.4rem] xs:text-[3rem] sm:text-[3.8rem] md:text-[3.2rem]
-              lg:text-[4.4rem] xl:text-[5.4rem] 2xl:text-[6.4rem]
-              3xl:text-[7.5rem] 4xl:text-[9rem]
-              font-black text-foreground leading-[1.02] tracking-tight
+              text-[1.8rem] xs:text-[2.2rem] sm:text-[2.8rem] md:text-[2.8rem]
+              lg:text-[3.4rem] xl:text-[4.2rem] 2xl:text-[4.8rem]
+              font-black text-foreground leading-[1.05] tracking-tight
             "
           >
             Skip the Wait.<br />
@@ -271,7 +269,7 @@ export default function LandingPage() {
             min-h-[270px] xs:min-h-[310px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[540px] 2xl:min-h-[600px] 3xl:min-h-[680px]
             h-[270px] xs:h-[310px] sm:h-[360px] md:h-[400px] lg:h-[480px] xl:h-[540px] 2xl:h-[600px] 3xl:h-[680px]
             rounded-[1.5rem] xs:rounded-[1.75rem] sm:rounded-[2.25rem]
-            bg-card/50 dark:bg-card/20 shadow-2xl border border-border/80
+            bg-background dark:bg-background border border-border/30 dark:border-border/10 shadow-xl
             p-1.5 xs:p-2 sm:p-3
             overflow-hidden xl:overflow-visible
             group md:max-w-[48%] lg:max-w-[580px] xl:max-w-none shrink-0
@@ -296,8 +294,8 @@ export default function LandingPage() {
 
           {/* Floating card: Table Ready */}
           <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="
               absolute top-2.5 left-2.5 xs:top-3 xs:left-3 xl:top-8 xl:-left-8
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
@@ -319,8 +317,8 @@ export default function LandingPage() {
 
           {/* Floating card: Rating */}
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
             className="
               absolute top-1/2 -translate-y-1/2 right-2.5 xs:right-3 xl:-right-8
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
@@ -342,8 +340,8 @@ export default function LandingPage() {
 
           {/* Floating card: Wait Saved */}
           <motion.div
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
+            animate={{ y: [0, -11, 0] }}
+            transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
             className="
               absolute bottom-2.5 left-2.5 xs:bottom-3 xs:left-3 xl:bottom-8 xl:-left-6
               bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl
