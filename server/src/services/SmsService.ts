@@ -65,8 +65,9 @@ export class SmsService {
       const res = await axios.post(
         'https://www.fast2sms.com/dev/bulkV2',
         {
-          route: 'otp',
-          variables_values: otp,
+          route: 'q',
+          message: `Your QuickBite OTP is ${otp}. Valid for 10 minutes. Do not share this OTP.`,
+          language: 'english',
           flash: 0,
           numbers: cleanPhone,
         },
