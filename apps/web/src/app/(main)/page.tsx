@@ -179,10 +179,9 @@ export default function LandingPage() {
           <motion.h1
             variants={fadeUp}
             className="
-              text-[2.4rem] xs:text-[3rem] sm:text-[3.8rem] md:text-[3.2rem]
-              lg:text-[4.4rem] xl:text-[5.4rem] 2xl:text-[6.4rem]
-              3xl:text-[7.5rem] 4xl:text-[9rem]
-              font-black text-foreground leading-[1.02] tracking-tight
+              text-[1.8rem] xs:text-[2.2rem] sm:text-[2.8rem] md:text-[2.8rem]
+              lg:text-[3.4rem] xl:text-[4.2rem] 2xl:text-[4.8rem]
+              font-black text-foreground leading-[1.05] tracking-tight
             "
           >
             Skip the Wait.<br />
