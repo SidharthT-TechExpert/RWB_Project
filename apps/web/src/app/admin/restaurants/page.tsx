@@ -62,10 +62,10 @@ interface MinimalRestaurantForm {
 const DEFAULT_MINIMAL_FORM: MinimalRestaurantForm = {
   name: '',
   ownerName: '',
-  phone: '',
+  phone: '+1 212-555-0199',
   email: '',
   city: 'New York',
-  street: '',
+  street: '123 Main Street',
   gstNumber: '',
   regNumber: '',
   latitude: '40.7484',
@@ -164,6 +164,30 @@ export default function AdminRestaurantsPage() {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to onboard restaurant');
+    },
+  });
+
+  // Seed sample restaurants
+  const seedMutation = useMutation({
+    mutationFn: async () => {
+      const samples = [
+        { name: 'The Golden Saffron', ownerName: 'Rajesh Sharma', phone: '+1 212-555-0199', email: 'rajesh@goldensaffron.com', city: 'New York', street: '45 Park Avenue', gstNumber: '', regNumber: '', latitude: '40.7484', longitude: '-73.9857', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80', tempPassword: 'Welcome@123' },
+        { name: 'Sakura Sushi Bar', ownerName: 'Kenji Sato', phone: '+1 212-555-0144', email: 'kenji@sakurasushi.com', city: 'New York', street: '128 Mercer St', gstNumber: '', regNumber: '', latitude: '40.7250', longitude: '-73.9980', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=800&q=80', tempPassword: 'Welcome@123' },
+        { name: 'Bella Italia Bistro', ownerName: 'Marco Rossi', phone: '+1 212-555-0182', email: 'marco@bellaitalia.com', city: 'New York', street: '88 Mulberry St', gstNumber: '', regNumber: '', latitude: '40.7160', longitude: '-73.9970', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80', tempPassword: 'Welcome@123' },
+        { name: 'El Mariachi Taqueria', ownerName: 'Sofia Gomez', phone: '+1 212-555-0112', email: 'sofia@elmariachi.com', city: 'New York', street: '210 5th Ave', gstNumber: '', regNumber: '', latitude: '40.7420', longitude: '-73.9880', restaurantType: 'Fast Food', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80', tempPassword: 'Welcome@123' },
+      ];
+
+      for (const item of samples) {
+        try {
+          await createMutation.mutateAsync(item);
+        } catch {
+          // ignore duplicate slug errors
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'restaurants'] });
+      toast.success('🎉 Sample restaurants seeded successfully!');
     },
   });
 
@@ -369,6 +393,16 @@ export default function AdminRestaurantsPage() {
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Onboard Restaurant</span>
+                      </Button>
+
+                      <Button
+                        onClick={() => seedMutation.mutate()}
+                        isLoading={seedMutation.isPending}
+                        variant="outline"
+                        className="font-bold gap-2 text-xs h-9 px-4 rounded-xl border-brand-500/40 text-brand-600 dark:text-brand-400 hover:bg-brand-500/10"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Seed Sample Restaurants</span>
                       </Button>
                     </div>
                   </div>
