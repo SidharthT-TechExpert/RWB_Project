@@ -6,6 +6,12 @@
   font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
 }
 
+.font-logo {
+  font-family: var(--font-outfit), var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
