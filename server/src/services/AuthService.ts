@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { User, IUser } from '../models/User';
+import { Restaurant } from '../models/Restaurant';
 import { OTP } from '../models/OTP';
 import { DailyOTPCount } from '../models/DailyOTPCount';
 import { UserProfile } from '../models/UserProfile';
@@ -22,30 +23,24 @@ export class AuthService {
     };
   }
 
-  async register(data: { name: string; email: string; password: string; phone?: string; role?: string }) {
-    const existingUser = await User.findOne({ email: data.email.toLowerCase() });
-    if (existingUser) throw new ConflictError('An account with this email already exists');
-
-    if (data.phone) {
-      const existingPhone = await User.findOne({ phone: data.phone });
-      if (existingPhone) throw new ConflictError('An account with this phone number already exists');
-    }
+  async register(data: { email: string; password: string; name: string; phone?: string; role?: string }) {
+    const existing = await User.findOne({ email: data.email.toLowerCase() });
+    if (existing) throw new ConflictError('Email is already registered');
 
     const hashedPassword = await hashPassword(data.password);
     const verificationToken = generateToken();
 
     const user = await User.create({
-      name: data.name,
       email: data.email.toLowerCase(),
       password: hashedPassword,
+      name: data.name,
       phone: data.phone,
-      role: (data.role as IUser['role']) || ROLES.CUSTOMER,
+      role: data.role || ROLES.CUSTOMER,
       emailVerificationToken: verificationToken,
       emailVerificationExpiry: addHours(new Date(), 24),
     });
 
-    // Create user profile
-    await UserProfile.create({ userId: user._id.toString(), name: user.name, email: user.email, phone: user.phone });
+    await UserProfile.create({ userId: user._id, isNotificationEnabled: true });
 
     emailService.sendVerificationEmail(user.email, user.name, verificationToken)
       .catch((err) => logger.error('Failed to send verification email:', err));
@@ -60,7 +55,31 @@ export class AuthService {
   async login(data: { email: string; password: string }) {
     const email = (data.email || '').trim().toLowerCase();
     const password = (data.password || '').trim();
-    const user = await User.findOne({ email }).select('+password +refreshTokens');
+    let user = await User.findOne({ email }).select('+password +refreshTokens');
+
+    // Auto-onboard missing User account for existing onboarded restaurant
+    if (!user) {
+      const restaurant = await Restaurant.findOne({
+        $or: [{ email }, { phone: email }],
+      });
+
+      if (restaurant) {
+        const defaultPassword = 'Welcome@123';
+        const hashedPassword = await hashPassword(defaultPassword);
+        const newUser = await User.create({
+          email: restaurant.email || email,
+          name: restaurant.name ? `${restaurant.name} Manager` : 'Restaurant Owner',
+          phone: restaurant.phone || '+1 212-555-0199',
+          password: hashedPassword,
+          role: ROLES.RESTAURANT_OWNER,
+          isEmailVerified: true,
+          isActive: true,
+        });
+        logger.info(`Auto-created User account for onboarded restaurant: ${email}`);
+        user = (await User.findById(newUser._id).select('+password +refreshTokens')) as any;
+      }
+    }
+
     if (!user) throw new AuthenticationError('Invalid email or password');
 
     if (user.isSuspended) throw new AppError('Your account has been suspended.', 403);
