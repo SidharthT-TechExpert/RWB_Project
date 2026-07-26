@@ -121,8 +121,8 @@ export default function DashboardHomePage() {
   return (
     <div className="space-y-6 pb-12 font-sans select-none text-slate-100">
 
-      {/* ── TOP COMMAND BAR (Glassmorphism Header) ── */}
-      <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+      {/* ── TOP COMMAND BAR (Sticky Glassmorphism Header) ── */}
+      <div className="sticky top-2 xs:top-3 sm:top-4 z-30 bg-[#091124]/95 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-4 shadow-[0_15px_35px_rgba(0,0,0,0.6)] flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all">
         {/* Subtle Ambient Radial Glow */}
         <div className="absolute -top-12 -left-12 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
