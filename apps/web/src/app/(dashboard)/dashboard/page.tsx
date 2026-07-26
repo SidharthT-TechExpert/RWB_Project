@@ -6,11 +6,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Search,
-  MapPin,
-  Bell,
-  HelpCircle,
-  Download,
   PhoneCall,
   Armchair,
   Calendar,
@@ -20,15 +15,10 @@ import {
   AlertTriangle,
   Info,
   Star,
-  ChevronDown,
-  Sparkles,
   BarChart2,
-  Clock,
-  Command,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useMyRestaurants } from '@/hooks/useRestaurants';
-import { Button } from '@/components/ui/Button';
 
 // Mock Table Data for Live Table Grid
 interface TableStatus {
@@ -98,7 +88,6 @@ const STATUS_STYLES = {
 export default function DashboardHomePage() {
   const [tables, setTables] = useState<TableStatus[]>(INITIAL_TABLES);
   const [tableFilter, setTableFilter] = useState<string>('all');
-  const [branch, setBranch] = useState('Downtown Branch');
 
   const { data: restaurants } = useMyRestaurants();
   const restaurant = restaurants?.data?.[0];
@@ -120,76 +109,6 @@ export default function DashboardHomePage() {
 
   return (
     <div className="space-y-6 pb-12 font-sans select-none text-slate-100">
-
-      {/* ── TOP COMMAND BAR (Sticky Flush On Top Header) ── */}
-      <div className="sticky top-0 z-40 bg-[#091124]/98 backdrop-blur-2xl border-b border-slate-800/90 rounded-b-2xl p-4 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all -mx-3 xs:-mx-4 sm:-mx-6 lg:-mx-8 -mt-3 xs:-mt-4 sm:-mt-6 lg:-mt-8 mb-6 px-4 xs:px-6 lg:px-8">
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Left Title */}
-        <div className="flex items-center gap-2.5 text-xs font-mono text-slate-400 uppercase tracking-widest relative z-10">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse" />
-          <span className="font-bold text-slate-300">QuickBite Manager</span>
-          <span className="text-slate-600">•</span>
-          <span className="text-slate-400">Operational Command Center</span>
-        </div>
-
-        {/* Middle Search & Branch Selector */}
-        <div className="flex flex-wrap items-center gap-3 flex-1 max-w-xl relative z-10">
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              placeholder="Search tables, orders, or customers..."
-              className="pl-10 pr-12 h-10 w-full rounded-xl border border-slate-800 bg-[#050B18]/90 text-xs font-medium text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition-all"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] font-mono text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-700/50">
-              <Command className="w-2.5 h-2.5" /> K
-            </div>
-          </div>
-
-          <div className="relative">
-            <select
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
-              className="h-10 pl-9 pr-9 rounded-xl border border-slate-800 bg-[#050B18]/90 text-xs font-bold text-slate-200 appearance-none cursor-pointer focus:outline-none focus:border-blue-500/60 transition-all"
-            >
-              <option value="Downtown Branch">Downtown Branch</option>
-              <option value="Uptown Branch">Uptown Branch</option>
-            </select>
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-500 pointer-events-none" />
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Right Actions & Manager Profile */}
-        <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <button className="p-2.5 rounded-xl border border-slate-800 bg-[#050B18]/80 text-slate-400 hover:text-white transition-all hover:border-slate-700 relative group">
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-500 shadow-[0_0_8px_#ff6b35]" />
-          </button>
-
-          <button className="p-2.5 rounded-xl border border-slate-800 bg-[#050B18]/80 text-slate-400 hover:text-white transition-all hover:border-slate-700">
-            <HelpCircle className="w-4 h-4" />
-          </button>
-
-          {/* Manager Avatar */}
-          <div className="flex items-center gap-3 pl-3 border-l border-slate-800/80">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white font-black flex items-center justify-center text-xs shadow-[0_0_15px_rgba(255,107,53,0.35)] border border-brand-400/40">
-              Arun
-            </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-bold text-white leading-none">Arun 👋</p>
-              <p className="text-[10px] font-mono font-bold text-slate-400 uppercase mt-0.5 tracking-wider">GENERAL MANAGER</p>
-            </div>
-          </div>
-
-          {/* Export Button */}
-          <Button size="sm" className="h-10 px-4 text-xs font-extrabold bg-white hover:bg-slate-100 text-slate-900 gap-2 rounded-xl shadow-lg hover:shadow-white/10 transition-all ml-2 cursor-pointer">
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </Button>
-        </div>
-      </div>
 
       {/* ── GREETING & KPI CARDS ── */}
       <div className="space-y-4">
