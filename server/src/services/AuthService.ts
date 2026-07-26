@@ -66,7 +66,7 @@ export class AuthService {
       if (restaurant) {
         const defaultPassword = 'Welcome@123';
         const hashedPassword = await hashPassword(defaultPassword);
-        user = await User.create({
+        const newUser = await User.create({
           email: restaurant.email || email,
           name: restaurant.name ? `${restaurant.name} Manager` : 'Restaurant Owner',
           phone: restaurant.phone || '+1 212-555-0199',
@@ -76,7 +76,7 @@ export class AuthService {
           isActive: true,
         });
         logger.info(`Auto-created User account for onboarded restaurant: ${email}`);
-        user = await User.findById(user._id).select('+password +refreshTokens');
+        user = (await User.findById(newUser._id).select('+password +refreshTokens')) as any;
       }
     }
 
