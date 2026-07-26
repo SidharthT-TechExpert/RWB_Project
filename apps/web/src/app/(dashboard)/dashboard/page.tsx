@@ -91,6 +91,36 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
+const INITIAL_TABLES: TableStatus[] = [
+  { id: '1', number: 'T-01', status: 'occupied' },
+  { id: '2', number: 'T-02', status: 'reserved' },
+  { id: '3', number: 'T-03', status: 'available' },
+  { id: '4', number: 'T-04', status: 'cleaning' },
+  { id: '5', number: 'T-05', status: 'occupied' },
+  { id: '6', number: 'T-06', status: 'available' },
+  { id: '7', number: 'T-07', status: 'cleaning' },
+  { id: '8', number: 'T-08', status: 'available' },
+  { id: '9', number: 'T-09', status: 'cleaning' },
+  { id: '10', number: 'T-10', status: 'occupied' },
+  { id: '11', number: 'T-11', status: 'occupied' },
+  { id: '12', number: 'T-12', status: 'occupied' },
+  { id: '13', number: 'T-13', status: 'cleaning' },
+  { id: '14', number: 'T-14', status: 'cleaning' },
+  { id: '15', number: 'T-15', status: 'cleaning' },
+  { id: '16', number: 'T-16', status: 'occupied' },
+  { id: '17', number: 'T-17', status: 'cleaning' },
+  { id: '18', number: 'T-18', status: 'available' },
+  { id: '19', number: 'T-19', status: 'cleaning' },
+  { id: '20', number: 'T-20', status: 'reserved' },
+];
+
+const STATUS_STYLES = {
+  occupied: { label: 'Occupied', bg: 'bg-blue-50/80 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-600 dark:text-blue-400', dot: 'bg-blue-600' },
+  reserved: { label: 'Reserved', bg: 'bg-orange-50/80 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-600 dark:text-orange-400', dot: 'bg-orange-600' },
+  available: { label: 'Available', bg: 'bg-emerald-50/80 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-600' },
+  cleaning: { label: 'Cleaning', bg: 'bg-amber-50/80 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
+};
+
 export default function DashboardHomePage() {
   const [tables] = useState<TableStatus[]>(INITIAL_TABLES);
   const [tableFilter, setTableFilter] = useState<string>('all');
