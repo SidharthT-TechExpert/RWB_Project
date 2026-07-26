@@ -23,6 +23,7 @@ import {
   Play,
   ChevronDown,
   Sparkles,
+  BarChart2,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useMyRestaurants } from '@/hooks/useRestaurants';
