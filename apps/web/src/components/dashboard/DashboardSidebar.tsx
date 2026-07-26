@@ -87,9 +87,9 @@ export function DashboardSidebar() {
             <span className="text-white font-black text-sm">Q</span>
           </div>
           {isExpanded && (
-            <div className="min-w-0">
-              <p className="text-sm font-black text-white truncate">QuickBite</p>
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Manager</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-white truncate">{restaurant?.name ?? 'Restaurant'}</p>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Manager Portal</p>
             </div>
           )}
           <button

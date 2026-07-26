@@ -53,7 +53,7 @@ export function DashboardHeader() {
           <div className="w-px h-5 bg-white/10 hidden sm:block" />
           <div>
             <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none hidden md:block">
-              QuickBite / {restaurant?.name ?? 'Restaurant'}
+              {restaurant?.name ?? 'Restaurant'} &nbsp;·&nbsp; Manager Portal
             </p>
             <h1 className="text-sm font-black text-white tracking-tight leading-tight">{pageLabel}</h1>
           </div>
