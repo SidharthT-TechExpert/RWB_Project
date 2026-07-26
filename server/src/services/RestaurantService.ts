@@ -1,8 +1,9 @@
 import { Restaurant, IRestaurant } from '../models/Restaurant';
+import { User } from '../models/User';
 import { NotFoundError, AuthorizationError, ConflictError } from '../errors';
 import { setCache, getCache, deleteCache } from '../config/redis';
-import { generateSlug, getPaginationParams, buildPaginationMeta } from '../utils';
-import { RESTAURANT_STATUS, CACHE_TTL } from '../constants';
+import { generateSlug, getPaginationParams, buildPaginationMeta, hashPassword } from '../utils';
+import { RESTAURANT_STATUS, ROLES, CACHE_TTL } from '../constants';
 import { logger } from '../config/logger';
 
 export class RestaurantService {
@@ -11,11 +12,42 @@ export class RestaurantService {
     const existing = await Restaurant.findOne({ slug });
     if (existing) slug = `${slug}-${Date.now()}`;
 
+    let finalOwnerId = ownerId;
+
+    // Auto-create Restaurant Owner User Account if email is provided
+    if (data.email) {
+      const cleanEmail = data.email.trim().toLowerCase();
+      let user = await User.findOne({ email: cleanEmail });
+
+      if (!user) {
+        const rawPassword = (data as any).tempPassword || 'Welcome@123';
+        const hashedPassword = await hashPassword(rawPassword);
+
+        user = await User.create({
+          email: cleanEmail,
+          name: data.name ? `${data.name} Manager` : 'Restaurant Owner',
+          phone: data.phone || '+1 212-555-0199',
+          password: hashedPassword,
+          role: ROLES.RESTAURANT_OWNER,
+          isEmailVerified: true,
+          isActive: true,
+        });
+        logger.info(`Auto-created Restaurant Owner account for ${cleanEmail}`);
+      } else if (user.role !== ROLES.ADMIN && user.role !== ROLES.RESTAURANT_OWNER) {
+        user.role = ROLES.RESTAURANT_OWNER;
+        await user.save();
+      }
+
+      if (user) {
+        finalOwnerId = user._id.toString();
+      }
+    }
+
     const restaurant = await Restaurant.create({
       name: data.name,
       slug,
       description: data.description || `Welcome to ${data.name}`,
-      ownerId: ownerId || 'admin_onboarded',
+      ownerId: finalOwnerId || ownerId || 'admin_onboarded',
       phone: data.phone || '+1 212-555-0100',
       email: data.email,
       website: data.website,
