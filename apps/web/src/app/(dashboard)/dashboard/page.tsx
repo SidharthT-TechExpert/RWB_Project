@@ -4,23 +4,17 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  PhoneCall,
-  Armchair,
-  Calendar,
-  Wallet,
-  ArrowUpRight,
-  TrendingUp,
-  AlertTriangle,
-  Info,
-  Star,
-  BarChart2,
+  PhoneCall, Armchair, Calendar, Wallet,
+  ArrowUpRight, ArrowDownRight, TrendingUp,
+  AlertTriangle, Info, Star, BarChart2,
+  ChevronRight, Zap, Clock,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useMyRestaurants } from '@/hooks/useRestaurants';
+import Link from 'next/link';
 
-// Mock Table Data for Live Table Grid
 interface TableStatus {
   id: string;
   number: string;
@@ -50,50 +44,26 @@ const INITIAL_TABLES: TableStatus[] = [
   { id: '20', number: 'T-20', status: 'reserved' },
 ];
 
-const STATUS_STYLES = {
-  occupied: {
-    label: 'Occupied',
-    cardBg: 'bg-gradient-to-b from-blue-950/40 to-blue-900/10 dark:bg-blue-950/30',
-    border: 'border-blue-500/40 dark:border-blue-700/60',
-    text: 'text-blue-400',
-    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]',
-    dot: 'bg-blue-500 shadow-[0_0_8px_#3b82f6]',
-  },
-  reserved: {
-    label: 'Reserved',
-    cardBg: 'bg-gradient-to-b from-orange-950/40 to-orange-900/10 dark:bg-orange-950/30',
-    border: 'border-orange-500/40 dark:border-orange-700/60',
-    text: 'text-orange-400',
-    glow: 'shadow-[0_0_15px_rgba(249,115,22,0.15)]',
-    dot: 'bg-orange-500 shadow-[0_0_8px_#f97316]',
-  },
-  available: {
-    label: 'Available',
-    cardBg: 'bg-gradient-to-b from-emerald-950/40 to-emerald-900/10 dark:bg-emerald-950/30',
-    border: 'border-emerald-500/40 dark:border-emerald-700/60',
-    text: 'text-emerald-400',
-    glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
-    dot: 'bg-emerald-500 shadow-[0_0_8px_#10b981]',
-  },
-  cleaning: {
-    label: 'Cleaning',
-    cardBg: 'bg-gradient-to-b from-amber-950/40 to-amber-900/10 dark:bg-amber-950/30',
-    border: 'border-amber-500/40 dark:border-amber-700/60',
-    text: 'text-amber-400',
-    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
-    dot: 'bg-amber-400 shadow-[0_0_8px_#f59e0b]',
-  },
+const TABLE_STATUS_CONFIG = {
+  occupied:  { label: 'Occupied',  color: 'bg-blue-500',   border: 'border-blue-500/30',   bg: 'bg-blue-500/10',   text: 'text-blue-400',   glow: 'shadow-blue-500/20'  },
+  reserved:  { label: 'Reserved',  color: 'bg-orange-500', border: 'border-orange-500/30', bg: 'bg-orange-500/10', text: 'text-orange-400', glow: 'shadow-orange-500/20'},
+  available: { label: 'Available', color: 'bg-emerald-500',border: 'border-emerald-500/30',bg: 'bg-emerald-500/10',text: 'text-emerald-400',glow: 'shadow-emerald-500/20'},
+  cleaning:  { label: 'Cleaning',  color: 'bg-amber-400',  border: 'border-amber-400/30',  bg: 'bg-amber-400/10',  text: 'text-amber-400',  glow: 'shadow-amber-400/20' },
 };
 
+const CHART_DATA = [42, 58, 38, 72, 88, 65, 82, 70, 91, 60, 45, 78];
+const CHART_HOURS = ['8a','9a','10a','11a','12p','1p','2p','3p','4p','5p','6p','7p'];
+
+const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
+
 export default function DashboardHomePage() {
-  const [tables, setTables] = useState<TableStatus[]>(INITIAL_TABLES);
+  const [tables] = useState<TableStatus[]>(INITIAL_TABLES);
   const [tableFilter, setTableFilter] = useState<string>('all');
 
   const { data: restaurants } = useMyRestaurants();
   const restaurant = restaurants?.data?.[0];
   const restaurantId = restaurant?._id;
 
-  // Real bookings query
   const { data: todayBookings } = useQuery({
     queryKey: ['dashboard', 'bookings', restaurantId],
     queryFn: async () => {
@@ -106,386 +76,344 @@ export default function DashboardHomePage() {
   });
 
   const filteredTables = tableFilter === 'all' ? tables : tables.filter((t) => t.status === tableFilter);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  const kpiCards = [
+    {
+      label: "Today's Reservations",
+      value: '128',
+      icon: PhoneCall,
+      change: '+12%',
+      up: true,
+      color: 'blue',
+      iconBg: 'bg-blue-500/15 text-blue-400',
+      border: 'hover:border-blue-500/30',
+      glow: 'hover:shadow-blue-500/10',
+    },
+    {
+      label: 'Table Occupancy',
+      value: '82%',
+      icon: Armchair,
+      sub: <div className="w-full bg-white/8 h-1.5 rounded-full mt-3 overflow-hidden"><div className="bg-blue-500 h-full rounded-full shadow-[0_0_6px_#3b82f6]" style={{ width: '82%' }} /></div>,
+      color: 'blue',
+      iconBg: 'bg-blue-500/15 text-blue-400',
+      border: 'hover:border-blue-500/30',
+      glow: 'hover:shadow-blue-500/10',
+    },
+    {
+      label: 'Available Tables',
+      value: '08',
+      icon: Calendar,
+      change: '↓ Low',
+      up: false,
+      color: 'amber',
+      iconBg: 'bg-amber-500/15 text-amber-400',
+      border: 'hover:border-amber-500/30',
+      glow: 'hover:shadow-amber-500/10',
+    },
+    {
+      label: 'Daily Revenue',
+      value: '₹84,250',
+      icon: Wallet,
+      change: '+18%',
+      up: true,
+      color: 'emerald',
+      iconBg: 'bg-emerald-500/15 text-emerald-400',
+      border: 'hover:border-emerald-500/30',
+      glow: 'hover:shadow-emerald-500/10',
+    },
+  ];
 
   return (
-    <div className="space-y-6 pb-12 font-sans select-none text-slate-100">
-
-      {/* ── GREETING & KPI CARDS ── */}
-      <div className="space-y-4">
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={{ show: { transition: { staggerChildren: 0.07 } } }}
+      className="space-y-6 pb-16"
+    >
+      {/* ── GREETING ROW ── */}
+      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-            Good Morning, Arun <span className="animate-bounce inline-block">👋</span>
+          <p className="text-[11px] font-mono text-slate-500 uppercase tracking-widest">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
+            {greeting}, <span className="text-blue-400">{restaurant?.name?.split(' ')[0] ?? 'Arun'}</span> 👋
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-medium">
-            Here is what's happening at <strong className="text-white font-bold">{restaurant?.name || 'El Mariachi Taqueria'}</strong> today.
-          </p>
+          <p className="text-xs text-slate-500 mt-0.5">Here's your operational snapshot for today.</p>
         </div>
-
-        {/* 4 Premium Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Today's Reservations */}
-          <motion.div
-            whileHover={{ y: -3 }}
-            className="p-5 rounded-2xl border border-slate-800/80 bg-[#091124]/90 backdrop-blur-xl shadow-xl relative overflow-hidden group hover:border-blue-500/40 transition-all"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest">Today's Reservations</span>
-              <div className="w-10 h-10 rounded-xl bg-blue-600/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shadow-[0_0_12px_rgba(37,99,235,0.2)]">
-                <PhoneCall className="w-5 h-5" />
-              </div>
-            </div>
-            <div className="text-3xl font-black text-white tracking-tight">128</div>
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1 mt-2.5">
-              <ArrowUpRight className="w-4 h-4" />
-              <span>+12% vs yest.</span>
-            </div>
-          </motion.div>
-
-          {/* Card 2: Table Occupancy */}
-          <motion.div
-            whileHover={{ y: -3 }}
-            className="p-5 rounded-2xl border border-slate-800/80 bg-[#091124]/90 backdrop-blur-xl shadow-xl relative overflow-hidden group hover:border-blue-500/40 transition-all"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest">Table Occupancy</span>
-              <div className="w-10 h-10 rounded-xl bg-blue-600/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shadow-[0_0_12px_rgba(37,99,235,0.2)]">
-                <Armchair className="w-5 h-5" />
-              </div>
-            </div>
-            <div className="text-3xl font-black text-white tracking-tight">82%</div>
-            <div className="w-full bg-slate-800/80 h-2 rounded-full mt-3 overflow-hidden p-0.5 border border-slate-700/50">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full shadow-[0_0_8px_#3b82f6]" style={{ width: '82%' }} />
-            </div>
-          </motion.div>
-
-          {/* Card 3: Available Tables */}
-          <motion.div
-            whileHover={{ y: -3 }}
-            className="p-5 rounded-2xl border border-slate-800/80 bg-[#091124]/90 backdrop-blur-xl shadow-xl relative overflow-hidden group hover:border-amber-500/40 transition-all"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest">Available Tables</span>
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                <Calendar className="w-5 h-5" />
-              </div>
-            </div>
-            <div className="text-3xl font-black text-white tracking-tight">08</div>
-            <div className="text-xs font-bold text-amber-400 mt-2.5 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span>Critical focus needed</span>
-            </div>
-          </motion.div>
-
-          {/* Card 4: Daily Revenue */}
-          <motion.div
-            whileHover={{ y: -3 }}
-            className="p-5 rounded-2xl border border-slate-800/80 bg-[#091124]/90 backdrop-blur-xl shadow-xl relative overflow-hidden group hover:border-blue-500/40 transition-all"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest">Daily Revenue</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-blue-400/40">
-                <Wallet className="w-5 h-5" />
-              </div>
-            </div>
-            <div className="text-3xl font-black text-white tracking-tight">₹84,250</div>
-            <div className="text-xs font-bold text-blue-400 flex items-center gap-1 mt-2.5">
-              <TrendingUp className="w-4 h-4" />
-              <span>^ 18% target met</span>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ── MAIN CONTENT GRID (Tables & Analytics + Side Panel) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        {/* ── LEFT COLUMN (Tables & Charts) ── */}
-        <div className="lg:col-span-8 space-y-6">
-
-          {/* Live Table Status Grid */}
-          <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-2xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-              <h2 className="font-black text-lg text-white flex items-center gap-2.5">
-                <Armchair className="w-5 h-5 text-brand-500" />
-                Live Table Status
-              </h2>
-
-              {/* Status Filter Badges */}
-              <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold">
-                <button
-                  onClick={() => setTableFilter('occupied')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${tableFilter === 'occupied' ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.4)]' : 'bg-[#050B18] text-slate-400 border-slate-800 hover:border-slate-700'}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_#3b82f6]" />
-                  <span>OCCUPIED</span>
-                </button>
-                <button
-                  onClick={() => setTableFilter('reserved')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${tableFilter === 'reserved' ? 'bg-orange-600 text-white border-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.4)]' : 'bg-[#050B18] text-slate-400 border-slate-800 hover:border-slate-700'}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_#f97316]" />
-                  <span>RESERVED</span>
-                </button>
-                <button
-                  onClick={() => setTableFilter('available')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${tableFilter === 'available' ? 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'bg-[#050B18] text-slate-400 border-slate-800 hover:border-slate-700'}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
-                  <span>AVAILABLE</span>
-                </button>
-                <button
-                  onClick={() => setTableFilter('cleaning')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${tableFilter === 'cleaning' ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)]' : 'bg-[#050B18] text-slate-400 border-slate-800 hover:border-slate-700'}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
-                  <span>CLEANING</span>
-                </button>
-                {tableFilter !== 'all' && (
-                  <button onClick={() => setTableFilter('all')} className="text-xs text-brand-400 hover:underline ml-1">
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Table Grid Cards */}
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2.5 sm:gap-3">
-              {filteredTables.map((t) => {
-                const style = STATUS_STYLES[t.status];
-                return (
-                  <motion.div
-                    key={t.id}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    className={`p-3.5 rounded-xl border ${style.cardBg} ${style.border} ${style.glow} flex flex-col items-center justify-center text-center space-y-1.5 cursor-pointer transition-all`}
-                  >
-                    <span className="text-xs font-mono font-bold text-slate-400">{t.number}</span>
-                    <Armchair className={`w-5 h-5 ${style.text}`} />
-                    <span className={`text-[10px] font-black uppercase tracking-wider ${style.text}`}>{style.label}</span>
-                  </motion.div>
-                );
-              })}
-            </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400">
+            <Zap className="w-3.5 h-3.5" />
+            <span>All Systems Operational</span>
           </div>
+        </div>
+      </motion.div>
 
-          {/* Bottom Split: Today's Reservations Table & Revenue Chart */}
+      {/* ── KPI CARDS ── */}
+      <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {kpiCards.map((card) => (
+          <motion.div
+            key={card.label}
+            whileHover={{ y: -2, scale: 1.01 }}
+            className={`group relative p-5 rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm shadow-xl transition-all duration-200 cursor-default ${card.border} hover:shadow-lg ${card.glow}`}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <p className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider leading-tight">{card.label}</p>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+                <card.icon className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-white tracking-tight tabular-nums">{card.value}</p>
+            {card.sub ?? null}
+            {card.change && (
+              <div className={`flex items-center gap-1 mt-3 text-xs font-bold ${card.up ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {card.up ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                {card.change}
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* ── MAIN GRID ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        {/* LEFT COLUMN */}
+        <div className="xl:col-span-8 space-y-6">
+
+          {/* Live Table Grid */}
+          <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden">
+            {/* Section header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-white/6">
+              <div className="flex items-center gap-2.5">
+                <Armchair className="w-4 h-4 text-blue-400" />
+                <h2 className="font-bold text-sm text-white">Live Table Status</h2>
+                <span className="text-[10px] font-mono text-slate-500">{tables.length} tables</span>
+              </div>
+              {/* Status filters */}
+              <div className="flex flex-wrap gap-1.5">
+                {(['all', 'occupied', 'reserved', 'available', 'cleaning'] as const).map((f) => {
+                  const cfg = f === 'all' ? null : TABLE_STATUS_CONFIG[f];
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setTableFilter(f)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                        tableFilter === f
+                          ? f === 'all' ? 'bg-white/15 text-white' : `${cfg!.bg} ${cfg!.text} border ${cfg!.border}`
+                          : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                      }`}
+                    >
+                      {cfg && <span className={`w-1.5 h-1.5 rounded-full ${cfg.color}`} />}
+                      <span className="capitalize">{f}</span>
+                      {f !== 'all' && (
+                        <span className="text-[10px]">
+                          {tables.filter(t => t.status === f).length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Table cards */}
+            <div className="p-4 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-5 2xl:grid-cols-7 gap-2">
+              <AnimatePresence>
+                {filteredTables.map((t) => {
+                  const cfg = TABLE_STATUS_CONFIG[t.status];
+                  return (
+                    <motion.div
+                      key={t.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      whileHover={{ scale: 1.06, y: -2 }}
+                      className={`aspect-square rounded-xl border ${cfg.border} ${cfg.bg} flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all shadow-lg ${cfg.glow}`}
+                    >
+                      <Armchair className={`w-5 h-5 ${cfg.text}`} />
+                      <span className="text-[10px] font-mono font-bold text-slate-400">{t.number}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-wider ${cfg.text}`}>{cfg.label}</span>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
+          {/* Reservations table + Revenue chart */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* Today's Reservations Table */}
-            <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                <h3 className="font-extrabold text-base text-white">Today's Reservations</h3>
-                <a href="/dashboard/bookings" className="text-xs font-bold text-blue-400 hover:underline">
-                  View All
-                </a>
+            {/* Today's Reservations */}
+            <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/6">
+                <h3 className="text-sm font-bold text-white">Today's Reservations</h3>
+                <Link href="/dashboard/bookings" className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                  View all <ChevronRight className="w-3 h-3" />
+                </Link>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="text-slate-400 border-b border-slate-800 text-[10px] uppercase font-mono tracking-wider">
-                    <tr>
-                      <th className="text-left pb-2.5 font-bold">CUSTOMER</th>
-                      <th className="text-center pb-2.5 font-bold">GUESTS</th>
-                      <th className="text-center pb-2.5 font-bold">TIME</th>
-                      <th className="text-right pb-2.5 font-bold">STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {todayBookings?.data?.length > 0 ? (
-                      todayBookings.data.map((b: any) => (
-                        <tr key={b._id} className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 font-bold text-white">{b.bookingNumber}</td>
-                          <td className="py-3 text-center font-semibold text-slate-300">{b.guestCount}p</td>
-                          <td className="py-3 text-center font-mono text-slate-400">{b.reservationTime}</td>
-                          <td className="py-3 text-right">
-                            <span className="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                              {b.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <>
-                        <tr className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 font-bold text-white">Mr. Thomas</td>
-                          <td className="py-3 text-center font-semibold text-slate-300">4p</td>
-                          <td className="py-3 text-center font-mono text-slate-400">19:30</td>
-                          <td className="py-3 text-right">
-                            <span className="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase bg-blue-500/15 border border-blue-500/30 text-blue-400">
-                              Confirmed
-                            </span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 font-bold text-white">Priya Sharma</td>
-                          <td className="py-3 text-center font-semibold text-slate-300">2p</td>
-                          <td className="py-3 text-center font-mono text-slate-400">20:00</td>
-                          <td className="py-3 text-right">
-                            <span className="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                              Checked-In
-                            </span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 font-bold text-white">Alex Vance</td>
-                          <td className="py-3 text-center font-semibold text-slate-300">6p</td>
-                          <td className="py-3 text-center font-mono text-slate-400">21:15</td>
-                          <td className="py-3 text-right">
-                            <span className="px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase bg-orange-500/15 border border-orange-500/30 text-orange-400">
-                              Reserved
-                            </span>
-                          </td>
-                        </tr>
-                      </>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Revenue vs Reservations Chart */}
-            <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-2xl flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                <div>
-                  <h3 className="font-extrabold text-base text-white">Revenue vs Reservations</h3>
-                  <p className="text-[10px] font-mono text-slate-400">Hourly comparison</p>
-                </div>
-                <select className="h-8 px-2.5 text-xs font-bold rounded-xl border border-slate-800 bg-[#050B18] text-slate-300 outline-none">
-                  <option value="24h">Last 24 Hours</option>
-                  <option value="7d">Last 7 Days</option>
-                </select>
-              </div>
-
-              {/* Chart SVG Representation */}
-              <div className="h-32 w-full flex items-end justify-between gap-2 pt-4 px-2">
-                {[35, 50, 45, 80, 95, 60, 85, 70, 90, 65, 40, 75].map((h, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                    <div className="w-full bg-gradient-to-t from-blue-600/30 to-blue-500 group-hover:from-blue-500 group-hover:to-indigo-400 rounded-t transition-all relative shadow-[0_0_8px_rgba(59,130,246,0.3)]" style={{ height: `${h}%` }}>
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-white text-slate-900 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow-lg transition-opacity pointer-events-none z-20">
-                        ₹{h * 100}
-                      </div>
+              <div className="p-4 space-y-1">
+                {(todayBookings?.data?.length > 0 ? todayBookings.data : [
+                  { _id: '1', bookingNumber: 'Thomas M.', guestCount: 4, reservationTime: '19:30', status: 'confirmed' },
+                  { _id: '2', bookingNumber: 'Priya S.',   guestCount: 2, reservationTime: '20:00', status: 'checked_in' },
+                  { _id: '3', bookingNumber: 'Alex V.',    guestCount: 6, reservationTime: '21:15', status: 'reserved' },
+                  { _id: '4', bookingNumber: 'Riya K.',    guestCount: 3, reservationTime: '21:30', status: 'confirmed' },
+                ]).map((b: any) => (
+                  <div key={b._id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/4 transition-all group">
+                    <div className="w-8 h-8 rounded-xl bg-white/6 flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-mono font-bold text-slate-300">{b.reservationTime}</span>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{b.bookingNumber}</p>
+                      <p className="text-[10px] text-slate-500">{b.guestCount} guests</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border capitalize shrink-0 ${
+                      b.status === 'confirmed'   ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+                      b.status === 'checked_in'  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                      b.status === 'reserved'    ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
+                      'bg-slate-500/10 border-slate-500/20 text-slate-400'
+                    }`}>
+                      {b.status.replace('_', ' ')}
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
+            {/* Hourly Revenue Chart */}
+            <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/6">
+                <div>
+                  <h3 className="text-sm font-bold text-white">Hourly Revenue</h3>
+                  <p className="text-[10px] font-mono text-slate-500 mt-0.5">Today · ₹84,250 total</p>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>+18%</span>
+                </div>
+              </div>
+              <div className="px-5 pt-4 pb-5">
+                {/* Bar chart */}
+                <div className="flex items-end gap-1.5 h-28">
+                  {CHART_DATA.map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                      <div
+                        className="w-full bg-blue-500/20 group-hover:bg-blue-500 rounded-t-md transition-all duration-300 relative"
+                        style={{ height: `${h}%` }}
+                      >
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded whitespace-nowrap transition-all pointer-events-none z-10 border border-white/10">
+                          ₹{(h * 950).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Hour labels */}
+                <div className="flex gap-1.5 mt-2">
+                  {CHART_HOURS.map((h, i) => (
+                    <div key={i} className="flex-1 text-center text-[9px] font-mono text-slate-600">{h}</div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
 
         </div>
 
-        {/* ── RIGHT COLUMN (Summary, Revenue Goal, Recent Alerts & Campaign) ── */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* RIGHT COLUMN */}
+        <div className="xl:col-span-4 space-y-4">
 
           {/* Today's Summary */}
-          <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-3.5 shadow-2xl">
-            <h3 className="font-black text-sm text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
+          <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-white/6">
               <BarChart2 className="w-4 h-4 text-blue-400" />
-              Today's Summary
-            </h3>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between pb-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">Peak Demand</span>
-                <span className="font-mono font-bold text-white">20:00 - 21:30</span>
-              </div>
-              <div className="flex items-center justify-between pb-1 border-b border-slate-800/40">
-                <span className="text-slate-400 font-medium">Top Dish</span>
-                <span className="font-bold text-white">Malabar Biryani</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400 font-medium">Avg. Order Value</span>
-                <span className="font-mono font-bold text-white">₹1,450</span>
-              </div>
+              <h3 className="text-sm font-bold text-white">Today's Summary</h3>
             </div>
-          </div>
-
-          {/* Revenue Goal Progress */}
-          <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-3 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-black text-sm text-white">Revenue Goal</h3>
-              <span className="text-xs font-mono font-extrabold text-blue-400">68%</span>
+            <div className="p-4 space-y-3">
+              {[
+                { label: 'Peak Demand', value: '20:00 – 21:30' },
+                { label: 'Top Dish', value: 'Malabar Biryani' },
+                { label: 'Avg. Order Value', value: '₹1,450' },
+                { label: 'Customer Rating', value: '4.8 ★' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500">{label}</span>
+                  <span className="font-bold text-white">{value}</span>
+                </div>
+              ))}
             </div>
+          </motion.div>
 
-            <div className="w-full bg-slate-800/80 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full shadow-[0_0_10px_#3b82f6]" style={{ width: '68%' }} />
+          {/* Revenue Goal */}
+          <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-bold text-white">Revenue Goal</p>
+              <span className="text-xs font-mono font-black text-blue-400">68%</span>
             </div>
-
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1">
+            <div className="h-2 w-full bg-white/8 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: '68%' }}
+                transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-[0_0_8px_#3b82f6]"
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-[10px] font-mono text-slate-600">
               <span>₹0</span>
-              <span className="font-bold text-white">TARGET: ₹1,250,000</span>
+              <span className="text-slate-400 font-bold">₹1,25,000 target</span>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Recent Alerts Card */}
-          <div className="bg-[#091124]/90 backdrop-blur-2xl border border-slate-800/80 rounded-2xl p-5 space-y-3.5 shadow-2xl">
-            <h3 className="font-black text-sm text-white border-b border-slate-800/80 pb-3">Recent Alerts</h3>
-
-            <div className="space-y-3">
-              {/* Alert 1 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-xs">
-                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold text-white">Inventory Low</p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">Basmati Rice stock below 5kg.</p>
-                  <p className="text-[9px] font-mono text-slate-400 mt-1">2 mins ago</p>
-                </div>
-              </div>
-
-              {/* Alert 2 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-xs">
-                <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold text-white">VIP Booking</p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">Mr. Thomas booked Table 15.</p>
-                  <p className="text-[9px] font-mono text-slate-400 mt-1">15 mins ago</p>
-                </div>
-              </div>
-
-              {/* Alert 3 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs">
-                <Star className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 fill-amber-400" />
-                <div>
-                  <p className="font-bold text-white">5 Star Review</p>
-                  <p className="text-[11px] text-slate-300 mt-0.5">"Best appam in town!" - Priya</p>
-                  <p className="text-[9px] font-mono text-slate-400 mt-1">1 hour ago</p>
-                </div>
-              </div>
+          {/* Recent Alerts */}
+          <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden">
+            <div className="px-5 pt-5 pb-3 border-b border-white/6 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
+              <span className="text-[10px] font-mono text-slate-500">3 new</span>
             </div>
-          </div>
-
-          {/* Campaign Active Card */}
-          <div
-            className="rounded-2xl border border-slate-800/80 p-5 bg-cover bg-center relative overflow-hidden min-h-[140px] flex flex-col justify-end text-white shadow-2xl group"
-            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80)' }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
-            <div className="relative z-10 space-y-1">
-              <span className="text-[9px] font-mono font-black tracking-widest uppercase px-2.5 py-1 rounded-lg bg-brand-500 text-white shadow-[0_0_10px_#ff6b35]">
-                CAMPAIGN ACTIVE
-              </span>
-              <h4 className="font-black text-lg tracking-tight text-white pt-1">
-                Weekend Brunch Special
-              </h4>
+            <div className="p-3 space-y-2">
+              {[
+                { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', title: 'Inventory Low', desc: 'Basmati Rice below 5kg', time: '2m ago' },
+                { icon: Info,          color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', title: 'VIP Booking',     desc: 'Mr. Thomas — Table 15',  time: '15m ago' },
+                { icon: Star,          color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', title: '5-Star Review', desc: '"Best appam in town!" — Priya', time: '1h ago' },
+              ].map(({ icon: Icon, color, bg, title, desc, time }) => (
+                <div key={title} className={`flex items-start gap-3 px-3 py-2.5 rounded-xl border ${bg} transition-all`}>
+                  <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white">{title}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{desc}</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-600 shrink-0 pt-0.5">{time}</span>
+                </div>
+              ))}
             </div>
-          </div>
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div variants={fadeUp} className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden">
+            <div className="px-5 pt-5 pb-3 border-b border-white/6">
+              <h3 className="text-sm font-bold text-white">Quick Actions</h3>
+            </div>
+            <div className="p-3 grid grid-cols-2 gap-2">
+              {[
+                { label: 'New Booking',   href: '/dashboard/bookings', color: 'bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30' },
+                { label: 'Add Menu Item', href: '/dashboard/menu',     color: 'bg-brand-500/20 border-brand-500/30 text-brand-400 hover:bg-brand-500/30' },
+                { label: 'View Orders',   href: '/dashboard/orders',   color: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' },
+                { label: 'View Reports',  href: '/dashboard/analytics',color: 'bg-purple-500/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30' },
+              ].map(({ label, href, color }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center justify-center px-3 py-2.5 rounded-xl border text-xs font-bold text-center transition-all ${color}`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
 
         </div>
-
       </div>
-
-      {/* ── FOOTER BAR ── */}
-      <div className="border-t border-slate-800/80 pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] font-mono text-slate-400">
-        <div>V2.4.0 © {new Date().getFullYear()} QUICKBITE PLATFORM</div>
-        <div className="flex items-center gap-5">
-          <a href="#" className="hover:text-white transition-colors">Support Center</a>
-          <a href="#" className="hover:text-white transition-colors">Documentation</a>
-          <div className="flex items-center gap-2 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
-            <span>SYSTEM ONLINE</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </motion.div>
   );
 }
