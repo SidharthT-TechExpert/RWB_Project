@@ -1,5 +1,5 @@
 # ─── Stage 1: Install dependencies ───────────────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -7,7 +7,7 @@ COPY package.json package-lock.json* ./
 RUN npm install --ignore-scripts --omit=optional
 
 # ─── Stage 2: Build Next.js (standalone) ─────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -41,7 +41,7 @@ ENV NEXT_OUTPUT_MODE=standalone
 RUN npm run build
 
 # ─── Stage 3: Production runtime ─────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 

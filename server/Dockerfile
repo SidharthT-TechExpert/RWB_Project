@@ -1,5 +1,5 @@
 # ─── Stage 1: Install dependencies ───────────────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
@@ -7,7 +7,7 @@ COPY server/package.json server/package-lock.json* ./
 RUN npm install --ignore-scripts --omit=optional
 
 # ─── Stage 2: Build TypeScript ────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY server/ .
 RUN npx tsc
 
 # ─── Stage 3: Production runtime ──────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 RUN apk add --no-cache libc6-compat wget
 WORKDIR /app
 
