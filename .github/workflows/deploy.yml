@@ -181,14 +181,28 @@ jobs:
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          EC2_HOST_CLEAN=$(echo "${{ secrets.EC2_HOST }}" | sed -e 's|^https\?://||' -e 's|/.*$||' | tr -d ' \r\n')
+          
+          printf "%s\n" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-          echo "✅ SSH key written and host fingerprint stored"
+          
+          ssh-keyscan -T 10 -H "$EC2_HOST_CLEAN" >> ~/.ssh/known_hosts 2>/dev/null || true
+          
+          cat >> ~/.ssh/config << 'EOF'
+          Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            ServerAliveInterval 30
+            ServerAliveCountMax 3
+          EOF
+          chmod 600 ~/.ssh/config
+          
+          echo "✅ SSH key written and config configured successfully"
 
       - name: Copy files to EC2
         run: |
-          SSH_DEST="${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}"
+          EC2_HOST_CLEAN=$(echo "${{ secrets.EC2_HOST }}" | sed -e 's|^https\?://||' -e 's|/.*$||' | tr -d ' \r\n')
+          SSH_DEST="${{ secrets.EC2_USER }}@${EC2_HOST_CLEAN}"
           REMOTE_DIR="/home/${{ secrets.EC2_USER }}/quickbite"
           ssh $SSH_DEST "mkdir -p ${REMOTE_DIR}/nginx"
           scp docker-compose.prod.yml .env.docker ${SSH_DEST}:${REMOTE_DIR}/
@@ -197,7 +211,8 @@ jobs:
 
       - name: Deploy on EC2
         run: |
-          SSH_DEST="${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}"
+          EC2_HOST_CLEAN=$(echo "${{ secrets.EC2_HOST }}" | sed -e 's|^https\?://||' -e 's|/.*$||' | tr -d ' \r\n')
+          SSH_DEST="${{ secrets.EC2_USER }}@${EC2_HOST_CLEAN}"
           IMAGE_PREFIX="${{ steps.vars.outputs.IMAGE_PREFIX }}"
           IMAGE_TAG="${{ github.sha }}"
           ACTOR="${{ github.actor }}"
