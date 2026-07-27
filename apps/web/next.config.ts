@@ -1,6 +1,8 @@
+import path from 'path';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(__dirname, '../../'),
   // Use 'standalone' for Docker/self-hosted AWS builds
   ...(process.env.NEXT_OUTPUT_MODE === 'standalone' && { output: 'standalone' }),
   eslint: {
