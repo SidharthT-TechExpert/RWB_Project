@@ -228,6 +228,27 @@ jobs:
             export IMAGE_PREFIX=${IMAGE_PREFIX}
             export IMAGE_TAG=${IMAGE_TAG}
 
+            # Ensure SSL cert directories & fallback certs exist
+            sudo mkdir -p /etc/letsencrypt/live/qickbite.com
+            sudo mkdir -p /etc/letsencrypt/live/api.qickbite.com
+            sudo chmod -R 755 /etc/letsencrypt 2>/dev/null || true
+
+            if [ ! -f /etc/letsencrypt/live/qickbite.com/fullchain.pem ]; then
+              echo "Creating fallback self-signed SSL cert for qickbite.com..."
+              sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                -keyout /etc/letsencrypt/live/qickbite.com/privkey.pem \
+                -out /etc/letsencrypt/live/qickbite.com/fullchain.pem \
+                -subj "/CN=qickbite.com" 2>/dev/null || true
+            fi
+
+            if [ ! -f /etc/letsencrypt/live/api.qickbite.com/fullchain.pem ]; then
+              echo "Creating fallback self-signed SSL cert for api.qickbite.com..."
+              sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                -keyout /etc/letsencrypt/live/api.qickbite.com/privkey.pem \
+                -out /etc/letsencrypt/live/api.qickbite.com/fullchain.pem \
+                -subj "/CN=api.qickbite.com" 2>/dev/null || true
+            fi
+
             # Pull new images while old containers still running
             docker compose -f docker-compose.prod.yml pull
 
