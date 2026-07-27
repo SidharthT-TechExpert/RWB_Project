@@ -22,9 +22,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: 'package-lock.json'
       - run: npm install --omit=optional
         working-directory: server
       - run: npx tsc --noEmit
