@@ -27,6 +27,7 @@ services:
     image: ${IMAGE_PREFIX:-ghcr.io/qickbite/quickbite}-web:${IMAGE_TAG:-latest}
     container_name: quickbite-web
     restart: always
+    command: sh -c "mkdir -p app/.next && cp -r .next/static app/.next/static 2>/dev/null || true; if [ -f /app/app/server.js ]; then node /app/app/server.js; elif [ -f /app/server.js ]; then node /app/server.js; else node server.js; fi"
     environment:
       NODE_ENV: production
       PORT: 3006
