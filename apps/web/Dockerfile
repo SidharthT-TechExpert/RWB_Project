@@ -58,9 +58,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Handle monorepo nested static files if needed
-RUN mkdir -p apps/web/.next && cp -r .next/static apps/web/.next/static 2>/dev/null || true
+RUN mkdir -p app/.next && cp -r .next/static app/.next/static 2>/dev/null || true
 
 USER nextjs
 EXPOSE 3006
 
-CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; elif [ -f apps/web/server.js ]; then node apps/web/server.js; else node .next/standalone/server.js; fi"]
+CMD ["sh", "-c", "if [ -f /app/app/server.js ]; then node /app/app/server.js; elif [ -f /app/server.js ]; then node /app/server.js; else node server.js; fi"]
