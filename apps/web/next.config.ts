@@ -14,15 +14,14 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
-  },
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
 };
 

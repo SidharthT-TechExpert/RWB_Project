@@ -66,12 +66,46 @@ export const debounce = <T extends (...args: Parameters<T>) => ReturnType<T>>(
 };
 
 export const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
-    const e = error as { response?: { data?: { message?: string } }; message?: string };
-    return e.response?.data?.message || e.message || 'Something went wrong';
+    const e = error as {
+      code?: string;
+      message?: string;
+      response?: {
+        data?: {
+          message?: string;
+          error?: string;
+          errors?: Array<{ msg?: string; message?: string }>;
+        };
+        status?: number;
+      };
+    };
+
+    // 1. API Response error message (e.g. invalid credentials, 404, 400, 500)
+    const apiMsg = e.response?.data?.message || e.response?.data?.error || e.response?.data?.errors?.[0]?.msg || e.response?.data?.errors?.[0]?.message;
+    if (apiMsg) return apiMsg;
+
+    // 2. HTTP status code fallback messages
+    if (e.response?.status === 401) return 'Invalid credentials. Please check your email and password.';
+    if (e.response?.status === 403) return 'Access denied. You do not have permission to perform this action.';
+    if (e.response?.status === 404) return 'Requested account or resource was not found.';
+    if (e.response?.status === 500) return 'Server error encountered. Please try again in a few moments.';
+
+    // 3. Network / Connection failure
+    if (e.code === 'ERR_NETWORK' || e.code === 'ECONNREFUSED' || e.message === 'Network Error' || e.message?.includes('Network Error')) {
+      return 'Backend API server (http://localhost:3000) is currently offline or unreachable.';
+    }
+
+    if (e.message) return e.message;
   }
-  return 'Something went wrong';
+
+  if (error instanceof Error) {
+    if (error.message === 'Network Error') {
+      return 'Backend API server (http://localhost:3000) is currently offline or unreachable.';
+    }
+    return error.message;
+  }
+
+  return 'An unexpected error occurred. Please try again.';
 };
 
 export const bookingStatusColors: Record<string, string> = {

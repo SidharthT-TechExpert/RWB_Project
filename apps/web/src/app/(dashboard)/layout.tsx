@@ -3,7 +3,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#030712] text-slate-100">
+    <div className="flex h-screen overflow-hidden bg-[#040609] text-slate-100 font-sans antialiased">
       {/* Sidebar — sticky, full height, never scrolls */}
       <DashboardSidebar />
 
@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DashboardHeader />
 
         {/* Scrollable main content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#040609] p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

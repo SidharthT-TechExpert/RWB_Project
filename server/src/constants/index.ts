@@ -1,6 +1,7 @@
 export const ROLES = {
   CUSTOMER: 'customer',
   RESTAURANT_OWNER: 'restaurant_owner',
+  BRANCH_MANAGER: 'branch_manager',
   ADMIN: 'admin',
   DELIVERY_PARTNER: 'delivery_partner',
 } as const;

@@ -65,11 +65,19 @@ export function useAuth() {
       toast.success(`Welcome back, ${user.name}!`);
       if (user.role === 'admin') {
         router.push('/admin');
+      } else if (user.role === 'branch_manager') {
+        router.push('/manager');
+      } else if (user.role === 'restaurant_owner') {
+        router.push('/dashboard');
       } else {
         router.push('/');
       }
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => {
+      const msg = getErrorMessage(error);
+      // Toast clear error message
+      toast.error(msg);
+    },
   });
 
   const logoutMutation = useMutation({

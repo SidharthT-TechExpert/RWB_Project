@@ -13,6 +13,7 @@ export class RestaurantService {
     if (existing) slug = `${slug}-${Date.now()}`;
 
     let finalOwnerId = ownerId;
+    let ownerNameVal = (data as any).ownerName;
 
     // Auto-create Restaurant Owner User Account if email is provided
     if (data.email) {
@@ -25,7 +26,7 @@ export class RestaurantService {
 
         user = await User.create({
           email: cleanEmail,
-          name: data.name ? `${data.name} Manager` : 'Restaurant Owner',
+          name: ownerNameVal || data.name || 'Restaurant Owner',
           phone: data.phone || '+1 212-555-0199',
           password: hashedPassword,
           role: ROLES.RESTAURANT_OWNER,
@@ -40,6 +41,7 @@ export class RestaurantService {
 
       if (user) {
         finalOwnerId = user._id.toString();
+        if (!ownerNameVal) ownerNameVal = user.name;
       }
     }
 
@@ -48,6 +50,7 @@ export class RestaurantService {
       slug,
       description: data.description || `Welcome to ${data.name}`,
       ownerId: finalOwnerId || ownerId || 'admin_onboarded',
+      ownerName: ownerNameVal || 'Restaurant Owner',
       phone: data.phone || '+1 212-555-0100',
       email: data.email,
       website: data.website,
