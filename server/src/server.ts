@@ -27,6 +27,14 @@ const start = async () => {
     logger.info(`🌐 Health: http://localhost:${PORT}/health`);
   });
 
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      logger.error(`❌ Port ${PORT} is already in use by another process.`);
+      logger.info(`👉 Tip: Stop any existing backend server or run "npx kill-port ${PORT}".`);
+      process.exit(1);
+    }
+  });
+
   // ── 6. Graceful shutdown ───────────────────────────────────────
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down gracefully`);

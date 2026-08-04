@@ -306,6 +306,18 @@ function PhoneStep() {
         {' '}&amp;{' '}
         <a href="/privacy" className="underline underline-offset-2 hover:text-[#FF6B35] font-semibold transition-colors">Privacy Policy</a>
       </p>
+
+      {/* Branch Manager Sign In Link */}
+      <div className="pt-2 border-t border-border/50 text-center">
+        <a
+          href="/manager/login"
+          onClick={closeModal}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors"
+        >
+          <span>Branch Manager Portal Sign In</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
     </motion.div>
   );
 }

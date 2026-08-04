@@ -19,9 +19,7 @@ import {
   Phone,
   Mail,
   User,
-  FileText,
   Lock,
-  Compass,
   Info,
   ShieldCheck,
   Tag,
@@ -39,24 +37,13 @@ const STATUS_COLORS: Record<string, string> = {
   inactive: 'secondary',
 };
 
-const RESTAURANT_TYPES = ['Restaurant', 'Cafe', 'Bakery', 'Fast Food', 'Food Court'];
-
 interface MinimalRestaurantForm {
   name: string;
   ownerName: string;
   phone: string;
   email: string;
-  city: string;
-  street: string;
-  gstNumber: string;
-  regNumber: string;
-  latitude: string;
-  longitude: string;
-  restaurantType: string;
-  status: string;
-  logo: string;
-  coverImage: string;
   tempPassword: string;
+  status: string;
 }
 
 const DEFAULT_MINIMAL_FORM: MinimalRestaurantForm = {
@@ -64,17 +51,8 @@ const DEFAULT_MINIMAL_FORM: MinimalRestaurantForm = {
   ownerName: '',
   phone: '+1 212-555-0199',
   email: '',
-  city: 'New York',
-  street: '123 Main Street',
-  gstNumber: '',
-  regNumber: '',
-  latitude: '40.7484',
-  longitude: '-73.9857',
-  restaurantType: 'Restaurant',
-  status: 'active',
-  logo: '',
-  coverImage: '',
   tempPassword: 'Welcome@123',
+  status: 'active',
 };
 
 export default function AdminRestaurantsPage() {
@@ -118,27 +96,27 @@ export default function AdminRestaurantsPage() {
     mutationFn: async (payload: MinimalRestaurantForm) => {
       const formatted = {
         name: payload.name,
+        ownerName: payload.ownerName,
         slug: payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4),
-        description: `${payload.name} (${payload.restaurantType}) located in ${payload.city}. Managed by ${payload.ownerName}.`,
-        cuisineTypes: [payload.restaurantType],
+        description: `${payload.name} located in New York. Owned by ${payload.ownerName}.`,
+        cuisineTypes: ['Restaurant'],
         priceRange: 2,
         address: {
-          street: payload.street,
-          city: payload.city,
+          street: '123 Main Street',
+          city: 'New York',
           state: 'NY',
           country: 'USA',
           zipCode: '10001',
         },
         location: {
           type: 'Point',
-          coordinates: [Number(payload.longitude) || -73.9857, Number(payload.latitude) || 40.7484],
+          coordinates: [-73.9857, 40.7484],
         },
         phone: payload.phone,
         email: payload.email,
-        logo: payload.logo || undefined,
-        coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+        tempPassword: payload.tempPassword,
         status: payload.status,
-        tags: [payload.restaurantType.toLowerCase(), payload.city.toLowerCase()],
+        tags: ['restaurant', 'new-york'],
         openingHours: [
           { day: 'monday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
           { day: 'tuesday', isOpen: true, openTime: '10:00', closeTime: '22:00' },
@@ -170,11 +148,11 @@ export default function AdminRestaurantsPage() {
   // Seed sample restaurants
   const seedMutation = useMutation({
     mutationFn: async () => {
-      const samples = [
-        { name: 'The Golden Saffron', ownerName: 'Rajesh Sharma', phone: '+1 212-555-0199', email: 'rajesh@goldensaffron.com', city: 'New York', street: '45 Park Avenue', gstNumber: '', regNumber: '', latitude: '40.7484', longitude: '-73.9857', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80', tempPassword: 'Welcome@123' },
-        { name: 'Sakura Sushi Bar', ownerName: 'Kenji Sato', phone: '+1 212-555-0144', email: 'kenji@sakurasushi.com', city: 'New York', street: '128 Mercer St', gstNumber: '', regNumber: '', latitude: '40.7250', longitude: '-73.9980', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=800&q=80', tempPassword: 'Welcome@123' },
-        { name: 'Bella Italia Bistro', ownerName: 'Marco Rossi', phone: '+1 212-555-0182', email: 'marco@bellaitalia.com', city: 'New York', street: '88 Mulberry St', gstNumber: '', regNumber: '', latitude: '40.7160', longitude: '-73.9970', restaurantType: 'Restaurant', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80', tempPassword: 'Welcome@123' },
-        { name: 'El Mariachi Taqueria', ownerName: 'Sofia Gomez', phone: '+1 212-555-0112', email: 'sofia@elmariachi.com', city: 'New York', street: '210 5th Ave', gstNumber: '', regNumber: '', latitude: '40.7420', longitude: '-73.9880', restaurantType: 'Fast Food', status: 'active', logo: '', coverImage: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80', tempPassword: 'Welcome@123' },
+      const samples: MinimalRestaurantForm[] = [
+        { name: 'The Golden Saffron', ownerName: 'Rajesh Sharma', phone: '+1 212-555-0199', email: 'rajesh@goldensaffron.com', status: 'active', tempPassword: 'Welcome@123' },
+        { name: 'Sakura Sushi Bar', ownerName: 'Kenji Sato', phone: '+1 212-555-0144', email: 'kenji@sakurasushi.com', status: 'active', tempPassword: 'Welcome@123' },
+        { name: 'Bella Italia Bistro', ownerName: 'Marco Rossi', phone: '+1 212-555-0182', email: 'marco@bellaitalia.com', status: 'active', tempPassword: 'Welcome@123' },
+        { name: 'El Mariachi Taqueria', ownerName: 'Sofia Gomez', phone: '+1 212-555-0112', email: 'sofia@elmariachi.com', status: 'active', tempPassword: 'Welcome@123' },
       ];
 
       for (const item of samples) {
@@ -252,7 +230,7 @@ export default function AdminRestaurantsPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              {['Restaurant', 'City & Address', 'Type', 'Rating', 'Status', 'Admin Control'].map((h) => (
+              {['Restaurant', 'Owner Details', 'Rating', 'Status', 'Admin Control'].map((h) => (
                 <th key={h} className="text-left px-4 py-3.5 font-bold text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -263,7 +241,7 @@ export default function AdminRestaurantsPage() {
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 5 }).map((_, j) => (
                     <td key={j} className="px-4 py-4">
                       <div className="h-4 bg-muted rounded animate-pulse" />
                     </td>
@@ -271,59 +249,56 @@ export default function AdminRestaurantsPage() {
                 </tr>
               ))
             ) : restaurants.length > 0 ? (
-              restaurants.map((r: any) => (
-                <motion.tr key={r._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-muted/30 transition-colors">
-                  {/* Restaurant Name & Image */}
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-11 h-11 rounded-xl bg-cover bg-center shrink-0 border border-border/80 shadow-xs"
-                        style={{ backgroundImage: `url(${r.logo || r.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80'})` }}
-                      />
-                      <div>
-                        <p className="font-extrabold text-foreground">{r.name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Phone className="w-3 h-3 text-muted-foreground/70" />
-                          {r.phone || 'N/A'}
-                        </p>
+              restaurants.map((r: any) => {
+                const extractedOwnerName = r.ownerName || r.description?.match(/Owned by (.*?)\./)?.[1] || r.description?.match(/Managed by (.*?)\./)?.[1] || 'Restaurant Owner';
+                return (
+                  <motion.tr key={r._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-muted/30 transition-colors">
+                    {/* Restaurant Name & Image */}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-11 h-11 rounded-xl bg-cover bg-center shrink-0 border border-border/80 shadow-xs"
+                          style={{ backgroundImage: `url(${r.logo || r.coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80'})` }}
+                        />
+                        <div>
+                          <p className="font-extrabold text-foreground">{r.name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Phone className="w-3 h-3 text-muted-foreground/70" />
+                            {r.phone || 'N/A'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* City & Address */}
-                  <td className="px-4 py-3.5">
-                    <p className="font-semibold text-foreground flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                      {r.address?.city || 'N/A'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[160px]">{r.address?.street}</p>
-                  </td>
+                    {/* Owner Details */}
+                    <td className="px-4 py-3.5">
+                      <p className="font-extrabold text-foreground flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                        {extractedOwnerName}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Mail className="w-3 h-3 text-muted-foreground/70" />
+                        {r.email || 'N/A'}
+                      </p>
+                    </td>
 
-                  {/* Type */}
-                  <td className="px-4 py-3.5">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground">
-                      <Tag className="w-3 h-3 text-brand-500" />
-                      {r.cuisineTypes?.[0] || 'Restaurant'}
-                    </span>
-                  </td>
+                    {/* Rating */}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-1 font-bold text-foreground">
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <span>{r.averageRating?.toFixed(1) || '0.0'}</span>
+                      </div>
+                    </td>
 
-                  {/* Rating */}
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-1 font-bold text-foreground">
-                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span>{r.averageRating?.toFixed(1) || '4.5'}</span>
-                    </div>
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="px-4 py-3.5">
-                    <Badge
-                      variant={(STATUS_COLORS[r.status] as any) || 'secondary'}
-                      className="capitalize font-bold text-xs px-2.5 py-0.5 rounded-lg"
-                    >
-                      {r.status === 'active' ? 'Approved' : r.status === 'suspended' ? 'Blocked' : r.status}
-                    </Badge>
-                  </td>
+                    {/* Status Badge */}
+                    <td className="px-4 py-3.5">
+                      <Badge
+                        variant={(STATUS_COLORS[r.status] as any) || 'secondary'}
+                        className="capitalize font-bold text-xs px-2.5 py-0.5 rounded-lg"
+                      >
+                        {r.status === 'active' ? 'Approved' : r.status === 'suspended' ? 'Blocked' : r.status}
+                      </Badge>
+                    </td>
 
                   {/* Actions */}
                   <td className="px-4 py-3.5">
@@ -371,10 +346,11 @@ export default function AdminRestaurantsPage() {
                     </div>
                   </td>
                 </motion.tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-16 text-center">
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan={5} className="px-4 py-16 text-center">
                   <div className="max-w-md mx-auto space-y-3">
                     <div className="w-12 h-12 rounded-full bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
                       <Building2 className="w-6 h-6" />
@@ -457,10 +433,10 @@ export default function AdminRestaurantsPage() {
                 }}
                 className="space-y-4"
               >
-                {/* Section 1: Basic Info */}
+                {/* Owner & Basic Info */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" /> Basic Information
+                    <User className="w-3.5 h-3.5" /> Owner & Restaurant Profile
                   </h3>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -475,7 +451,7 @@ export default function AdminRestaurantsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-foreground">Owner / Manager Name *</label>
+                      <label className="text-xs font-bold text-foreground">Owner Name *</label>
                       <input
                         required
                         value={formData.ownerName}
@@ -498,7 +474,7 @@ export default function AdminRestaurantsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-foreground">Email Address *</label>
+                      <label className="text-xs font-bold text-foreground">Owner Email Address *</label>
                       <input
                         required
                         type="email"
@@ -509,100 +485,25 @@ export default function AdminRestaurantsPage() {
                       />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-foreground">City *</label>
-                      <input
-                        required
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="New York"
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Full Address *</label>
-                      <input
-                        required
-                        value={formData.street}
-                        onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                        placeholder="45 Park Avenue, Suite 100"
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-foreground">GST Number (Optional)</label>
-                      <input
-                        value={formData.gstNumber}
-                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                        placeholder="22AAAAA0000A1Z5"
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Registration No. (Optional)</label>
-                      <input
-                        value={formData.regNumber}
-                        onChange={(e) => setFormData({ ...formData, regNumber: e.target.value })}
-                        placeholder="REG-884920"
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                  </div>
                 </div>
 
-                {/* Section 2: Location */}
-                <div className="space-y-3 pt-2 border-t">
+                {/* Owner Credentials & Account Status */}
+                <div className="space-y-3 pt-3 border-t">
                   <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Compass className="w-3.5 h-3.5" /> Location Coordinates
+                    <Lock className="w-3.5 h-3.5" /> Owner Authentication & Status
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-bold text-foreground">Latitude</label>
+                      <label className="text-xs font-bold text-foreground">Owner Password *</label>
                       <input
-                        value={formData.latitude}
-                        onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
+                        required
+                        value={formData.tempPassword}
+                        onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-mono font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-foreground">Longitude</label>
-                      <input
-                        value={formData.longitude}
-                        onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 3: Restaurant Type & Status */}
-                <div className="space-y-3 pt-2 border-t">
-                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Type & Status
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Restaurant Type *</label>
-                      <select
-                        value={formData.restaurantType}
-                        onChange={(e) => setFormData({ ...formData, restaurantType: e.target.value })}
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      >
-                        {RESTAURANT_TYPES.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Initial Status *</label>
+                      <label className="text-xs font-bold text-foreground">Account Status *</label>
                       <select
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -614,49 +515,6 @@ export default function AdminRestaurantsPage() {
                         <option value="suspended">Blocked</option>
                       </select>
                     </div>
-                  </div>
-                </div>
-
-                {/* Section 4: Branding */}
-                <div className="space-y-3 pt-2 border-t">
-                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5" /> Branding (Optional)
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Logo URL</label>
-                      <input
-                        value={formData.logo}
-                        onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                        placeholder="https://..."
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-foreground">Cover Image URL</label>
-                      <input
-                        value={formData.coverImage}
-                        onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                        placeholder="https://..."
-                        className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-medium focus:ring-2 focus:ring-brand-500/20 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 5: Temporary Password */}
-                <div className="space-y-3 pt-2 border-t">
-                  <h3 className="text-xs font-bold text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5" /> Owner Credentials
-                  </h3>
-                  <div>
-                    <label className="text-xs font-bold text-foreground">Temporary Owner Password *</label>
-                    <input
-                      required
-                      value={formData.tempPassword}
-                      onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 text-sm rounded-xl border bg-background font-mono font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
-                    />
                   </div>
                 </div>
 

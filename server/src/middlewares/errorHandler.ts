@@ -14,7 +14,7 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   }
 
   // Mongoose validation error
-  if (err.name === 'ValidationError') {
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
     res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: err.message });
     return;
   }

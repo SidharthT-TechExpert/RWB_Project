@@ -13,7 +13,7 @@ export interface IOpeningHours {
 
 export interface IRestaurant extends Document {
   _id: mongoose.Types.ObjectId;
-  name: string; slug: string; description: string; ownerId: string;
+  name: string; slug: string; description: string; ownerId: string; ownerName?: string;
   status: RestaurantStatus; cuisineTypes: string[]; priceRange: 1 | 2 | 3 | 4;
   address: { street: string; city: string; state: string; country: string; zipCode: string };
   location: { type: 'Point'; coordinates: [number, number] };
@@ -34,6 +34,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     slug: { type: String, required: true, unique: true, index: true },
     description: { type: String, required: true },
     ownerId: { type: String, required: true, index: true },
+    ownerName: { type: String },
     status: { type: String, enum: Object.values(RESTAURANT_STATUS), default: RESTAURANT_STATUS.PENDING, index: true },
     cuisineTypes: [{ type: String, index: true }],
     priceRange: { type: Number, enum: [1, 2, 3, 4], default: 2 },

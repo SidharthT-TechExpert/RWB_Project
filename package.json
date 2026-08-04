@@ -5,7 +5,7 @@
   "description": "QuickBite — restaurant pre-booking platform (monolith)",
   "scripts": {
     "dev:api":            "npm run dev --prefix server",
-    "dev:api:infisical":  "infisical run --env=dev -- npm run dev --prefix server",
+    "dev:infisical":  "infisical run --env=dev -- npm run dev --prefix server",
     "dev:web":            "npm run dev --prefix apps/web",
     "dev:mobile":         "npm --prefix apps/mobile run start",
     "dev:mobile:client":  "npm --prefix apps/mobile run start:dev-client",

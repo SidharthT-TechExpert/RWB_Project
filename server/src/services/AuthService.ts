@@ -57,26 +57,50 @@ export class AuthService {
     const password = (data.password || '').trim();
     let user = await User.findOne({ email }).select('+password +refreshTokens');
 
-    // Auto-onboard missing User account for existing onboarded restaurant
+    // Auto-onboard missing User account for existing onboarded restaurant or demo accounts
     if (!user) {
-      const restaurant = await Restaurant.findOne({
-        $or: [{ email }, { phone: email }],
-      });
+      const isDemoAccount =
+        email === 'owner@paragon.com' ||
+        email === 'downtown.manager@paragon.com' ||
+        email === 'rgm@paragonrestaurant.net';
 
-      if (restaurant) {
-        const defaultPassword = 'Welcome@123';
-        const hashedPassword = await hashPassword(defaultPassword);
+      if (isDemoAccount) {
+        const demoPassword = email.includes('manager') ? 'Manager@123' : 'Owner@123';
+        const hashedPassword = await hashPassword(demoPassword);
+        const role = email.includes('manager') ? ROLES.BRANCH_MANAGER : ROLES.RESTAURANT_OWNER;
+        const name = email.includes('manager') ? 'Downtown Branch Manager' : 'Sumesh Govind';
+
         const newUser = await User.create({
-          email: restaurant.email || email,
-          name: restaurant.name ? `${restaurant.name} Manager` : 'Restaurant Owner',
-          phone: restaurant.phone || '+1 212-555-0199',
+          email,
+          name,
+          phone: '+1 212-555-0199',
           password: hashedPassword,
-          role: ROLES.RESTAURANT_OWNER,
+          role,
           isEmailVerified: true,
           isActive: true,
         });
-        logger.info(`Auto-created User account for onboarded restaurant: ${email}`);
+        logger.info(`Auto-created demo account: ${email}`);
         user = (await User.findById(newUser._id).select('+password +refreshTokens')) as any;
+      } else {
+        const restaurant = await Restaurant.findOne({
+          $or: [{ email }, { phone: email }],
+        });
+
+        if (restaurant) {
+          const defaultPassword = 'Welcome@123';
+          const hashedPassword = await hashPassword(defaultPassword);
+          const newUser = await User.create({
+            email: restaurant.email || email,
+            name: restaurant.name ? `${restaurant.name} Manager` : 'Restaurant Owner',
+            phone: restaurant.phone || '+1 212-555-0199',
+            password: hashedPassword,
+            role: ROLES.RESTAURANT_OWNER,
+            isEmailVerified: true,
+            isActive: true,
+          });
+          logger.info(`Auto-created User account for onboarded restaurant: ${email}`);
+          user = (await User.findById(newUser._id).select('+password +refreshTokens')) as any;
+        }
       }
     }
 
