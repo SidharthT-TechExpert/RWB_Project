@@ -179,6 +179,23 @@ export class RestaurantService {
     return updated;
   }
 
+  async updateTableAvailability(restaurantId: string, tableNumber: string, isAvailable: boolean, callerRole?: string): Promise<IRestaurant> {
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) throw new NotFoundError('Restaurant');
+    if (callerRole !== ROLES.BRANCH_MANAGER && callerRole !== ROLES.ADMIN && restaurant.ownerId !== restaurantId) {
+      throw new AuthorizationError();
+    }
+    const tableExists = restaurant.tables.find((t) => t.tableNumber === tableNumber);
+    if (!tableExists) throw new NotFoundError(`Table ${tableNumber}`);
+    const updated = await Restaurant.findOneAndUpdate(
+      { _id: restaurantId, 'tables.tableNumber': tableNumber },
+      { $set: { 'tables.$.isAvailable': isAvailable } },
+      { new: true }
+    ) as IRestaurant;
+    await deleteCache(`restaurant:${restaurantId}`);
+    return updated;
+  }
+
   async searchRestaurants(query: string, page?: number, limit?: number) {
     const { page: p, limit: l, skip } = getPaginationParams(page, limit);
     const filter = { $text: { $search: query }, status: RESTAURANT_STATUS.ACTIVE };

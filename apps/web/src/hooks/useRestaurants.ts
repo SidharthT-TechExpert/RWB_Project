@@ -168,3 +168,21 @@ export function useAddTable(restaurantId: string) {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
+
+export function useToggleTableAvailability(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tableNumber, isAvailable }: { tableNumber: string; isAvailable: boolean }) => {
+      const res = await api.patch(
+        `/restaurants/${restaurantId}/tables/${encodeURIComponent(tableNumber)}/availability`,
+        { isAvailable }
+      );
+      return res.data.data as Restaurant;
+    },
+    onSuccess: (_data, { isAvailable }) => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      toast.success(isAvailable ? 'Table listed — now visible to guests' : 'Table unlisted — hidden from bookings');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}

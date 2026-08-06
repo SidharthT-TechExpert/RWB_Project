@@ -55,6 +55,23 @@ export class RestaurantController {
     }
     catch (error) { next(error); }
   }
+
+  async updateTableAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { userId, role } = req.user!;
+      const { tableNumber } = req.params;
+      const { isAvailable } = req.body;
+      if (typeof isAvailable !== 'boolean') {
+        res.status(400).json({ success: false, message: 'isAvailable must be a boolean' });
+        return;
+      }
+      sendSuccess(
+        res,
+        isAvailable ? 'Table listed as available' : 'Table unlisted',
+        await restaurantService.updateTableAvailability(req.params.id, tableNumber, isAvailable, role)
+      );
+    } catch (error) { next(error); }
+  }
   async getFeatured(req: Request, res: Response, next: NextFunction): Promise<void> {
     try { sendSuccess(res, 'Featured restaurants', await restaurantService.getFeaturedRestaurants(req.query.limit ? Number(req.query.limit) : undefined)); }
     catch (error) { next(error); }
