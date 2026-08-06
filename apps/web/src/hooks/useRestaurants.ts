@@ -143,3 +143,27 @@ export function useCreateRestaurant() {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
+
+export interface AddTablePayload {
+  tableNumber: string;
+  capacity: number;
+  type: 'indoor' | 'outdoor' | 'private' | 'bar';
+  isAvailable?: boolean;
+  description?: string;
+}
+
+export function useAddTable(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AddTablePayload) => {
+      const res = await api.post(`/restaurants/${restaurantId}/tables`, payload);
+      return res.data.data as Restaurant;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants', 'mine'] });
+      toast.success('Table added successfully!');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}

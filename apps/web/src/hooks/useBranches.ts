@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useMyRestaurants } from './useRestaurants';
@@ -7,6 +7,8 @@ export interface Branch {
   _id: string;
   name: string;
   code: string;
+  restaurantId?: string;
+  managerId?: string;
   phone?: string;
   email?: string;
   status: 'active' | 'inactive' | 'suspended';
@@ -78,4 +80,16 @@ export function useBranches() {
     setSelectedBranchId: changeSelectedBranch,
     refetchBranches: refetch,
   };
+}
+
+export function useMyBranch() {
+  return useQuery({
+    queryKey: ['branches', 'my-branch'],
+    queryFn: async () => {
+      const res = await api.get('/branches/manager/my-branch');
+      return res.data.data as Branch;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 }

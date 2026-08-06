@@ -166,10 +166,13 @@ export class RestaurantService {
     return updated;
   }
 
-  async addTable(id: string, ownerId: string, tableData: IRestaurant['tables'][number]): Promise<IRestaurant> {
+  async addTable(id: string, callerId: string, tableData: IRestaurant['tables'][number], callerRole?: string): Promise<IRestaurant> {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) throw new NotFoundError('Restaurant');
-    if (restaurant.ownerId !== ownerId) throw new AuthorizationError();
+    // Branch managers are trusted to add tables to their own restaurant — skip ownership check
+    if (callerRole !== ROLES.BRANCH_MANAGER && callerRole !== ROLES.ADMIN && restaurant.ownerId !== callerId) {
+      throw new AuthorizationError();
+    }
     if (restaurant.tables.find((t) => t.tableNumber === tableData.tableNumber)) throw new ConflictError(`Table ${tableData.tableNumber} already exists`);
     const updated = await Restaurant.findByIdAndUpdate(id, { $push: { tables: tableData }, $inc: { totalCapacity: tableData.capacity } }, { new: true }) as IRestaurant;
     await deleteCache(`restaurant:${id}`);
