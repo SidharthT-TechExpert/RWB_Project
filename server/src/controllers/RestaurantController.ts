@@ -49,7 +49,10 @@ export class RestaurantController {
     catch (error) { next(error); }
   }
   async addTable(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try { sendSuccess(res, 'Table added', await restaurantService.addTable(req.params.id, req.user!.userId, req.body)); }
+    try {
+      const { userId, role } = req.user!;
+      sendSuccess(res, 'Table added', await restaurantService.addTable(req.params.id, userId, req.body, role));
+    }
     catch (error) { next(error); }
   }
   async getFeatured(req: Request, res: Response, next: NextFunction): Promise<void> {
