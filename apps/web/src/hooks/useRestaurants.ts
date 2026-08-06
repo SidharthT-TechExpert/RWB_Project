@@ -148,6 +148,7 @@ export interface AddTablePayload {
   tableNumber: string;
   capacity: number;
   type: 'indoor' | 'outdoor' | 'private' | 'bar';
+  seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
   isAvailable?: boolean;
   description?: string;
 }
