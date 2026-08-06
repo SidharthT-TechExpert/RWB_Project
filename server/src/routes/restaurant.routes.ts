@@ -19,5 +19,6 @@ router.get('/owner/my-restaurants', authenticate, authorize(ROLES.RESTAURANT_OWN
 router.put('/:id', authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.ADMIN), restaurantController.update.bind(restaurantController));
 router.post('/:id/tables', authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.ADMIN, ROLES.BRANCH_MANAGER), restaurantController.addTable.bind(restaurantController));
 router.patch('/:id/tables/:tableNumber/availability', authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.ADMIN, ROLES.BRANCH_MANAGER), restaurantController.updateTableAvailability.bind(restaurantController));
+router.patch('/:id/tables/:tableNumber', authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.ADMIN, ROLES.BRANCH_MANAGER), restaurantController.updateTable.bind(restaurantController));
 
 export default router;

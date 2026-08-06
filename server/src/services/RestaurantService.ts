@@ -196,6 +196,42 @@ export class RestaurantService {
     return updated;
   }
 
+  async updateTable(
+    restaurantId: string,
+    tableNumber: string,
+    data: Partial<Pick<IRestaurant['tables'][number], 'capacity' | 'type' | 'description'> & { seatingCategory: string }>,
+    callerRole?: string
+  ): Promise<IRestaurant> {
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) throw new NotFoundError('Restaurant');
+    if (callerRole !== ROLES.BRANCH_MANAGER && callerRole !== ROLES.ADMIN && restaurant.ownerId !== restaurantId) {
+      throw new AuthorizationError();
+    }
+    const existingTable = restaurant.tables.find((t) => t.tableNumber === tableNumber);
+    if (!existingTable) throw new NotFoundError(`Table ${tableNumber}`);
+
+    const setFields: Record<string, unknown> = {};
+    if (data.capacity !== undefined)       setFields['tables.$.capacity']        = data.capacity;
+    if (data.type !== undefined)           setFields['tables.$.type']            = data.type;
+    if (data.description !== undefined)    setFields['tables.$.description']     = data.description;
+    if (data.seatingCategory !== undefined) setFields['tables.$.seatingCategory'] = data.seatingCategory;
+
+    const updated = await Restaurant.findOneAndUpdate(
+      { _id: restaurantId, 'tables.tableNumber': tableNumber },
+      { $set: setFields },
+      { new: true }
+    ) as IRestaurant;
+
+    // Recalculate totalCapacity if capacity changed
+    if (data.capacity !== undefined && data.capacity !== existingTable.capacity) {
+      const diff = data.capacity - existingTable.capacity;
+      await Restaurant.findByIdAndUpdate(restaurantId, { $inc: { totalCapacity: diff } });
+    }
+
+    await deleteCache(`restaurant:${restaurantId}`);
+    return updated;
+  }
+
   async searchRestaurants(query: string, page?: number, limit?: number) {
     const { page: p, limit: l, skip } = getPaginationParams(page, limit);
     const filter = { $text: { $search: query }, status: RESTAURANT_STATUS.ACTIVE };

@@ -72,6 +72,14 @@ export class RestaurantController {
       );
     } catch (error) { next(error); }
   }
+
+  async updateTable(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { role } = req.user!;
+      const { id, tableNumber } = req.params;
+      sendSuccess(res, 'Table updated', await restaurantService.updateTable(id, tableNumber, req.body, role));
+    } catch (error) { next(error); }
+  }
   async getFeatured(req: Request, res: Response, next: NextFunction): Promise<void> {
     try { sendSuccess(res, 'Featured restaurants', await restaurantService.getFeaturedRestaurants(req.query.limit ? Number(req.query.limit) : undefined)); }
     catch (error) { next(error); }

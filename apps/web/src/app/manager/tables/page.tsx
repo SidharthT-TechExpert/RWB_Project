@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { Button } from '@/components/ui/Button';
-import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye } from 'lucide-react';
+import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAddTable, useToggleTableAvailability, AddTablePayload, useRestaurant } from '@/hooks/useRestaurants';
+import { useAddTable, useUpdateTable, useToggleTableAvailability, AddTablePayload, EditTablePayload, useRestaurant } from '@/hooks/useRestaurants';
 import { useMyBranch } from '@/hooks/useBranches';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -77,6 +77,7 @@ export default function ManagerTablesPage() {
   const restaurantId = myBranch?.restaurantId ?? '';
 
   const addTableMutation = useAddTable(restaurantId);
+  const updateTableMutation = useUpdateTable(restaurantId);
   const toggleAvailabilityMutation = useToggleTableAvailability(restaurantId);
 
   const { data: restaurant, isLoading: isRestaurantLoading } = useRestaurant(restaurantId);
@@ -86,6 +87,8 @@ export default function ManagerTablesPage() {
   const [togglingTable, setTogglingTable] = useState<string | null>(null);
   const [confirmUnlistTable, setConfirmUnlistTable] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTable, setEditingTable] = useState<TableItem | null>(null);
+  const [editForm, setEditForm] = useState<EditTablePayload & { tableNumber: string }>({ tableNumber: '', capacity: 4, type: 'indoor', seatingCategory: 'regular', description: '' });
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
   // ── Derive tables ───────────────────────────────────────────────────────────
@@ -115,6 +118,36 @@ export default function ManagerTablesPage() {
   const handleCloseModal = () => {
     setShowAddModal(false);
     setForm(DEFAULT_FORM);
+  };
+
+  const handleOpenEdit = (t: TableItem) => {
+    setEditingTable(t);
+    setEditForm({
+      tableNumber: t.tableNumber,
+      capacity: t.capacity,
+      type: t.type as TableType,
+      seatingCategory: (t.seatingCategory as SeatingCategory) ?? 'regular',
+      description: t.description ?? '',
+    });
+  };
+
+  const handleCloseEdit = () => {
+    setEditingTable(null);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.capacity || editForm.capacity < 1) return toast.error('Capacity must be at least 1');
+    updateTableMutation.mutate(
+      {
+        tableNumber: editForm.tableNumber,
+        capacity: Number(editForm.capacity),
+        type: editForm.type,
+        seatingCategory: editForm.seatingCategory,
+        description: editForm.description?.trim() || undefined,
+      },
+      { onSuccess: handleCloseEdit }
+    );
   };
 
   const handleAddTable = (e: React.FormEvent) => {
@@ -263,9 +296,18 @@ export default function ManagerTablesPage() {
                       </div>
                       <p className="text-[10px] text-slate-400 font-medium capitalize mt-0.5">{t.type}</p>
                     </div>
-                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border capitalize ${STATUS_COLORS[effectiveStatus]}`}>
-                      {!t.isAvailable ? 'unavailable' : status}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleOpenEdit(t)}
+                        className="w-7 h-7 rounded-lg bg-white/4 hover:bg-purple-500/15 border border-white/8 hover:border-purple-500/30 text-slate-500 hover:text-purple-400 flex items-center justify-center transition-all"
+                        title="Edit table details"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border capitalize ${STATUS_COLORS[effectiveStatus]}`}>
+                        {!t.isAvailable ? 'unavailable' : status}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-white/4 border border-white/6 text-xs space-y-1.5">
@@ -460,6 +502,97 @@ export default function ManagerTablesPage() {
                   {addTableMutation.isPending
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Adding…</>
                     : <><Plus className="w-3.5 h-3.5" /> Add Table</>
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── EDIT TABLE MODAL ─────────────────────────────────────────────────── */}
+      {editingTable && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#080F22] border border-slate-800 rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-800">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-purple-400" />
+                Edit Table <span className="text-purple-400">{editingTable.tableNumber}</span>
+              </h3>
+              <button onClick={handleCloseEdit} disabled={updateTableMutation.isPending}
+                className="text-slate-500 hover:text-white transition-colors disabled:opacity-50">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+
+              {/* Capacity + Type */}
+              <div className="grid grid-cols-2 gap-4">
+                {field('Capacity',
+                  <input
+                    type="number"
+                    min={1} max={50}
+                    value={editForm.capacity}
+                    onChange={(e) => setEditForm((f) => ({ ...f, capacity: parseInt(e.target.value, 10) || 1 }))}
+                    required
+                    disabled={updateTableMutation.isPending}
+                    className={inputCls}
+                  />
+                )}
+                {field('Table Type',
+                  <select
+                    value={editForm.type}
+                    onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value as TableType }))}
+                    disabled={updateTableMutation.isPending}
+                    className={inputCls}
+                  >
+                    {TABLE_TYPES.map((t) => (
+                      <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Seating Category */}
+              {field('Seating Category',
+                <select
+                  value={editForm.seatingCategory}
+                  onChange={(e) => setEditForm((f) => ({ ...f, seatingCategory: e.target.value as SeatingCategory }))}
+                  disabled={updateTableMutation.isPending}
+                  className={inputCls}
+                >
+                  {SEATING_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* Description */}
+              {field('Description',
+                <input
+                  type="text"
+                  value={editForm.description ?? ''}
+                  onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="e.g. Near window, AC section, Quiet corner…"
+                  disabled={updateTableMutation.isPending}
+                  className={inputCls}
+                />,
+                '(optional)'
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={handleCloseEdit} disabled={updateTableMutation.isPending}
+                  className="px-4 py-2.5 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition-colors disabled:opacity-50">
+                  Cancel
+                </button>
+                <button type="submit" disabled={updateTableMutation.isPending}
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 transition-colors disabled:opacity-70 flex items-center gap-2">
+                  {updateTableMutation.isPending
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+                    : <><Pencil className="w-3.5 h-3.5" /> Save Changes</>
                   }
                 </button>
               </div>

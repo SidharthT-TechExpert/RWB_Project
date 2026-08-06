@@ -169,6 +169,31 @@ export function useAddTable(restaurantId: string) {
   });
 }
 
+export interface EditTablePayload {
+  capacity?: number;
+  type?: 'indoor' | 'outdoor' | 'private' | 'bar';
+  seatingCategory?: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  description?: string;
+}
+
+export function useUpdateTable(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tableNumber, ...payload }: EditTablePayload & { tableNumber: string }) => {
+      const res = await api.patch(
+        `/restaurants/${restaurantId}/tables/${encodeURIComponent(tableNumber)}`,
+        payload
+      );
+      return res.data.data as Restaurant;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      toast.success('Table updated successfully!');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
 export function useToggleTableAvailability(restaurantId: string) {
   const queryClient = useQueryClient();
   return useMutation({
