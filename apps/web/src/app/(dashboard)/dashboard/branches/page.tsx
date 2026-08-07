@@ -248,13 +248,13 @@ export default function BranchesPage() {
                   onClick={() => {
                     setSelectedBranch(b);
                     setEditBranchForm({
-                      name: b.name,
-                      code: b.code,
-                      phone: b.phone,
+                      name: b.name || '',
+                      code: b.code || '',
+                      phone: b.phone || '',
                       email: b.email || '',
-                      street: b.address.street,
-                      city: b.address.city,
-                      status: b.status,
+                      street: b.address?.street || '',
+                      city: b.address?.city || '',
+                      status: b.status || 'active',
                       tablesCount: b.tablesCount || 20,
                     });
                     setIsEditBranchOpen(true);
@@ -274,7 +274,7 @@ export default function BranchesPage() {
             <div className="space-y-2 text-xs text-slate-400 pt-2 border-t border-white/6 font-medium">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span>{b.address.street}, {b.address.city}</span>
+                <span>{b.address?.street || 'No street specified'}{b.address?.city ? `, ${b.address.city}` : ''}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
