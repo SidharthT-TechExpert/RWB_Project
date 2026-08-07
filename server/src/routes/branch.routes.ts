@@ -13,8 +13,8 @@ router.get('/manager/my-branch', authenticate, authorize(ROLES.BRANCH_MANAGER), 
 
 router.get('/:id', branchController.getById.bind(branchController));
 
-// Owner / Admin Protected
-router.use(authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.ADMIN));
+// Owner / Admin / Branch Manager Protected
+router.use(authenticate, authorize(ROLES.RESTAURANT_OWNER, ROLES.BRANCH_MANAGER, ROLES.ADMIN));
 
 router.post('/', branchController.create.bind(branchController));
 router.get('/owner/my-branches', branchController.getMyBranches.bind(branchController));

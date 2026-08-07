@@ -8,24 +8,21 @@ import { ROLES } from '../constants';
 import { logger } from '../config/logger';
 
 export class BranchService {
-  async createBranch(ownerId: string, data: Partial<IBranch>): Promise<IBranch> {
+  async createBranch(ownerId: string, data: Partial<IBranch> & { street?: string; city?: string }): Promise<IBranch> {
     const restaurant = await Restaurant.findById(data.restaurantId);
-    if (!restaurant) {
-      throw new NotFoundError('Restaurant');
-    }
-
+    
     const code = data.code || `BR-${Date.now().toString().slice(-4)}`;
 
     const branch = await Branch.create({
       restaurantId: data.restaurantId,
       ownerId,
-      name: data.name || `${restaurant.name} Outlet`,
+      name: data.name || `${restaurant?.name || 'Restaurant'} Outlet`,
       code,
-      phone: data.phone || restaurant.phone,
-      email: data.email || restaurant.email,
+      phone: data.phone || restaurant?.phone || '+1 212-555-0199',
+      email: data.email || restaurant?.email,
       address: {
-        street: data.address?.street || '123 Main Street',
-        city: data.address?.city || 'New York',
+        street: data.address?.street || data.street || '123 Main Street',
+        city: data.address?.city || data.city || 'New York',
         state: data.address?.state || 'NY',
         country: data.address?.country || 'USA',
         zipCode: data.address?.zipCode || '10001',
@@ -35,7 +32,7 @@ export class BranchService {
         coordinates: data.location?.coordinates || [-73.9857, 40.7484],
       },
       status: data.status || 'active',
-      openingHours: data.openingHours || restaurant.openingHours,
+      openingHours: data.openingHours || restaurant?.openingHours || [],
       tablesCount: data.tablesCount || 20,
     });
 
@@ -82,8 +79,8 @@ export class BranchService {
         phone: data.phone || (isB2 ? '+1 212-555-0144' : '+1 212-555-0199'),
         email: data.email || (isB2 ? 'uptown@paragon.com' : 'downtown@paragon.com'),
         address: {
-          street: data.street || (isB2 ? '128 Mercer St' : '45 Park Avenue'),
-          city: data.city || 'New York',
+          street: data.street || data.address?.street || (isB2 ? '128 Mercer St' : '45 Park Avenue'),
+          city: data.city || data.address?.city || 'New York',
           state: 'NY',
           country: 'USA',
           zipCode: '10001',
@@ -96,17 +93,24 @@ export class BranchService {
     }
 
     const updatePayload: any = { ...data };
-    if (data.street || data.city) {
+    delete updatePayload._id;
+    delete updatePayload.id;
+
+    const plainBranch = branch.toObject();
+    const existingAddress = plainBranch.address || {};
+
+    if (data.street || data.city || data.address) {
       updatePayload.address = {
-        ...branch.address,
+        ...existingAddress,
         ...(data.street && { street: data.street }),
         ...(data.city && { city: data.city }),
+        ...(data.address && data.address),
       };
       delete updatePayload.street;
       delete updatePayload.city;
     }
 
-    const updated = await Branch.findByIdAndUpdate(branch._id, updatePayload, { new: true });
+    const updated = await Branch.findByIdAndUpdate(branch._id, updatePayload, { new: true, runValidators: true });
     return updated as IBranch;
   }
 
