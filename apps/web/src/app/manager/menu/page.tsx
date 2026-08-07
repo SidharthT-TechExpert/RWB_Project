@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 import {
   Layers,
@@ -124,8 +124,8 @@ const INITIAL_ITEMS: MenuItem[] = [
 ];
 
 export default function ManagerMenuPage() {
-  const { selectedBranch } = useBranches();
-  const branchName = selectedBranch?.name || 'Downtown Branch';
+  const currentBranch = useCurrentBranch();
+  const branchName = currentBranch?.name || 'Assigned Branch';
 
   const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
   const [selectedCat, setSelectedCat] = useState<string>('All Items');

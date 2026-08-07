@@ -1,23 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { Button } from '@/components/ui/Button';
 import { Building2, Save, Store, Phone, Mail, MapPin } from 'lucide-react';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 
 export default function ManagerSettingsPage() {
-  const { selectedBranch } = useBranches();
+  const currentBranch = useCurrentBranch();
 
   const [form, setForm] = useState({
-    name: selectedBranch?.name || 'Downtown Branch',
-    code: selectedBranch?.code || 'BR-NY-01',
-    phone: selectedBranch?.phone || '+1 212-555-0199',
-    email: selectedBranch?.email || 'downtown@paragon.com',
-    street: selectedBranch?.address?.street || '45 Park Avenue',
-    city: selectedBranch?.address?.city || 'New York',
+    name: '',
+    code: '',
+    phone: '',
+    email: '',
+    street: '',
+    city: '',
   });
+
+  useEffect(() => {
+    if (currentBranch) {
+      setForm({
+        name: currentBranch.name || '',
+        code: currentBranch.code || '',
+        phone: currentBranch.phone || '',
+        email: currentBranch.email || '',
+        street: currentBranch.address?.street || '',
+        city: currentBranch.address?.city || '',
+      });
+    }
+  }, [currentBranch]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

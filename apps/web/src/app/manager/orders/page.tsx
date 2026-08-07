@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 import {
   UtensilsCrossed,
@@ -112,8 +112,8 @@ const INITIAL_ORDERS: OrderItem[] = [
 ];
 
 export default function ManagerOrdersPage() {
-  const { selectedBranch } = useBranches();
-  const branchName = selectedBranch?.name || 'Downtown Branch';
+  const currentBranch = useCurrentBranch();
+  const branchName = currentBranch?.name || 'Assigned Branch';
 
   const [orders, setOrders] = useState<OrderItem[]>(INITIAL_ORDERS);
   const [filter, setFilter] = useState<'all' | 'pending' | 'cooking' | 'ready' | 'served'>('all');

@@ -18,7 +18,7 @@ import {
   Armchair,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 
 const NAV_ITEMS = [
   { name: 'Branch Overview', href: '/manager', icon: LayoutDashboard },
@@ -34,10 +34,10 @@ const NAV_ITEMS = [
 export function ManagerSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { selectedBranch } = useBranches();
+  const currentBranch = useCurrentBranch();
 
-  const branchName = selectedBranch?.name || 'Downtown Branch';
-  const branchCode = selectedBranch?.code || 'BR-NY-01';
+  const branchName = currentBranch?.name || 'Assigned Outlet';
+  const branchCode = currentBranch?.code || 'OUTLET';
 
   return (
     <aside className="w-64 bg-[#050C1F] border-r border-white/8 flex flex-col h-screen sticky top-0 z-50 select-none shadow-2xl">

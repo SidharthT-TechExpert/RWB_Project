@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 import {
   CalendarCheck,
@@ -37,8 +37,8 @@ const INITIAL_BOOKINGS: Booking[] = [
 ];
 
 export default function ManagerBookingsPage() {
-  const { selectedBranch } = useBranches();
-  const branchName = selectedBranch?.name || 'Downtown Branch';
+  const currentBranch = useCurrentBranch();
+  const branchName = currentBranch?.name || 'Assigned Branch';
 
   const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
   const [searchQuery, setSearchQuery] = useState('');
