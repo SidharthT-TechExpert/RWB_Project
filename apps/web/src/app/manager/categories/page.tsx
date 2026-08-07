@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 import {
   Layers,
@@ -39,8 +39,8 @@ const INITIAL_CATEGORIES: CategoryItem[] = [
 ];
 
 export default function ManagerCategoriesPage() {
-  const { selectedBranch } = useBranches();
-  const branchName = selectedBranch?.name || 'Downtown Branch';
+  const currentBranch = useCurrentBranch();
+  const branchName = currentBranch?.name || 'Assigned Branch';
 
   const [categories, setCategories] = useState<CategoryItem[]>(INITIAL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');

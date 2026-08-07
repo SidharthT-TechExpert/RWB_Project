@@ -30,7 +30,7 @@ import {
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 
 interface OrderItemDetail {
@@ -59,8 +59,8 @@ interface TableStatus {
 }
 
 export default function ManagerDashboardPage() {
-  const { selectedBranch } = useBranches();
-  const branchName = selectedBranch?.name || 'Downtown Branch';
+  const currentBranch = useCurrentBranch();
+  const branchName = currentBranch?.name || 'Assigned Branch';
 
   const [orders, setOrders] = useState<LiveOrder[]>([
     {

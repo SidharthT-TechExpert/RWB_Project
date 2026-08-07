@@ -93,3 +93,9 @@ export function useMyBranch() {
     retry: false,
   });
 }
+
+export function useCurrentBranch() {
+  const { data: myBranch } = useMyBranch();
+  const { selectedBranch, branches } = useBranches();
+  return myBranch || selectedBranch || branches[0] || null;
+}

@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Search, Bell, Clock, Building2, Store, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
-import { useBranches } from '@/hooks/useBranches';
+import { useCurrentBranch } from '@/hooks/useBranches';
 import toast from 'react-hot-toast';
 
 export function ManagerHeader({ pageTitle = 'Branch Overview' }: { pageTitle?: string }) {
   const [outletStatus, setOutletStatus] = useState<'online' | 'busy' | 'offline'>('online');
   const { user } = useAuth();
-  const { selectedBranch } = useBranches();
+  const currentBranch = useCurrentBranch();
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -34,7 +34,7 @@ export function ManagerHeader({ pageTitle = 'Branch Overview' }: { pageTitle?: s
               </span>
               <span className="text-white/20">•</span>
               <span className="text-[10px] font-mono text-slate-400 font-bold">
-                {selectedBranch?.name || 'Downtown Outlet'}
+                {currentBranch?.name || 'Assigned Outlet'}
               </span>
             </div>
             <h1 className="text-lg font-black text-white tracking-tight">{pageTitle}</h1>
