@@ -1,7 +1,29 @@
+'use client';
+
+import { ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { useAuth } from '@/hooks/useAuth';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const { user, isMeLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isMeLoading) {
+      if (!user) {
+        router.replace('/auth/login');
+      } else if (user.role === 'branch_manager') {
+        router.replace('/manager');
+      } else if (user.role === 'admin') {
+        router.replace('/admin');
+      } else if (user.role !== 'restaurant_owner' && user.role !== 'owner') {
+        router.replace('/auth/login');
+      }
+    }
+  }, [isMeLoading, user, router]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#040609] text-slate-100 font-sans antialiased">
       {/* Sidebar — sticky, full height, never scrolls */}
