@@ -133,10 +133,14 @@ api.interceptors.response.use(
   }
 );
 
-// Customer Token Helpers
-export const setAuthTokens = (accessToken: string, refreshToken: string) => {
-  Cookies.set('accessToken', accessToken, { expires: 1 / 96, sameSite: 'strict' });
-  Cookies.set('refreshToken', refreshToken, { expires: 7, sameSite: 'strict' });
+// Customer / Owner / Manager Token Helpers
+export const setAuthTokens = (accessToken: string, refreshToken: string, role?: string) => {
+  Cookies.set('accessToken', accessToken, { expires: 1 / 96, sameSite: 'lax' });
+  Cookies.set('refreshToken', refreshToken, { expires: 7, sameSite: 'lax' });
+  if (role) {
+    Cookies.set('userRole', role, { expires: 7, sameSite: 'lax' });
+    localStorage.setItem('userRole', role);
+  }
   localStorage.setItem('accessToken', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
 };
@@ -144,23 +148,29 @@ export const setAuthTokens = (accessToken: string, refreshToken: string) => {
 export const clearAuthTokens = () => {
   Cookies.remove('accessToken');
   Cookies.remove('refreshToken');
+  Cookies.remove('userRole');
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userRole');
 };
 
 // Admin Token Helpers
 export const setAdminAuthTokens = (accessToken: string, refreshToken: string) => {
-  Cookies.set('adminAccessToken', accessToken, { expires: 1 / 96, sameSite: 'strict' });
-  Cookies.set('adminRefreshToken', refreshToken, { expires: 7, sameSite: 'strict' });
+  Cookies.set('adminAccessToken', accessToken, { expires: 1 / 96, sameSite: 'lax' });
+  Cookies.set('adminRefreshToken', refreshToken, { expires: 7, sameSite: 'lax' });
+  Cookies.set('userRole', 'admin', { expires: 7, sameSite: 'lax' });
   localStorage.setItem('adminAccessToken', accessToken);
   localStorage.setItem('adminRefreshToken', refreshToken);
+  localStorage.setItem('userRole', 'admin');
 };
 
 export const clearAdminAuthTokens = () => {
   Cookies.remove('adminAccessToken');
   Cookies.remove('adminRefreshToken');
+  Cookies.remove('userRole');
   localStorage.removeItem('adminAccessToken');
   localStorage.removeItem('adminRefreshToken');
+  localStorage.removeItem('userRole');
 };
 
 export default api;

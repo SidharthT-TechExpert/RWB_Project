@@ -15,6 +15,12 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
     if (!isLoginPage && !isMeLoading) {
       if (!user) {
         router.replace('/manager/login');
+      } else if (user.role === 'restaurant_owner') {
+        router.replace('/dashboard');
+      } else if (user.role === 'admin') {
+        router.replace('/admin');
+      } else if (user.role !== 'branch_manager') {
+        router.replace('/manager/login');
       }
     }
   }, [isLoginPage, isMeLoading, user, router]);

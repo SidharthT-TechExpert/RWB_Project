@@ -1,12 +1,30 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { useAuth } from '@/hooks/useAuth';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isMeLoading } = useAuth();
   const isLoginPage = pathname === '/admin/login';
+
+  useEffect(() => {
+    if (!isLoginPage && !isMeLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (user.role === 'branch_manager') {
+        router.replace('/manager');
+      } else if (user.role === 'restaurant_owner' || user.role === 'owner') {
+        router.replace('/dashboard');
+      } else if (user.role !== 'admin') {
+        router.replace('/admin/login');
+      }
+    }
+  }, [isLoginPage, isMeLoading, user, router]);
 
   if (isLoginPage) {
     return <>{children}</>;

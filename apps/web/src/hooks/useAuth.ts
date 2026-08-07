@@ -43,7 +43,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       const { user, tokens } = data;
-      setAuthTokens(tokens.accessToken, tokens.refreshToken);
+      setAuthTokens(tokens.accessToken, tokens.refreshToken, user?.role);
       setUser(user);
       queryClient.setQueryData(['auth', 'me'], user);
       toast.success('Welcome to QuickBite!');
@@ -59,7 +59,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       const { user, tokens } = data;
-      setAuthTokens(tokens.accessToken, tokens.refreshToken);
+      setAuthTokens(tokens.accessToken, tokens.refreshToken, user?.role);
       setUser(user);
       queryClient.setQueryData(['auth', 'me'], user);
       toast.success(`Welcome back, ${user.name}!`);
@@ -110,7 +110,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       const { user, tokens } = data;
-      setAuthTokens(tokens.accessToken, tokens.refreshToken);
+      setAuthTokens(tokens.accessToken, tokens.refreshToken, user?.role);
       setUser(user);
       toast.success('Login successful!');
       router.push('/');
