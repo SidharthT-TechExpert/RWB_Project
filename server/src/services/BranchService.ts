@@ -41,11 +41,31 @@ export class BranchService {
   }
 
   async getBranchesByRestaurant(restaurantId: string): Promise<IBranch[]> {
-    return Branch.find({ restaurantId }).sort({ createdAt: -1 });
+    let branches = await Branch.find({ restaurantId }).sort({ createdAt: -1 });
+    if (branches.length === 0 && mongoose.Types.ObjectId.isValid(restaurantId)) {
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (restaurant?.ownerId) {
+        branches = await Branch.find({ ownerId: restaurant.ownerId }).sort({ createdAt: -1 });
+      }
+    }
+    if (branches.length === 0) {
+      branches = await Branch.find().sort({ createdAt: -1 });
+    }
+    return branches;
   }
 
   async getBranchesByOwner(ownerId: string): Promise<IBranch[]> {
-    return Branch.find({ ownerId }).sort({ createdAt: -1 });
+    let branches = await Branch.find({ ownerId }).sort({ createdAt: -1 });
+    if (branches.length === 0) {
+      const restaurant = await Restaurant.findOne({ ownerId });
+      if (restaurant) {
+        branches = await Branch.find({ restaurantId: restaurant._id.toString() }).sort({ createdAt: -1 });
+      }
+    }
+    if (branches.length === 0) {
+      branches = await Branch.find().sort({ createdAt: -1 });
+    }
+    return branches;
   }
 
   async getBranchById(id: string): Promise<IBranch> {

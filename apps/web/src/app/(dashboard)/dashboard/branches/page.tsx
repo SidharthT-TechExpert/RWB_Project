@@ -70,11 +70,16 @@ export default function BranchesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['branches', restaurantId],
     queryFn: async () => {
-      if (!restaurantId) return { data: [] };
-      const res = await api.get(`/branches/restaurant/${restaurantId}`);
+      if (restaurantId) {
+        try {
+          const res = await api.get(`/branches/restaurant/${restaurantId}`);
+          if (res.data?.data?.length > 0) return res.data;
+        } catch {}
+      }
+      const res = await api.get('/branches/owner/my-branches');
       return res.data;
     },
-    enabled: !!restaurantId,
+    enabled: true,
   });
 
   // Default mock branches if database empty
@@ -128,9 +133,21 @@ export default function BranchesPage() {
   // Update Branch Mutation
   const updateBranchMutation = useMutation({
     mutationFn: async ({ branchId, payload }: { branchId: string; payload: typeof editBranchForm }) => {
-      return api.put(`/branches/${branchId}`, payload);
+      const res = await api.put(`/branches/${branchId}`, payload);
+      return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (resData) => {
+      if (resData?.data) {
+        const updatedBranch = resData.data;
+        queryClient.setQueryData(['branches', restaurantId], (old: any) => {
+          const currentList = old?.data || [];
+          const exists = currentList.some((b: BranchItem) => b._id === updatedBranch._id || b.code === updatedBranch.code);
+          const newList = exists
+            ? currentList.map((b: BranchItem) => (b._id === updatedBranch._id || b.code === updatedBranch.code ? updatedBranch : b))
+            : [updatedBranch, ...currentList];
+          return { ...old, data: newList };
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['branches'] });
       toast.success('🎉 Branch updated successfully!');
       setIsEditBranchOpen(false);
