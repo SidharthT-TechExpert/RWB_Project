@@ -143,3 +143,71 @@ export function useCreateRestaurant() {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
+
+export interface AddTablePayload {
+  tableNumber: string;
+  capacity: number;
+  type: 'indoor' | 'outdoor' | 'private' | 'bar';
+  seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  isAvailable?: boolean;
+  description?: string;
+}
+
+export function useAddTable(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AddTablePayload) => {
+      const res = await api.post(`/restaurants/${restaurantId}/tables`, payload);
+      return res.data.data as Restaurant;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants', 'mine'] });
+      toast.success('Table added successfully!');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+export interface EditTablePayload {
+  capacity?: number;
+  type?: 'indoor' | 'outdoor' | 'private' | 'bar';
+  seatingCategory?: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  description?: string;
+}
+
+export function useUpdateTable(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tableNumber, ...payload }: EditTablePayload & { tableNumber: string }) => {
+      const res = await api.patch(
+        `/restaurants/${restaurantId}/tables/${encodeURIComponent(tableNumber)}`,
+        payload
+      );
+      return res.data.data as Restaurant;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      toast.success('Table updated successfully!');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+export function useToggleTableAvailability(restaurantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tableNumber, isAvailable }: { tableNumber: string; isAvailable: boolean }) => {
+      const res = await api.patch(
+        `/restaurants/${restaurantId}/tables/${encodeURIComponent(tableNumber)}/availability`,
+        { isAvailable }
+      );
+      return res.data.data as Restaurant;
+    },
+    onSuccess: (_data, { isAvailable }) => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      toast.success(isAvailable ? 'Table listed — now visible to guests' : 'Table unlisted — hidden from bookings');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}

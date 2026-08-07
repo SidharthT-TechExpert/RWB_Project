@@ -57,8 +57,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Handle monorepo nested static files if needed
-RUN mkdir -p app/.next && cp -r .next/static app/.next/static 2>/dev/null || true
+# In monorepo standalone builds Next.js server.js is nested under apps/web —
+# copy public and static to both locations so assets are always found
+RUN mkdir -p app/.next && \
+    cp -r .next/static app/.next/static 2>/dev/null || true && \
+    cp -r public app/public 2>/dev/null || true
 
 USER nextjs
 EXPOSE 3006

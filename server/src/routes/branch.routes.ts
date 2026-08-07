@@ -7,6 +7,10 @@ const router = Router();
 
 // Public / Read
 router.get('/restaurant/:restaurantId', branchController.getByRestaurant.bind(branchController));
+
+// Branch Manager — get own branch (must be before /:id wildcard)
+router.get('/manager/my-branch', authenticate, authorize(ROLES.BRANCH_MANAGER), branchController.getMyBranch.bind(branchController));
+
 router.get('/:id', branchController.getById.bind(branchController));
 
 // Owner / Admin Protected

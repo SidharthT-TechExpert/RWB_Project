@@ -33,12 +33,24 @@ app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false 
 const defaultOrigins = 'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://127.0.0.1:3000,http://127.0.0.1:3001';
 const configuredOrigins = (process.env.CORS_ORIGIN || defaultOrigins).split(',').map((s) => s.trim());
 
+// Derive the apex domain from FRONTEND_URL or CORS_ORIGIN so both apex + www are always allowed
+const frontendUrl = process.env.FRONTEND_URL || '';
+const apexMatch = frontendUrl.match(/^https?:\/\/(?:www\.)?([^/]+)/);
+const apexDomain = apexMatch ? apexMatch[1] : null;
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
     if (!isProduction()) {
       if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+    }
+
+    // Always allow both apex and www variants of the configured domain
+    if (apexDomain) {
+      if (origin === `https://${apexDomain}` || origin === `https://www.${apexDomain}`) {
         return callback(null, true);
       }
     }

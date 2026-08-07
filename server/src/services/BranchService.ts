@@ -185,6 +185,33 @@ export class BranchService {
     const managers = await User.find({ role: ROLES.BRANCH_MANAGER, isActive: true }).select('name email phone role createdAt');
     return managers;
   }
+
+  async getMyBranch(managerId: string, email: string): Promise<IBranch> {
+    // Primary lookup: branch already linked to this manager's userId
+    let branch = await Branch.findOne({ managerId });
+
+    if (!branch) {
+      // Fallback: find the user by email, then find branch linked to their userId
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (user) {
+        branch = await Branch.findOne({ managerId: user._id.toString() });
+
+        // Also try matching by stored managerName / email in case managerId was never set
+        if (!branch) {
+          branch = await Branch.findOne({ email: email.toLowerCase() });
+        }
+
+        // If found via fallback, back-fill managerId so future lookups are fast
+        if (branch && !branch.managerId) {
+          branch.managerId = user._id.toString();
+          await branch.save();
+        }
+      }
+    }
+
+    if (!branch) throw new NotFoundError('Branch');
+    return branch;
+  }
 }
 
 export const branchService = new BranchService();
