@@ -285,6 +285,14 @@ export default function ManagerTablesPage() {
               <span className="sm:hidden">Standees</span>
             </Button>
             <Button
+              onClick={() => setShowBulkPrintModal(true)}
+              disabled={apiTables.length === 0}
+              className="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-xs gap-2 rounded-xl h-10 px-4"
+            >
+              <Printer className="w-4 h-4 text-purple-400" />
+              <span>Print All Standees</span>
+            </Button>
+            <Button
               onClick={() => setShowAddModal(true)}
               disabled={!restaurantId || isLoading}
               className="bg-white/6 hover:bg-white/10 border border-white/10 text-white font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
