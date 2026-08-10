@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { Button } from '@/components/ui/Button';
-import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye, Pencil, QrCode, Printer } from 'lucide-react';
+import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye, Pencil, QrCode, Printer, Search, Filter, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAddTable, useUpdateTable, useToggleTableAvailability, AddTablePayload, EditTablePayload, useRestaurant } from '@/hooks/useRestaurants';
 import { useMyBranch } from '@/hooks/useBranches';
@@ -51,6 +51,7 @@ interface TableItem {
   capacity: number;
   type: string;
   seatingCategory: string;
+  isAc: boolean;
   description?: string;
   status: TableStatus;
   isAvailable: boolean;
@@ -61,6 +62,7 @@ interface FormState {
   capacity: string;
   type: TableType;
   seatingCategory: SeatingCategory;
+  isAc: boolean;
   description: string;
 }
 
@@ -69,6 +71,7 @@ const DEFAULT_FORM: FormState = {
   capacity: '4',
   type: 'indoor',
   seatingCategory: 'regular',
+  isAc: true,
   description: '',
 };
 
@@ -92,8 +95,16 @@ export default function ManagerTablesPage() {
   const [selectedQRTable, setSelectedQRTable] = useState<TableItem | null>(null);
   const [showBulkPrintModal, setShowBulkPrintModal] = useState(false);
   const [editingTable, setEditingTable] = useState<TableItem | null>(null);
-  const [editForm, setEditForm] = useState<EditTablePayload & { tableNumber: string }>({ tableNumber: '', capacity: 4, type: 'indoor', seatingCategory: 'regular', description: '' });
+  const [editForm, setEditForm] = useState<EditTablePayload & { tableNumber: string }>({ tableNumber: '', capacity: 4, type: 'indoor', seatingCategory: 'regular', isAc: true, description: '' });
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+
+  // ── Table Filters State ─────────────────────────────────────────────────────
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'occupied' | 'unlisted'>('all');
+  const [climateFilter, setClimateFilter] = useState<'all' | 'ac' | 'non_ac'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [capacityFilter, setCapacityFilter] = useState<string>('all');
 
   // ── Derive tables ───────────────────────────────────────────────────────────
 
@@ -103,6 +114,7 @@ export default function ManagerTablesPage() {
     capacity: t.capacity,
     type: t.type,
     seatingCategory: (t as any).seatingCategory ?? 'regular',
+    isAc: (t as any).isAc !== false,
     description: (t as any).description,
     isAvailable: t.isAvailable,
     status: localStatus[t.tableNumber] ?? (t.isAvailable ? 'available' : 'occupied'),
@@ -111,6 +123,61 @@ export default function ManagerTablesPage() {
   const total     = apiTables.length;
   const available = apiTables.filter((t) => t.isAvailable && (localStatus[t.tableNumber] ?? t.status) === 'available').length;
   const occupied  = apiTables.filter((t) => t.isAvailable && (localStatus[t.tableNumber] ?? t.status) === 'occupied').length;
+  const unlisted  = apiTables.filter((t) => !t.isAvailable).length;
+
+  const hasActiveFilters =
+    searchTerm.trim() !== '' ||
+    statusFilter !== 'all' ||
+    climateFilter !== 'all' ||
+    typeFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    capacityFilter !== 'all';
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setClimateFilter('all');
+    setTypeFilter('all');
+    setCategoryFilter('all');
+    setCapacityFilter('all');
+  };
+
+  const filteredTables = apiTables.filter((t) => {
+    // Search filter
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase().trim();
+      const matchNum = t.tableNumber.toLowerCase().includes(q);
+      const matchDesc = (t.description || '').toLowerCase().includes(q);
+      const matchType = t.type.toLowerCase().includes(q);
+      const matchCat = (t.seatingCategory || '').toLowerCase().includes(q);
+      if (!matchNum && !matchDesc && !matchType && !matchCat) return false;
+    }
+
+    // Status filter
+    const currentStatus = localStatus[t.tableNumber] ?? (t.isAvailable ? 'available' : 'occupied');
+    if (statusFilter === 'available') {
+      if (!t.isAvailable || currentStatus !== 'available') return false;
+    } else if (statusFilter === 'occupied') {
+      if (!t.isAvailable || currentStatus !== 'occupied') return false;
+    } else if (statusFilter === 'unlisted') {
+      if (t.isAvailable) return false;
+    }
+
+    // Climate filter
+    if (climateFilter === 'ac' && !t.isAc) return false;
+    if (climateFilter === 'non_ac' && t.isAc) return false;
+
+    // Type filter
+    if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+
+    // Category filter
+    if (categoryFilter !== 'all' && t.seatingCategory !== categoryFilter) return false;
+
+    // Capacity filter
+    if (capacityFilter !== 'all' && t.capacity < parseInt(capacityFilter, 10)) return false;
+
+    return true;
+  });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -131,6 +198,7 @@ export default function ManagerTablesPage() {
       capacity: t.capacity,
       type: t.type as TableType,
       seatingCategory: (t.seatingCategory as SeatingCategory) ?? 'regular',
+      isAc: t.isAc !== false,
       description: t.description ?? '',
     });
   };
@@ -148,6 +216,7 @@ export default function ManagerTablesPage() {
         capacity: Number(editForm.capacity),
         type: editForm.type,
         seatingCategory: editForm.seatingCategory,
+        isAc: editForm.isAc,
         description: editForm.description?.trim() || undefined,
       },
       { onSuccess: handleCloseEdit }
@@ -165,6 +234,7 @@ export default function ManagerTablesPage() {
       capacity: capacityNum,
       type: form.type,
       seatingCategory: form.seatingCategory,
+      isAc: form.isAc,
       isAvailable: true,
       ...(form.description.trim() ? { description: form.description.trim() } : {}),
     };
@@ -191,20 +261,29 @@ export default function ManagerTablesPage() {
     <div className="flex-1 flex flex-col min-h-screen bg-[#030816]">
       <ManagerHeader pageTitle="Branch Tables & Reservations" />
 
-      <main className="p-6 space-y-6 max-w-[1600px] w-full mx-auto pb-16">
+      <main className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[2400px] w-full mx-auto pb-24">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#070D1F] p-6 rounded-2xl border border-white/8 shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#070D1F] p-4 sm:p-6 rounded-2xl border border-white/8 shadow-xl">
           <div>
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <CalendarCheck className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+              <CalendarCheck className="w-5 h-5 text-purple-400 shrink-0" />
               Floor Plan &amp; Seating Roster
             </h2>
             <p className="text-xs text-slate-400 mt-1">
               Manage live table availability, guest check-ins, and walk-in assignments.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+            <Button
+              onClick={() => setShowBulkPrintModal(true)}
+              disabled={apiTables.length === 0}
+              className="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
+            >
+              <Printer className="w-4 h-4 text-purple-400 shrink-0" />
+              <span className="hidden sm:inline">Print All Standees</span>
+              <span className="sm:hidden">Standees</span>
+            </Button>
             <Button
               onClick={() => setShowBulkPrintModal(true)}
               disabled={apiTables.length === 0}
@@ -216,34 +295,35 @@ export default function ManagerTablesPage() {
             <Button
               onClick={() => setShowAddModal(true)}
               disabled={!restaurantId || isLoading}
-              className="bg-white/6 hover:bg-white/10 border border-white/10 text-white font-bold text-xs gap-2 rounded-xl h-10 px-4"
+              className="bg-white/6 hover:bg-white/10 border border-white/10 text-white font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
             >
-              <Plus className="w-4 h-4 text-purple-400" />
+              <Plus className="w-4 h-4 text-purple-400 shrink-0" />
               <span>Add Table</span>
             </Button>
             <Button
               onClick={() => toast.success('Walk-in Check-in coming soon')}
-              className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-4"
+              className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
             >
-              <UserPlus className="w-4 h-4" />
-              <span>Walk-in Check-in</span>
+              <UserPlus className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Walk-in Check-in</span>
+              <span className="sm:hidden">Walk-in</span>
             </Button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { label: 'Total Tables', value: total, color: 'purple', Icon: TableProperties },
             { label: 'Available',    value: available, color: 'emerald', Icon: CheckCircle2 },
             { label: 'Occupied',     value: occupied,  color: 'rose',    Icon: Users },
           ].map(({ label, value, color, Icon }) => (
-            <div key={label} className="p-4 rounded-2xl bg-[#060C1E] border border-white/8 flex items-center justify-between">
+            <div key={label} className="p-4 rounded-2xl bg-[#060C1E] border border-white/8 flex items-center justify-between shadow-lg">
               <div>
                 <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-                <p className={`text-2xl font-black mt-1 tabular-nums text-${color}-400`}>{value}</p>
+                <p className={`text-xl sm:text-2xl 3xl:text-3xl font-black mt-1 tabular-nums text-${color}-400`}>{value}</p>
               </div>
-              <div className={`w-10 h-10 rounded-xl bg-${color}-500/10 border border-${color}-500/20 text-${color}-400 flex items-center justify-center`}>
+              <div className={`w-10 h-10 rounded-xl bg-${color}-500/10 border border-${color}-500/20 text-${color}-400 flex items-center justify-center shrink-0`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
@@ -285,49 +365,201 @@ export default function ManagerTablesPage() {
           </div>
         )}
 
-        {/* Tables Grid */}
+        {/* ── Filter & Search Toolbar ────────────────────────────────────────── */}
         {!isLoading && apiTables.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {apiTables.map((t) => {
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#070D1F] border border-white/8 space-y-3.5 shadow-xl">
+            {/* Row 1: Search & Quick Status Pills */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Search Input */}
+              <div className="relative w-full lg:max-w-md">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search table number, notes, category..."
+                  className="w-full bg-[#030816] border border-white/8 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500 transition-colors"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Status Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 no-scrollbar">
+                {[
+                  { id: 'all', label: `All Tables (${total})` },
+                  { id: 'available', label: `Available (${available})` },
+                  { id: 'occupied', label: `Occupied (${occupied})` },
+                  { id: 'unlisted', label: `Unlisted (${unlisted})` },
+                ].map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={() => setStatusFilter(st.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      statusFilter === st.id
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'bg-white/4 border border-white/6 text-slate-400 hover:text-white hover:border-white/12'
+                    }`}
+                  >
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Row 2: Dropdowns + Active Count + Reset */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/6 text-xs">
+              <div className="grid grid-cols-1 xs:grid-cols-2 md:flex md:flex-wrap items-center gap-2">
+                {/* Climate AC Filter */}
+                <select
+                  value={climateFilter}
+                  onChange={(e) => setClimateFilter(e.target.value as any)}
+                  className="bg-[#030816] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-purple-500 cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">❄️ All Climate (AC / Non-AC)</option>
+                  <option value="ac">❄️ AC Tables Only</option>
+                  <option value="non_ac">🍃 Non-AC Tables Only</option>
+                </select>
+
+                {/* Section / Table Type Filter */}
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="bg-[#030816] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-purple-500 cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">🏢 All Sections</option>
+                  {TABLE_TYPES.map((t) => (
+                    <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                  ))}
+                </select>
+
+                {/* Seating Category Filter */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="bg-[#030816] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-purple-500 cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">👥 All Categories</option>
+                  {SEATING_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                  ))}
+                </select>
+
+                {/* Min Capacity Filter */}
+                <select
+                  value={capacityFilter}
+                  onChange={(e) => setCapacityFilter(e.target.value)}
+                  className="bg-[#030816] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-purple-500 cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">🪑 Any Capacity</option>
+                  <option value="2">2+ Guests</option>
+                  <option value="4">4+ Guests</option>
+                  <option value="6">6+ Guests</option>
+                  <option value="8">8+ Guests</option>
+                </select>
+
+                {/* Reset Filters Button */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={resetFilters}
+                    className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold transition-all w-full xs:w-auto"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Result Count Counter */}
+              <div className="text-[11px] text-slate-400 font-mono shrink-0">
+                Showing <span className="text-white font-bold">{filteredTables.length}</span> of <span className="text-white font-bold">{apiTables.length}</span> tables
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty Filter State */}
+        {!isLoading && apiTables.length > 0 && filteredTables.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 space-y-3 text-center bg-[#060C1E] rounded-2xl border border-white/8">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Filter className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">No tables match your filters</p>
+              <p className="text-xs text-slate-400 mt-1">Try adjusting your search query, status, or climate filters.</p>
+            </div>
+            <Button
+              onClick={resetFilters}
+              variant="outline"
+              className="border-white/10 hover:bg-white/6 text-white text-xs font-bold rounded-xl h-9 px-4 mt-2 gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-purple-400" />
+              <span>Clear All Filters</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Tables Grid - Responsive across Mobile, Tablet, Desktop, 2K, 4K & TVs */}
+        {!isLoading && filteredTables.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
+            {filteredTables.map((t) => {
               const status: TableStatus = (localStatus[t.tableNumber] ?? t.status) as TableStatus;
               const effectiveStatus = !t.isAvailable ? 'maintenance' : status;
               const cat = (t.seatingCategory ?? 'regular') as SeatingCategory;
               return (
-                <div key={t.id} className={`p-5 rounded-2xl bg-[#060C1E] border space-y-4 shadow-xl ${!t.isAvailable ? 'border-slate-800/50' : 'border-white/8'}`}>
+                <div key={t.id} className={`p-4 sm:p-5 rounded-2xl bg-[#060C1E] border space-y-3.5 shadow-xl transition-all ${!t.isAvailable ? 'border-slate-800/50' : 'border-white/8'}`}>
                   {/* Dim header + details when unlisted, but NOT the action buttons */}
                   <div className={!t.isAvailable ? 'opacity-60' : ''}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-lg text-white">{t.tableNumber}</span>
-                        {!t.isAvailable && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-500/20 border border-slate-600/40 text-slate-400 flex items-center gap-1">
-                            <EyeOff className="w-2.5 h-2.5" /> Unlisted
-                          </span>
-                        )}
+                    {/* 2-Tier Header: Prevents Badge Overlap & Text Collision */}
+                    <div className="space-y-2 mb-3">
+                      {/* Row 1: Table Number & Status Pill */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-black text-lg text-white tracking-tight">{t.tableNumber}</span>
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border capitalize shrink-0 ${
+                          !t.isAvailable
+                            ? 'bg-slate-500/20 border-slate-600/40 text-slate-400 flex items-center gap-1'
+                            : STATUS_COLORS[status]
+                        }`}>
+                          {!t.isAvailable ? (
+                            <>
+                              <EyeOff className="w-2.5 h-2.5" />
+                              <span>Unlisted</span>
+                            </>
+                          ) : (
+                            status
+                          )}
+                        </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 font-medium capitalize mt-0.5">{t.type}</p>
+
+                      {/* Row 2: Section / Type & Quick Action Buttons */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-slate-400 font-medium capitalize truncate">
+                          {t.type} Section
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => setSelectedQRTable(t)}
+                            className="w-7 h-7 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-400 flex items-center justify-center transition-all cursor-pointer"
+                            title="View & Download Table QR"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEdit(t)}
+                            className="w-7 h-7 rounded-lg bg-white/4 hover:bg-purple-500/15 border border-white/8 hover:border-purple-500/30 text-slate-400 hover:text-purple-400 flex items-center justify-center transition-all cursor-pointer"
+                            title="Edit table details"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => setSelectedQRTable(t)}
-                        className="w-7 h-7 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-400 flex items-center justify-center transition-all"
-                        title="View & Download Table QR"
-                      >
-                        <QrCode className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenEdit(t)}
-                        className="w-7 h-7 rounded-lg bg-white/4 hover:bg-purple-500/15 border border-white/8 hover:border-purple-500/30 text-slate-500 hover:text-purple-400 flex items-center justify-center transition-all"
-                        title="Edit table details"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border capitalize ${STATUS_COLORS[effectiveStatus]}`}>
-                        {!t.isAvailable ? 'unavailable' : status}
-                      </span>
-                    </div>
-                  </div>
 
                   <div className="p-3 rounded-xl bg-white/4 border border-white/6 text-xs space-y-1.5">
                     <div className="flex justify-between text-slate-400">
@@ -338,6 +570,14 @@ export default function ManagerTablesPage() {
                       <span>Category</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[cat]}`}>
                         {CATEGORY_LABELS[cat]}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Climate</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                        t.isAc ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30'
+                      }`}>
+                        {t.isAc ? '❄️ AC' : '🍃 Non-AC'}
                       </span>
                     </div>
                     {t.description && (
@@ -461,7 +701,7 @@ export default function ManagerTablesPage() {
                 )}
               </div>
 
-              {/* Row 2: Table Type + Seating Category */}
+              {/* Row 2: Table Type + Climate / AC */}
               <div className="grid grid-cols-2 gap-4">
                 {field('Table Type',
                   <select
@@ -475,19 +715,32 @@ export default function ManagerTablesPage() {
                     ))}
                   </select>
                 )}
-                {field('Seating Category',
+                {field('Climate / AC',
                   <select
-                    value={form.seatingCategory}
-                    onChange={(e) => setForm((f) => ({ ...f, seatingCategory: e.target.value as SeatingCategory }))}
+                    value={form.isAc ? 'ac' : 'non-ac'}
+                    onChange={(e) => setForm((f) => ({ ...f, isAc: e.target.value === 'ac' }))}
                     disabled={addTableMutation.isPending}
                     className={inputCls}
                   >
-                    {SEATING_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-                    ))}
+                    <option value="ac">❄️ AC (Air Conditioned)</option>
+                    <option value="non-ac">🍃 Non-AC</option>
                   </select>
                 )}
               </div>
+
+              {/* Row 3: Seating Category */}
+              {field('Seating Category',
+                <select
+                  value={form.seatingCategory}
+                  onChange={(e) => setForm((f) => ({ ...f, seatingCategory: e.target.value as SeatingCategory }))}
+                  disabled={addTableMutation.isPending}
+                  className={inputCls}
+                >
+                  {SEATING_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                  ))}
+                </select>
+              )}
 
               {/* Status note */}
               <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
@@ -503,7 +756,7 @@ export default function ManagerTablesPage() {
                   type="text"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="e.g. Near window, AC section, Quiet corner…"
+                  placeholder="e.g. Near window, Quiet corner, Garden view…"
                   disabled={addTableMutation.isPending}
                   className={inputCls}
                 />,
@@ -548,7 +801,7 @@ export default function ManagerTablesPage() {
 
             <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
 
-              {/* Capacity + Type */}
+              {/* Row 1: Capacity + Table Type */}
               <div className="grid grid-cols-2 gap-4">
                 {field('Capacity',
                   <input
@@ -575,19 +828,32 @@ export default function ManagerTablesPage() {
                 )}
               </div>
 
-              {/* Seating Category */}
-              {field('Seating Category',
-                <select
-                  value={editForm.seatingCategory}
-                  onChange={(e) => setEditForm((f) => ({ ...f, seatingCategory: e.target.value as SeatingCategory }))}
-                  disabled={updateTableMutation.isPending}
-                  className={inputCls}
-                >
-                  {SEATING_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-                  ))}
-                </select>
-              )}
+              {/* Row 2: Climate / AC + Seating Category */}
+              <div className="grid grid-cols-2 gap-4">
+                {field('Climate / AC',
+                  <select
+                    value={editForm.isAc ? 'ac' : 'non-ac'}
+                    onChange={(e) => setEditForm((f) => ({ ...f, isAc: e.target.value === 'ac' }))}
+                    disabled={updateTableMutation.isPending}
+                    className={inputCls}
+                  >
+                    <option value="ac">❄️ AC (Air Conditioned)</option>
+                    <option value="non-ac">🍃 Non-AC</option>
+                  </select>
+                )}
+                {field('Seating Category',
+                  <select
+                    value={editForm.seatingCategory}
+                    onChange={(e) => setEditForm((f) => ({ ...f, seatingCategory: e.target.value as SeatingCategory }))}
+                    disabled={updateTableMutation.isPending}
+                    className={inputCls}
+                  >
+                    {SEATING_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
 
               {/* Description */}
               {field('Description',
@@ -595,7 +861,7 @@ export default function ManagerTablesPage() {
                   type="text"
                   value={editForm.description ?? ''}
                   onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="e.g. Near window, AC section, Quiet corner…"
+                  placeholder="e.g. Near window, Quiet corner, Garden view…"
                   disabled={updateTableMutation.isPending}
                   className={inputCls}
                 />,

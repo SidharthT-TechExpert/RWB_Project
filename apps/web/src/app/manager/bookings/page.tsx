@@ -103,28 +103,28 @@ export default function ManagerBookingsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-[#030816] text-slate-100 min-h-screen">
-      <ManagerHeader />
+      <ManagerHeader pageTitle="Table Reservations & Bookings" />
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-        {/* Page Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-[2400px] w-full mx-auto pb-24">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#070D1F] p-4 sm:p-6 rounded-2xl border border-white/8 shadow-xl">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-400 uppercase">
+              <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-400 uppercase">
                 {branchName}
               </span>
               <span className="text-slate-600">&bull;</span>
-              <span className="text-xs text-slate-400 font-medium">Guest Reservations</span>
+              <span className="text-xs text-slate-400 font-medium">Guest Bookings</span>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
-              <CalendarCheck className="w-6 h-6 text-blue-400" />
+            <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
+              <CalendarCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 shrink-0" />
               Table Reservations &amp; Bookings
             </h1>
           </div>
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all cursor-pointer shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>New Walk-in / Reservation</span>

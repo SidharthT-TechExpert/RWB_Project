@@ -18,7 +18,7 @@ export interface Restaurant {
   logo?: string;
   gallery: string[];
   openingHours: Array<{ day: string; isOpen: boolean; openTime: string; closeTime: string }>;
-  tables: Array<{ tableNumber: string; capacity: number; isAvailable: boolean; type: string }>;
+  tables: Array<{ tableNumber: string; capacity: number; isAvailable: boolean; type: string; seatingCategory?: string; isAc?: boolean; description?: string }>;
   averageRating: number;
   totalReviews: number;
   features: string[];
@@ -149,6 +149,7 @@ export interface AddTablePayload {
   capacity: number;
   type: 'indoor' | 'outdoor' | 'private' | 'bar';
   seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  isAc?: boolean;
   isAvailable?: boolean;
   description?: string;
 }
@@ -173,6 +174,7 @@ export interface EditTablePayload {
   capacity?: number;
   type?: 'indoor' | 'outdoor' | 'private' | 'bar';
   seatingCategory?: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  isAc?: boolean;
   description?: string;
 }
 

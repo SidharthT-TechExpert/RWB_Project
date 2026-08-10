@@ -5,6 +5,7 @@ export interface ITable {
   tableNumber: string; capacity: number; isAvailable: boolean;
   type: 'indoor' | 'outdoor' | 'private' | 'bar';
   seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  isAc?: boolean;
   description?: string;
 }
 
@@ -52,7 +53,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     phone: { type: String, required: true }, email: String, website: String,
     coverImage: String, logo: String, gallery: [String],
     openingHours: [{ day: String, isOpen: Boolean, openTime: String, closeTime: String }],
-    tables: [{ tableNumber: String, capacity: Number, isAvailable: { type: Boolean, default: true }, type: { type: String, default: 'indoor' }, seatingCategory: { type: String, default: 'regular' }, description: String }],
+    tables: [{ tableNumber: String, capacity: Number, isAvailable: { type: Boolean, default: true }, type: { type: String, default: 'indoor' }, seatingCategory: { type: String, default: 'regular' }, isAc: { type: Boolean, default: true }, description: String }],
     totalCapacity: { type: Number, default: 0 },
     averageRating: { type: Number, default: 0, min: 0, max: 5 }, totalReviews: { type: Number, default: 0 },
     totalBookings: { type: Number, default: 0 }, features: [String],

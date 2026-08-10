@@ -20,6 +20,7 @@ interface BulkPrintStandeesModalProps {
     capacity: number;
     type?: string;
     seatingCategory?: string;
+    isAc?: boolean;
   }>;
 }
 
@@ -105,7 +106,7 @@ export function BulkPrintStandeesModal({
                         <span className="font-black text-sm text-white">Table {t.tableNumber}</span>
                       </div>
                       <p className="text-[10px] text-slate-400 mt-0.5">
-                        {t.capacity} Guests • {t.type || 'Indoor'}
+                        {t.capacity} Guests • {t.type || 'Indoor'} • {t.isAc !== false ? '❄️ AC' : '🍃 Non-AC'}
                       </p>
                     </div>
                     <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />

@@ -5,6 +5,7 @@ export interface IBranchTable {
   capacity: number;
   type: 'indoor' | 'outdoor' | 'private' | 'bar';
   seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  isAc?: boolean;
   description?: string;
   isAvailable: boolean;
   qrCodeToken: string;
@@ -60,6 +61,7 @@ const BranchSchema = new Schema<IBranch>(
         capacity: { type: Number, default: 4 },
         type: { type: String, enum: ['indoor', 'outdoor', 'private', 'bar'], default: 'indoor' },
         seatingCategory: { type: String, enum: ['regular', 'family', 'business', 'vip', 'couple'], default: 'regular' },
+        isAc: { type: Boolean, default: true },
         description: { type: String },
         isAvailable: { type: Boolean, default: true },
         qrCodeToken: { type: String, index: true },
