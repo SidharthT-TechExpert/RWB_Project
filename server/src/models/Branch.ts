@@ -1,5 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IBranchTable {
+  tableNumber: string;
+  capacity: number;
+  type: 'indoor' | 'outdoor' | 'private' | 'bar';
+  seatingCategory: 'regular' | 'family' | 'business' | 'vip' | 'couple';
+  description?: string;
+  isAvailable: boolean;
+  qrCodeToken: string;
+  qrCodeUrl?: string;
+}
+
 export interface IBranch extends Document {
   _id: mongoose.Types.ObjectId;
   restaurantId: string;
@@ -10,6 +21,9 @@ export interface IBranch extends Document {
   managerName?: string;
   phone: string;
   email?: string;
+  qrCodeToken?: string;
+  qrCodeUrl?: string;
+  tables: IBranchTable[];
   address: {
     street: string;
     city: string;
@@ -33,11 +47,25 @@ const BranchSchema = new Schema<IBranch>(
     restaurantId: { type: String, required: true, index: true },
     ownerId: { type: String, required: true, index: true },
     name: { type: String, required: true, trim: true },
-    code: { type: String, required: true, trim: true, uppercase: true },
+    code: { type: String, required: true, trim: true, uppercase: true, index: true },
     managerId: { type: String, index: true },
     managerName: { type: String },
     phone: { type: String, required: true },
     email: { type: String },
+    qrCodeToken: { type: String, index: true },
+    qrCodeUrl: { type: String },
+    tables: [
+      {
+        tableNumber: { type: String, required: true },
+        capacity: { type: Number, default: 4 },
+        type: { type: String, enum: ['indoor', 'outdoor', 'private', 'bar'], default: 'indoor' },
+        seatingCategory: { type: String, enum: ['regular', 'family', 'business', 'vip', 'couple'], default: 'regular' },
+        description: { type: String },
+        isAvailable: { type: Boolean, default: true },
+        qrCodeToken: { type: String, index: true },
+        qrCodeUrl: { type: String },
+      },
+    ],
     address: {
       street: { type: String, required: true },
       city: { type: String, required: true },

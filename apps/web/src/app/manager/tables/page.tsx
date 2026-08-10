@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { Button } from '@/components/ui/Button';
-import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye, Pencil } from 'lucide-react';
+import { CalendarCheck, Users, Plus, CheckCircle2, UserPlus, X, TableProperties, Loader2, AlertCircle, EyeOff, Eye, Pencil, QrCode, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAddTable, useUpdateTable, useToggleTableAvailability, AddTablePayload, EditTablePayload, useRestaurant } from '@/hooks/useRestaurants';
 import { useMyBranch } from '@/hooks/useBranches';
+import { TableQRModal } from '@/components/manager/TableQRModal';
+import { BulkPrintStandeesModal } from '@/components/manager/BulkPrintStandeesModal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -87,6 +89,8 @@ export default function ManagerTablesPage() {
   const [togglingTable, setTogglingTable] = useState<string | null>(null);
   const [confirmUnlistTable, setConfirmUnlistTable] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedQRTable, setSelectedQRTable] = useState<TableItem | null>(null);
+  const [showBulkPrintModal, setShowBulkPrintModal] = useState(false);
   const [editingTable, setEditingTable] = useState<TableItem | null>(null);
   const [editForm, setEditForm] = useState<EditTablePayload & { tableNumber: string }>({ tableNumber: '', capacity: 4, type: 'indoor', seatingCategory: 'regular', description: '' });
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
@@ -202,6 +206,14 @@ export default function ManagerTablesPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button
+              onClick={() => setShowBulkPrintModal(true)}
+              disabled={apiTables.length === 0}
+              className="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-xs gap-2 rounded-xl h-10 px-4"
+            >
+              <Printer className="w-4 h-4 text-purple-400" />
+              <span>Print All Standees</span>
+            </Button>
+            <Button
               onClick={() => setShowAddModal(true)}
               disabled={!restaurantId || isLoading}
               className="bg-white/6 hover:bg-white/10 border border-white/10 text-white font-bold text-xs gap-2 rounded-xl h-10 px-4"
@@ -296,7 +308,14 @@ export default function ManagerTablesPage() {
                       </div>
                       <p className="text-[10px] text-slate-400 font-medium capitalize mt-0.5">{t.type}</p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => setSelectedQRTable(t)}
+                        className="w-7 h-7 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-400 flex items-center justify-center transition-all"
+                        title="View & Download Table QR"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleOpenEdit(t)}
                         className="w-7 h-7 rounded-lg bg-white/4 hover:bg-purple-500/15 border border-white/8 hover:border-purple-500/30 text-slate-500 hover:text-purple-400 flex items-center justify-center transition-all"
@@ -652,6 +671,36 @@ export default function ManagerTablesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── TABLE QR MODAL ─────────────────────────────────────────────────── */}
+      {selectedQRTable && (
+        <TableQRModal
+          isOpen={!!selectedQRTable}
+          onClose={() => setSelectedQRTable(null)}
+          table={selectedQRTable}
+          branch={{
+            _id: myBranch?._id,
+            name: myBranch?.name || `${restaurant?.name || 'Paragon'} — Downtown Branch`,
+            code: myBranch?.code || 'BR-NY-01',
+          }}
+          restaurantName={restaurant?.name || 'Paragon'}
+        />
+      )}
+
+      {/* ── BULK PRINT STANDEES MODAL ────────────────────────────────────────── */}
+      {showBulkPrintModal && (
+        <BulkPrintStandeesModal
+          isOpen={showBulkPrintModal}
+          onClose={() => setShowBulkPrintModal(false)}
+          branch={{
+            _id: myBranch?._id,
+            name: myBranch?.name || `${restaurant?.name || 'Paragon'} — Downtown Branch`,
+            code: myBranch?.code || 'BR-NY-01',
+          }}
+          restaurantName={restaurant?.name || 'Paragon'}
+          tables={apiTables}
+        />
       )}
     </div>
   );

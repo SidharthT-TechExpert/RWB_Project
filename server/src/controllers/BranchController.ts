@@ -68,6 +68,55 @@ export class BranchController {
       res.status(HTTP_STATUS.OK).json({ success: true, data: branch });
     } catch (error) { next(error); }
   }
+
+  async getBranchQR(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const qrData = await branchService.getBranchQR(id);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: qrData });
+    } catch (error) { next(error); }
+  }
+
+  async getTableQR(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id, tableNumber } = req.params;
+      const qrData = await branchService.getTableQR(id, tableNumber);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: qrData });
+    } catch (error) { next(error); }
+  }
+
+  async resolveQR(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token } = req.params;
+      const result = await branchService.resolveQRToken(token);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: result });
+    } catch (error) { next(error); }
+  }
+
+  async addTable(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const result = await branchService.addTable(id, req.body);
+      res.status(HTTP_STATUS.CREATED).json({ success: true, data: result });
+    } catch (error) { next(error); }
+  }
+
+  async updateTable(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id, tableNumber } = req.params;
+      const result = await branchService.updateTable(id, tableNumber, req.body);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: result });
+    } catch (error) { next(error); }
+  }
+
+  async toggleTableAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id, tableNumber } = req.params;
+      const { isAvailable } = req.body;
+      const result = await branchService.toggleTableAvailability(id, tableNumber, isAvailable);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: result });
+    } catch (error) { next(error); }
+  }
 }
 
 export const branchController = new BranchController();
