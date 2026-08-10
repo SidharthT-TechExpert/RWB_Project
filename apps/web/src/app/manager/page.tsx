@@ -265,58 +265,68 @@ export default function ManagerDashboardPage() {
         </div>
 
         {/* KPI Stats Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border border-white/8 bg-[#070D1F]/90 backdrop-blur-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Today's Outlet Sales</span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold">
-                <DollarSign className="w-4 h-4" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            {
+              label: "Today's Outlet Sales",
+              value: '$1,840.50',
+              sub: '+14.2% vs yesterday',
+              subColor: 'text-emerald-400',
+              Icon: DollarSign,
+              color: 'emerald',
+              grad: 'from-emerald-600/20 to-emerald-600/5',
+              SubIcon: TrendingUp,
+            },
+            {
+              label: 'Active Live Orders',
+              value: `${orders.length} Orders`,
+              sub: `${orders.filter(o => o.status === 'preparing').length} In Kitchen Queue`,
+              subColor: 'text-blue-400',
+              Icon: Utensils,
+              color: 'blue',
+              grad: 'from-blue-600/20 to-blue-600/5',
+              SubIcon: CookingPot,
+            },
+            {
+              label: 'Table Occupancy',
+              value: '75% (18/24)',
+              sub: `${tables.filter(t => t.status === 'available').length} Available now`,
+              subColor: 'text-purple-400',
+              Icon: Calendar,
+              color: 'purple',
+              grad: 'from-purple-600/20 to-purple-600/5',
+              SubIcon: CheckCircle2,
+            },
+            {
+              label: 'Staff On Duty',
+              value: '8 On Shift',
+              sub: '4 Waiters · 3 Chefs · 1 Cashier',
+              subColor: 'text-amber-400',
+              Icon: Users,
+              color: 'amber',
+              grad: 'from-amber-600/20 to-amber-600/5',
+              SubIcon: Users,
+            },
+          ].map(({ label, value, sub, subColor, Icon, color, grad, SubIcon }) => (
+            <div key={label} className={`relative p-4 sm:p-5 rounded-2xl bg-gradient-to-br ${grad} border border-white/8 overflow-hidden shadow-lg group hover:scale-[1.02] transition-transform duration-200 cursor-default`}>
+              <div className={`absolute top-0 right-0 w-28 h-28 rounded-full bg-${color}-500/10 blur-2xl -translate-y-8 translate-x-8`} />
+              <div className="relative space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full bg-${color}-400 animate-pulse`} />
+                    <p className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest truncate">{label}</p>
+                  </div>
+                  <div className={`w-7 h-7 rounded-xl bg-${color}-500/15 border border-${color}-500/20 text-${color}-400 flex items-center justify-center shrink-0`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-white leading-none">{value}</p>
+                <p className={`text-[10px] sm:text-[11px] ${subColor} font-bold flex items-center gap-1`}>
+                  <SubIcon className="w-3 h-3 shrink-0" /> {sub}
+                </p>
               </div>
             </div>
-            <p className="text-2xl font-black text-white">$1,840.50</p>
-            <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> +14.2% vs yesterday
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-white/8 bg-[#070D1F]/90 backdrop-blur-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Active Live Orders</span>
-              <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold">
-                <Utensils className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-2xl font-black text-white">{orders.length} Orders</p>
-            <p className="text-[11px] text-blue-400 font-bold flex items-center gap-1">
-              <CookingPot className="w-3.5 h-3.5" /> {orders.filter(o => o.status === 'preparing').length} Orders in Kitchen Queue
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-white/8 bg-[#070D1F]/90 backdrop-blur-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Table Occupancy</span>
-              <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center font-bold">
-                <Calendar className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-2xl font-black text-white">75% (18/24)</p>
-            <p className="text-[11px] text-purple-400 font-bold flex items-center gap-1">
-              {tables.filter(t => t.status === 'available').length} Tables Available right now
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-white/8 bg-[#070D1F]/90 backdrop-blur-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Outlet Staff On Duty</span>
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-2xl font-black text-white">8 On Shift</p>
-            <p className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
-              4 Waiters, 3 Chefs, 1 Cashier
-            </p>
-          </div>
+          ))}
         </div>
 
         {/* Grid Section: Live Orders (KDS) + Live Table Map */}
