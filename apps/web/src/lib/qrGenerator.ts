@@ -111,6 +111,7 @@ export function openPrintStandeeWindow(params: {
   branchCode: string;
   tableNumber: string;
   capacity?: number;
+  isAc?: boolean;
   qrUrl: string;
 }) {
   const printWindow = window.open('', '_blank', 'width=800,height=900');
@@ -264,7 +265,7 @@ export function openPrintStandeeWindow(params: {
           </div>
 
           <div class="instructions">Scan to View Menu &amp; Order</div>
-          <div class="sub-instructions">Point camera at QR code • No app download required</div>
+          <div class="sub-instructions">${params.capacity ? `${params.capacity} Guests • ` : ''}${params.isAc !== false ? '❄️ AC' : '🍃 Non-AC'} • No app required</div>
 
           <div class="footer-logo">Powered by QuickBite OS</div>
         </div>
@@ -292,7 +293,7 @@ export function openBulkPrintStandeesWindow(params: {
   restaurantName: string;
   branchName: string;
   branchCode: string;
-  tables: Array<{ tableNumber: string; capacity?: number; type?: string }>;
+  tables: Array<{ tableNumber: string; capacity?: number; type?: string; isAc?: boolean }>;
   baseUrl: string;
 }) {
   const printWindow = window.open('', '_blank', 'width=1000,height=900');
@@ -316,7 +317,7 @@ export function openBulkPrintStandeesWindow(params: {
           </div>
 
           <div class="instructions">Scan to View Menu &amp; Order</div>
-          <div class="sub-instructions">${t.capacity ? `${t.capacity} Guests • ` : ''}${t.type || 'Indoor'} Section</div>
+          <div class="sub-instructions">${t.capacity ? `${t.capacity} Guests • ` : ''}${t.isAc !== false ? '❄️ AC' : '🍃 Non-AC'} • ${t.type || 'Indoor'}</div>
 
           <div class="footer-logo">Powered by QuickBite OS</div>
         </div>

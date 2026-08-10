@@ -179,9 +179,9 @@ export default function ManagerDashboardPage() {
     <div className="flex-1 flex flex-col min-h-screen bg-[#030816]">
       <ManagerHeader pageTitle="Branch Command Center & Live Operations" />
 
-      <main className="p-6 space-y-6 max-w-[1600px] w-full mx-auto pb-16">
+      <main className="p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-[2400px] w-full mx-auto pb-24">
         {/* Welcome Banner */}
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-purple-900/20 border border-blue-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
+        <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-purple-900/20 border border-blue-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-400 text-xs font-mono font-bold">
@@ -191,7 +191,7 @@ export default function ManagerDashboardPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Live Operations Active
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white mt-1.5">Welcome back, Manager 👋</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-white mt-1.5">Welcome back, Manager 👋</h2>
             <p className="text-xs text-slate-400 mt-1">
               Monitor outlet performance, kitchen preparation queues, live seating, and staff rosters in real-time.
             </p>

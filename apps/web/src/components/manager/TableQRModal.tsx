@@ -18,6 +18,7 @@ interface TableQRModalProps {
     capacity: number;
     type?: string;
     seatingCategory?: string;
+    isAc?: boolean;
     description?: string;
   };
   branch: {
@@ -158,12 +159,18 @@ export function TableQRModal({
               </div>
 
               {/* Meta details */}
-              <div className="flex items-center gap-3 mt-3 text-xs text-slate-400">
+              <div className="flex items-center gap-2 mt-3 text-xs text-slate-400 flex-wrap justify-center">
                 <span className="flex items-center gap-1">
                   <Users className="w-3.5 h-3.5 text-slate-500" /> {table.capacity} Guests
                 </span>
                 <span>•</span>
                 <span className="capitalize">{table.type || 'Indoor'}</span>
+                <span>•</span>
+                <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                  table.isAc !== false ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30'
+                }`}>
+                  {table.isAc !== false ? '❄️ AC' : '🍃 Non-AC'}
+                </span>
                 {table.seatingCategory && (
                   <>
                     <span>•</span>

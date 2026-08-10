@@ -20,7 +20,10 @@ import {
   Sparkles,
   AlertTriangle,
   ChevronRight,
-  Eye
+  Eye,
+  Maximize,
+  Minimize,
+  Tv
 } from 'lucide-react';
 
 interface OrderItem {
@@ -185,39 +188,64 @@ export default function ManagerOrdersPage() {
   const readyCount = orders.filter((o) => o.status === 'ready').length;
   const servedCount = orders.filter((o) => o.status === 'served').length;
 
+  const [isTvMode, setIsTvMode] = useState(false);
+
+  const toggleTvMode = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsTvMode(true);
+      toast.success('📺 TV Kitchen Display Mode Enabled');
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsTvMode(false);
+      toast.success('Exited TV Mode');
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-[#030816] text-slate-100 min-h-screen">
-      <ManagerHeader />
+      {!isTvMode && <ManagerHeader pageTitle="Live Orders & Kitchen Display (KDS)" />}
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] w-full mx-auto">
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-[2400px] w-full mx-auto pb-24">
         {/* Page Title & Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#070D1F] p-4 sm:p-6 rounded-2xl border border-white/8 shadow-xl">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-400 uppercase">
+              <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-400 uppercase">
                 {branchName}
               </span>
               <span className="text-slate-600">&bull;</span>
               <span className="text-xs text-slate-400 font-medium">Real-time KDS Stream</span>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
-              <CookingPot className="w-6 h-6 text-amber-400 animate-pulse" />
+            <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
+              <CookingPot className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 animate-pulse shrink-0" />
               Live Orders &amp; Kitchen Display (KDS)
             </h1>
           </div>
 
-          <button
-            onClick={() => setShowNewOrderModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Walk-in Order (POS)</span>
-          </button>
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+            <button
+              onClick={toggleTvMode}
+              className="px-3.5 py-2.5 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/30 text-purple-300 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer flex-1 sm:flex-initial justify-center"
+              title="Toggle Fullscreen Kitchen Display TV Mode"
+            >
+              {isTvMode ? <Minimize className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
+              <span>{isTvMode ? 'Exit TV Mode' : 'TV Screen Mode'}</span>
+            </button>
+
+            <button
+              onClick={() => setShowNewOrderModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex-1 sm:flex-initial justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Walk-in Order</span>
+            </button>
+          </div>
         </div>
 
         {/* Top Control Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#080F22]/90 p-4 rounded-2xl border border-slate-800/80 shadow-xl">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-[#080F22]/90 p-3.5 sm:p-4 rounded-2xl border border-slate-800/80 shadow-xl">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
             {[
               { id: 'all', label: 'All Orders', count: orders.length },
               { id: 'pending', label: 'New Received', count: pendingCount, color: 'text-amber-400' },
@@ -228,7 +256,7 @@ export default function ManagerOrdersPage() {
               <button
                 key={st.id}
                 onClick={() => setFilter(st.id as any)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 ${
                   filter === st.id
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                     : 'bg-white/4 border border-white/6 text-slate-400 hover:text-white'
@@ -242,20 +270,20 @@ export default function ManagerOrdersPage() {
             ))}
           </div>
 
-          <div className="relative shrink-0 md:w-64">
+          <div className="relative shrink-0 w-full md:w-64">
             <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by order #, table or guest…"
+              placeholder="Search order #, table, guest…"
               className="w-full bg-[#030816] border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 transition-all"
             />
           </div>
         </div>
 
-        {/* KDS Kanban 4-Column Board */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {/* KDS Kanban 4-Column Board - Responsive for Mobile, Tablet, 2K/4K/TV */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 3xl:grid-cols-4 gap-4 sm:gap-5">
           {/* Column 1: New Received */}
           <div className="space-y-4 p-4 rounded-2xl bg-[#080F22]/90 border border-slate-800/80">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">

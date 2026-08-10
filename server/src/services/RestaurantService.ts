@@ -199,7 +199,7 @@ export class RestaurantService {
   async updateTable(
     restaurantId: string,
     tableNumber: string,
-    data: Partial<Pick<IRestaurant['tables'][number], 'capacity' | 'type' | 'description'> & { seatingCategory: string }>,
+    data: Partial<Pick<IRestaurant['tables'][number], 'capacity' | 'type' | 'description' | 'isAc'> & { seatingCategory: string }>,
     callerRole?: string
   ): Promise<IRestaurant> {
     const restaurant = await Restaurant.findById(restaurantId);
@@ -215,6 +215,7 @@ export class RestaurantService {
     if (data.type !== undefined)           setFields['tables.$.type']            = data.type;
     if (data.description !== undefined)    setFields['tables.$.description']     = data.description;
     if (data.seatingCategory !== undefined) setFields['tables.$.seatingCategory'] = data.seatingCategory;
+    if (data.isAc !== undefined)           setFields['tables.$.isAc']            = data.isAc;
 
     const updated = await Restaurant.findOneAndUpdate(
       { _id: restaurantId, 'tables.tableNumber': tableNumber },

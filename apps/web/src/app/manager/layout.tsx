@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ManagerSidebar } from '@/components/manager/ManagerSidebar';
 import { useAuth } from '@/hooks/useAuth';
 
+import { ManagerSidebarProvider } from '@/context/ManagerSidebarContext';
+
 export default function ManagerLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -30,11 +32,13 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#030816] text-slate-100 font-sans antialiased select-none">
-      <ManagerSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        {children}
+    <ManagerSidebarProvider>
+      <div className="flex min-h-screen bg-[#030816] text-slate-100 font-sans antialiased select-none">
+        <ManagerSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          {children}
+        </div>
       </div>
-    </div>
+    </ManagerSidebarProvider>
   );
 }
