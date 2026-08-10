@@ -27,20 +27,39 @@ const STATUS_COLORS: Record<TableStatus, string> = {
   maintenance: 'bg-slate-500/15 border-slate-500/30 text-slate-400',
 };
 
+// Left accent border color for table cards
+const STATUS_BORDER_ACCENT: Record<string, string> = {
+  available:   'border-l-emerald-500',
+  occupied:    'border-l-rose-500',
+  reserved:    'border-l-amber-500',
+  cleaning:    'border-l-purple-500',
+  maintenance: 'border-l-slate-600',
+  unlisted:    'border-l-slate-700',
+};
+
+const STATUS_GLOW: Record<string, string> = {
+  available:   'hover:shadow-emerald-500/10 hover:border-emerald-500/25',
+  occupied:    'hover:shadow-rose-500/10 hover:border-rose-500/25',
+  reserved:    'hover:shadow-amber-500/10 hover:border-amber-500/25',
+  cleaning:    'hover:shadow-purple-500/10 hover:border-purple-500/25',
+  maintenance: 'hover:shadow-slate-500/5 hover:border-slate-500/20',
+  unlisted:    'hover:shadow-slate-500/5 hover:border-slate-700/40',
+};
+
 const CATEGORY_LABELS: Record<SeatingCategory, string> = {
   regular:  'Regular',
   family:   'Family',
   business: 'Business',
-  vip:      'VIP',
+  vip:      '⭐ VIP',
   couple:   'Couple',
 };
 
 const CATEGORY_COLORS: Record<SeatingCategory, string> = {
-  regular:  'bg-slate-500/15 text-slate-400',
-  family:   'bg-blue-500/15 text-blue-400',
-  business: 'bg-cyan-500/15 text-cyan-400',
-  vip:      'bg-amber-500/15 text-amber-400',
-  couple:   'bg-pink-500/15 text-pink-400',
+  regular:  'bg-slate-500/15 text-slate-400 border border-slate-500/20',
+  family:   'bg-blue-500/15 text-blue-400 border border-blue-500/20',
+  business: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20',
+  vip:      'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+  couple:   'bg-pink-500/15 text-pink-400 border border-pink-500/20',
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -263,72 +282,94 @@ export default function ManagerTablesPage() {
 
       <main className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[2400px] w-full mx-auto pb-24">
 
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#070D1F] p-4 sm:p-6 rounded-2xl border border-white/8 shadow-xl">
-          <div>
-            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-              <CalendarCheck className="w-5 h-5 text-purple-400 shrink-0" />
-              Floor Plan &amp; Seating Roster
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Manage live table availability, guest check-ins, and walk-in assignments.
-            </p>
-          </div>
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-            <Button
-              onClick={() => setShowBulkPrintModal(true)}
-              disabled={apiTables.length === 0}
-              className="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
-            >
-              <Printer className="w-4 h-4 text-purple-400 shrink-0" />
-              <span className="hidden sm:inline">Print All Standees</span>
-              <span className="sm:hidden">Standees</span>
-            </Button>
-            <Button
-              onClick={() => setShowBulkPrintModal(true)}
-              disabled={apiTables.length === 0}
-              className="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-xs gap-2 rounded-xl h-10 px-4"
-            >
-              <Printer className="w-4 h-4 text-purple-400" />
-              <span>Print All Standees</span>
-            </Button>
-            <Button
-              onClick={() => setShowAddModal(true)}
-              disabled={!restaurantId || isLoading}
-              className="bg-white/6 hover:bg-white/10 border border-white/10 text-white font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
-            >
-              <Plus className="w-4 h-4 text-purple-400 shrink-0" />
-              <span>Add Table</span>
-            </Button>
-            <Button
-              onClick={() => toast.success('Walk-in Check-in coming soon')}
-              className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-3 sm:px-4 flex-1 sm:flex-initial"
-            >
-              <UserPlus className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Walk-in Check-in</span>
-              <span className="sm:hidden">Walk-in</span>
-            </Button>
+        {/* ── Premium Hero Header Banner ── */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/8">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-[#0d1528] to-indigo-900/20" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.12),transparent_60%)]" />
+          {/* Decorative grid dots */}
+          <div className="absolute inset-0" style={{backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px)',backgroundSize:'24px 24px'}} />
+
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 sm:p-7">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+                  <CalendarCheck className="w-4 h-4 text-purple-400" />
+                </div>
+                <span className="text-[10px] font-mono font-black text-purple-400 uppercase tracking-[0.2em]">FLOOR PLAN</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Seating Roster &amp; Table Control</h2>
+              <p className="text-xs text-slate-400 max-w-sm">Manage live table status, guest check-ins, and walk-in assignments in real-time.</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <button
+                onClick={() => setShowBulkPrintModal(true)}
+                disabled={apiTables.length === 0}
+                className="h-10 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold text-xs gap-2 flex items-center transition-all disabled:opacity-40 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-purple-400" />
+                <span className="hidden sm:inline">Print Standees</span>
+                <span className="sm:hidden">Print</span>
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                disabled={!restaurantId || isLoading}
+                className="h-10 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold text-xs gap-2 flex items-center transition-all disabled:opacity-40 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                Add Table
+              </button>
+              <button
+                onClick={() => toast.success('Walk-in Check-in coming soon')}
+                className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-black text-xs gap-2 flex items-center shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Walk-in Check-in</span>
+                <span className="sm:hidden">Walk-in</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {/* Stats — Premium Glassmorphism KPI Cards */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {[
-            { label: 'Total Tables', value: total, color: 'purple', Icon: TableProperties },
-            { label: 'Available',    value: available, color: 'emerald', Icon: CheckCircle2 },
-            { label: 'Occupied',     value: occupied,  color: 'rose',    Icon: Users },
-          ].map(({ label, value, color, Icon }) => (
-            <div key={label} className="p-4 rounded-2xl bg-[#060C1E] border border-white/8 flex items-center justify-between shadow-lg">
-              <div>
-                <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-                <p className={`text-xl sm:text-2xl 3xl:text-3xl font-black mt-1 tabular-nums text-${color}-400`}>{value}</p>
-              </div>
-              <div className={`w-10 h-10 rounded-xl bg-${color}-500/10 border border-${color}-500/20 text-${color}-400 flex items-center justify-center shrink-0`}>
-                <Icon className="w-5 h-5" />
+            {
+              label: 'Total Tables', value: total, sub: `${unlisted} unlisted`,
+              colors: { bg: 'bg-purple-500/8', border: 'border-purple-500/20', text: 'text-purple-400', dot: 'bg-purple-400', glow: 'shadow-purple-500/10' },
+              Icon: TableProperties,
+            },
+            {
+              label: 'Available Now', value: available, sub: 'ready for guests',
+              colors: { bg: 'bg-emerald-500/8', border: 'border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400', glow: 'shadow-emerald-500/10' },
+              Icon: CheckCircle2,
+            },
+            {
+              label: 'Occupied', value: occupied, sub: 'guests seated',
+              colors: { bg: 'bg-rose-500/8', border: 'border-rose-500/20', text: 'text-rose-400', dot: 'bg-rose-400', glow: 'shadow-rose-500/10' },
+              Icon: Users,
+            },
+          ].map(({ label, value, sub, colors, Icon }) => (
+            <div key={label} className={`relative rounded-2xl ${colors.bg} border ${colors.border} p-4 sm:p-5 overflow-hidden shadow-lg ${colors.glow} hover:scale-[1.02] transition-transform duration-200`}>
+              <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full blur-2xl opacity-30" style={{background: 'currentColor'}} />
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} animate-pulse`} />
+                    <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">{label}</p>
+                  </div>
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${colors.bg} border ${colors.border} ${colors.text} flex items-center justify-center`}>
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+                <p className={`text-3xl sm:text-4xl font-black ${colors.text} leading-none tabular-nums`}>{value}</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-1.5">{sub}</p>
               </div>
             </div>
           ))}
         </div>
+
 
         {/* States */}
         {isLoading && (
@@ -505,147 +546,225 @@ export default function ManagerTablesPage() {
           </div>
         )}
 
-        {/* Tables Grid - Responsive across Mobile, Tablet, Desktop, 2K, 4K & TVs */}
+        {/* Tables Grid - Premium Cards */}
         {!isLoading && filteredTables.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4 sm:gap-5">
             {filteredTables.map((t) => {
               const status: TableStatus = (localStatus[t.tableNumber] ?? t.status) as TableStatus;
-              const effectiveStatus = !t.isAvailable ? 'maintenance' : status;
               const cat = (t.seatingCategory ?? 'regular') as SeatingCategory;
-              return (
-                <div key={t.id} className={`p-4 sm:p-5 rounded-2xl bg-[#060C1E] border space-y-3.5 shadow-xl transition-all ${!t.isAvailable ? 'border-slate-800/50' : 'border-white/8'}`}>
-                  {/* Dim header + details when unlisted, but NOT the action buttons */}
-                  <div className={!t.isAvailable ? 'opacity-60' : ''}>
-                    {/* 2-Tier Header: Prevents Badge Overlap & Text Collision */}
-                    <div className="space-y-2 mb-3">
-                      {/* Row 1: Table Number & Status Pill */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-black text-lg text-white tracking-tight">{t.tableNumber}</span>
-                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border capitalize shrink-0 ${
-                          !t.isAvailable
-                            ? 'bg-slate-500/20 border-slate-600/40 text-slate-400 flex items-center gap-1'
-                            : STATUS_COLORS[status]
-                        }`}>
-                          {!t.isAvailable ? (
-                            <>
-                              <EyeOff className="w-2.5 h-2.5" />
-                              <span>Unlisted</span>
-                            </>
-                          ) : (
-                            status
-                          )}
-                        </span>
-                      </div>
 
-                      {/* Row 2: Section / Type & Quick Action Buttons */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] text-slate-400 font-medium capitalize truncate">
-                          {t.type} Section
-                        </span>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            onClick={() => setSelectedQRTable(t)}
-                            className="w-7 h-7 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-400 flex items-center justify-center transition-all cursor-pointer"
-                            title="View & Download Table QR"
-                          >
-                            <QrCode className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(t)}
-                            className="w-7 h-7 rounded-lg bg-white/4 hover:bg-purple-500/15 border border-white/8 hover:border-purple-500/30 text-slate-400 hover:text-purple-400 flex items-center justify-center transition-all cursor-pointer"
-                            title="Edit table details"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
+              // Color config per status
+              const cfg = !t.isAvailable ? {
+                glow: '',
+                topLine: 'bg-slate-700/50',
+                headerBg: 'from-slate-800/40 to-transparent',
+                numColor: 'text-slate-400',
+                badgeBg: 'bg-slate-800/80 border-slate-700/50 text-slate-400',
+                cardBg: 'bg-[#080e1e]/60 border-slate-800/60',
+              } : status === 'available' ? {
+                glow: 'shadow-[0_0_40px_rgba(16,185,129,0.10)] hover:shadow-[0_0_60px_rgba(16,185,129,0.20)]',
+                topLine: 'bg-gradient-to-r from-transparent via-emerald-400 to-transparent',
+                headerBg: 'from-emerald-900/20 to-transparent',
+                numColor: 'text-white',
+                badgeBg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+                cardBg: 'bg-[#080e1e]/90 border-emerald-500/15 hover:border-emerald-500/30',
+              } : status === 'occupied' ? {
+                glow: 'shadow-[0_0_40px_rgba(244,63,94,0.10)] hover:shadow-[0_0_60px_rgba(244,63,94,0.20)]',
+                topLine: 'bg-gradient-to-r from-transparent via-rose-400 to-transparent',
+                headerBg: 'from-rose-900/20 to-transparent',
+                numColor: 'text-white',
+                badgeBg: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+                cardBg: 'bg-[#080e1e]/90 border-rose-500/15 hover:border-rose-500/30',
+              } : status === 'cleaning' ? {
+                glow: 'shadow-[0_0_40px_rgba(168,85,247,0.10)] hover:shadow-[0_0_60px_rgba(168,85,247,0.18)]',
+                topLine: 'bg-gradient-to-r from-transparent via-purple-400 to-transparent',
+                headerBg: 'from-purple-900/20 to-transparent',
+                numColor: 'text-white',
+                badgeBg: 'bg-purple-500/15 border-purple-500/30 text-purple-400',
+                cardBg: 'bg-[#080e1e]/90 border-purple-500/15 hover:border-purple-500/30',
+              } : {
+                glow: 'shadow-[0_0_40px_rgba(245,158,11,0.08)] hover:shadow-[0_0_60px_rgba(245,158,11,0.15)]',
+                topLine: 'bg-gradient-to-r from-transparent via-amber-400 to-transparent',
+                headerBg: 'from-amber-900/15 to-transparent',
+                numColor: 'text-white',
+                badgeBg: 'bg-amber-500/15 border-amber-500/30 text-amber-400',
+                cardBg: 'bg-[#080e1e]/90 border-amber-500/15 hover:border-amber-500/30',
+              };
+
+              return (
+                <div
+                  key={t.id}
+                  className={`group relative rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 ${cfg.cardBg} ${cfg.glow}`}
+                >
+                  {/* Top glow line */}
+                  <div className={`absolute top-0 inset-x-0 h-[2px] ${cfg.topLine}`} />
+
+                  {/* Header background gradient */}
+                  <div className={`absolute top-0 inset-x-0 h-24 bg-gradient-to-b ${cfg.headerBg} pointer-events-none`} />
+
+                  <div className="relative p-5 space-y-4">
+
+                    {/* ── Card Header ── */}
+                    <div className={!t.isAvailable ? 'opacity-55' : ''}>
+                      <div className="flex items-start justify-between gap-2">
+                        {/* Left: Table number + section */}
+                        <div>
+                          <div className="flex items-baseline gap-2 leading-none">
+                            <span className={`text-3xl sm:text-4xl font-black tracking-tighter ${cfg.numColor}`}>{t.tableNumber}</span>
+                            <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">{t.type}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5 capitalize">{t.type} Section</p>
+                        </div>
+
+                        {/* Right: Status + action icons */}
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 shrink-0 ${cfg.badgeBg}`}>
+                            {!t.isAvailable ? (
+                              <><EyeOff className="w-2.5 h-2.5" /> Unlisted</>
+                            ) : status === 'available' ? (
+                              <><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Available</>
+                            ) : status === 'occupied' ? (
+                              <><span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> Occupied</>
+                            ) : status === 'cleaning' ? (
+                              <><span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" /> Cleaning</>
+                            ) : (
+                              <span className="capitalize">{status}</span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setSelectedQRTable(t)}
+                              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-purple-500/20 border border-white/8 hover:border-purple-500/40 text-slate-500 hover:text-purple-400 flex items-center justify-center transition-all cursor-pointer"
+                              title="Table QR Code"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(t)}
+                              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/20 text-slate-500 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                              title="Edit Table"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                  <div className="p-3 rounded-xl bg-white/4 border border-white/6 text-xs space-y-1.5">
-                    <div className="flex justify-between text-slate-400">
-                      <span>Capacity</span>
-                      <span className="font-bold text-white">{t.capacity} Guests</span>
+                    {/* ── Info Rows ── */}
+                    <div className={`rounded-xl border divide-y text-xs overflow-hidden transition-opacity ${!t.isAvailable ? 'opacity-50 bg-white/[0.02] border-white/5 divide-white/[0.04]' : 'bg-white/[0.03] border-white/8 divide-white/[0.06]'}`}>
+                      <div className="flex items-center justify-between px-3 py-2.5">
+                        <span className="text-slate-500 flex items-center gap-1.5">
+                          <Users className="w-3 h-3" /> Capacity
+                        </span>
+                        <span className="font-bold text-white">{t.capacity} Guests</span>
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2.5">
+                        <span className="text-slate-500">Category</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[cat]}`}>
+                          {CATEGORY_LABELS[cat]}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2.5">
+                        <span className="text-slate-500">Climate</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                          t.isAc
+                            ? 'bg-sky-500/15 text-sky-300 border border-sky-500/25'
+                            : 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                        }`}>
+                          {t.isAc ? '❄️ AC' : '🌿 Non-AC'}
+                        </span>
+                      </div>
+                      {t.description && (
+                        <div className="flex items-center justify-between px-3 py-2.5 gap-3">
+                          <span className="text-slate-500 shrink-0">Note</span>
+                          <span className="text-slate-300 font-semibold text-right truncate text-[10px]">{t.description}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Category</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[cat]}`}>
-                        {CATEGORY_LABELS[cat]}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Climate</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                        t.isAc ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30'
-                      }`}>
-                        {t.isAc ? '❄️ AC' : '🍃 Non-AC'}
-                      </span>
-                    </div>
-                    {t.description && (
-                      <div className="flex justify-between text-slate-400 gap-2">
-                        <span className="shrink-0">Note</span>
-                        <span className="font-bold text-white text-right truncate">{t.description}</span>
+
+                    {/* ── Action Buttons ── */}
+                    {t.isAvailable ? (
+                      <div className="space-y-2">
+                        {status === 'available' && (
+                          <button
+                            onClick={() => updateTableStatus(t.id, 'occupied')}
+                            className="w-full h-10 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all duration-200 active:scale-[0.98] cursor-pointer tracking-wide"
+                          >
+                            <Users className="w-3.5 h-3.5" />
+                            SEAT GUESTS
+                          </button>
+                        )}
+                        {status === 'occupied' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => updateTableStatus(t.id, 'available')}
+                              className="h-10 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600/30 to-emerald-500/20 hover:from-emerald-500/40 hover:to-emerald-400/30 border border-emerald-500/40 hover:border-emerald-400/60 text-emerald-300 transition-all duration-200 cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Set Free
+                            </button>
+                            <button
+                              onClick={() => updateTableStatus(t.id, 'cleaning')}
+                              className="h-10 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600/30 to-purple-500/20 hover:from-purple-500/40 hover:to-purple-400/30 border border-purple-500/40 hover:border-purple-400/60 text-purple-300 transition-all duration-200 cursor-pointer"
+                            >
+                              🧹 Clean
+                            </button>
+                          </div>
+                        )}
+                        {status === 'cleaning' && (
+                          <button
+                            onClick={() => updateTableStatus(t.id, 'available')}
+                            className="w-full h-10 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600/30 to-emerald-500/20 hover:from-emerald-500/40 hover:to-emerald-400/30 border border-emerald-500/40 hover:border-emerald-400/60 text-emerald-300 transition-all duration-200 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Mark Clean &amp; Free
+                          </button>
+                        )}
+                        {status === 'reserved' && (
+                          <button
+                            onClick={() => updateTableStatus(t.id, 'occupied')}
+                            className="w-full h-10 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600/30 to-amber-500/20 hover:from-amber-500/40 to-amber-400/30 border border-amber-500/40 text-amber-300 transition-all duration-200 cursor-pointer"
+                          >
+                            Check-in Guest
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
+                        <AlertCircle className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <p className="text-[11px] text-slate-600">Unlisted — list it to manage status.</p>
                       </div>
                     )}
-                  </div>
-                  </div>{/* end dimmed section */}
 
-                  {/* Status actions — only shown when table is listed */}
-                  {t.isAvailable ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {status !== 'available' && (
-                        <Button size="sm" variant="outline" onClick={() => updateTableStatus(t.id, 'available')}
-                          className="h-8 text-xs font-bold text-emerald-400 border-emerald-500/30">
-                          Set Free
-                        </Button>
-                      )}
-                      {status === 'available' && (
-                        <Button size="sm" onClick={() => updateTableStatus(t.id, 'occupied')}
-                          className="h-8 text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white col-span-2">
-                          Occupy Table
-                        </Button>
-                      )}
-                      {status === 'occupied' && (
-                        <Button size="sm" variant="outline" onClick={() => updateTableStatus(t.id, 'cleaning')}
-                          className="h-8 text-xs font-bold text-purple-400 border-purple-500/30">
-                          Clean Table
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-500/8 border border-slate-700/50">
-                      <AlertCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      <p className="text-[11px] text-slate-500">Table is unlisted — list it to manage status.</p>
-                    </div>
-                  )}
-
-                  {/* List / Unlist — persisted to DB */}
-                  <div className="pt-1 border-t border-white/6">
-                    <button
-                      onClick={() => {
-                        if (t.isAvailable) {
-                          setConfirmUnlistTable(t.tableNumber);
-                        } else {
-                          setTogglingTable(t.tableNumber);
-                          toggleAvailabilityMutation.mutate(
-                            { tableNumber: t.tableNumber, isAvailable: true },
-                            { onSettled: () => setTogglingTable(null) }
-                          );
-                        }
-                      }}
-                      disabled={togglingTable === t.tableNumber}
-                      className={`w-full h-8 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60
-                        ${t.isAvailable
-                          ? 'bg-slate-500/10 hover:bg-rose-500/15 border border-slate-700 hover:border-rose-500/40 text-slate-400 hover:text-rose-400'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                    {/* ── List / Unlist ── */}
+                    <div className="pt-0.5">
+                      <button
+                        onClick={() => {
+                          if (t.isAvailable) {
+                            setConfirmUnlistTable(t.tableNumber);
+                          } else {
+                            setTogglingTable(t.tableNumber);
+                            toggleAvailabilityMutation.mutate(
+                              { tableNumber: t.tableNumber, isAvailable: true },
+                              { onSettled: () => setTogglingTable(null) }
+                            );
+                          }
+                        }}
+                        disabled={togglingTable === t.tableNumber}
+                        className={`w-full h-9 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-50 cursor-pointer border ${
+                          t.isAvailable
+                            ? 'bg-transparent border-white/8 hover:border-rose-500/40 text-slate-500 hover:text-rose-400 hover:bg-rose-500/5'
+                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
                         }`}
-                    >
-                      {togglingTable === t.tableNumber
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : t.isAvailable
-                          ? <><EyeOff className="w-3.5 h-3.5" /> Unlist Table</>
-                          : <><Eye className="w-3.5 h-3.5" /> List Table</>
-                      }
-                    </button>
+                      >
+                        {togglingTable === t.tableNumber
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : t.isAvailable
+                            ? <><EyeOff className="w-3 h-3" /> Unlist Table</>
+                            : <><Eye className="w-3 h-3" /> Make Available</>
+                        }
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               );
