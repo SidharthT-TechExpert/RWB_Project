@@ -7,17 +7,28 @@ import { hashPassword } from '../utils';
 import { ROLES } from '../constants';
 import { logger } from '../config/logger';
 
+import crypto from 'crypto';
+
 export class BranchService {
+  private generateQRToken(prefix: string, identifier: string): string {
+    const raw = `${prefix}:${identifier}:${Date.now()}:${Math.random().toString(36).substring(2, 7)}`;
+    return crypto.createHash('sha256').update(raw).digest('hex').substring(0, 16);
+  }
+
   async createBranch(ownerId: string, data: Partial<IBranch> & { street?: string; city?: string }): Promise<IBranch> {
     const restaurant = await Restaurant.findById(data.restaurantId);
     
-    const code = data.code || `BR-${Date.now().toString().slice(-4)}`;
+    const code = (data.code || `BR-${Date.now().toString().slice(-4)}`).toUpperCase();
+    const qrCodeToken = this.generateQRToken('BRANCH', code);
 
     const branch = await Branch.create({
       restaurantId: data.restaurantId,
       ownerId,
       name: data.name || `${restaurant?.name || 'Restaurant'} Outlet`,
       code,
+      qrCodeToken,
+      qrCodeUrl: `/dine-in?branch=${code}&token=${qrCodeToken}`,
+      tables: data.tables || [],
       phone: data.phone || restaurant?.phone || '+1 212-555-0199',
       email: data.email || restaurant?.email,
       address: {
@@ -36,7 +47,7 @@ export class BranchService {
       tablesCount: data.tablesCount || 20,
     });
 
-    logger.info(`Branch created: ${branch.name} (${branch.code}) for restaurant ${data.restaurantId}`);
+    logger.info(`Branch created: ${branch.name} (${branch.code}) with QR Token ${qrCodeToken}`);
     return branch;
   }
 
@@ -235,6 +246,183 @@ export class BranchService {
 
     if (!branch) throw new NotFoundError('Branch');
     return branch;
+  }
+
+  async getBranchQR(branchId: string) {
+    const branch = await this.getBranchById(branchId);
+    if (!branch.qrCodeToken) {
+      branch.qrCodeToken = this.generateQRToken('BRANCH', branch.code);
+      branch.qrCodeUrl = `/dine-in?branch=${branch.code}&token=${branch.qrCodeToken}`;
+      await branch.save();
+    }
+
+    const restaurant = await Restaurant.findById(branch.restaurantId).select('name logo slug');
+
+    return {
+      branchId: branch._id.toString(),
+      branchName: branch.name,
+      branchCode: branch.code,
+      restaurantId: branch.restaurantId,
+      restaurantName: restaurant?.name || branch.name,
+      qrCodeToken: branch.qrCodeToken,
+      qrCodeUrl: branch.qrCodeUrl || `/dine-in?branch=${branch.code}&token=${branch.qrCodeToken}`,
+      tablesCount: branch.tables?.length || branch.tablesCount || 0,
+    };
+  }
+
+  async addTable(branchId: string, tableData: { tableNumber: string; capacity?: number; type?: string; seatingCategory?: string; description?: string }) {
+    const branch = await this.getBranchById(branchId);
+    const upperTableNumber = tableData.tableNumber.trim().toUpperCase();
+
+    branch.tables = branch.tables || [];
+    const exists = branch.tables.some((t) => t.tableNumber === upperTableNumber);
+    if (exists) {
+      throw new ConflictError(`Table ${upperTableNumber} already exists in this branch`);
+    }
+
+    const qrCodeToken = this.generateQRToken(`${branch.code}-${upperTableNumber}`, upperTableNumber);
+    const newTable = {
+      tableNumber: upperTableNumber,
+      capacity: tableData.capacity || 4,
+      type: (tableData.type as any) || 'indoor',
+      seatingCategory: (tableData.seatingCategory as any) || 'regular',
+      description: tableData.description,
+      isAvailable: true,
+      qrCodeToken,
+      qrCodeUrl: `/dine-in?branch=${branch.code}&table=${upperTableNumber}&token=${qrCodeToken}`,
+    };
+
+    branch.tables.push(newTable as any);
+    branch.tablesCount = branch.tables.length;
+    await branch.save();
+
+    return {
+      branch,
+      table: newTable,
+    };
+  }
+
+  async updateTable(branchId: string, tableNumber: string, updateData: any) {
+    const branch = await this.getBranchById(branchId);
+    const upperTableNumber = tableNumber.trim().toUpperCase();
+
+    const table = branch.tables?.find((t) => t.tableNumber === upperTableNumber);
+    if (!table) throw new NotFoundError(`Table ${upperTableNumber}`);
+
+    if (updateData.capacity !== undefined) table.capacity = updateData.capacity;
+    if (updateData.type !== undefined) table.type = updateData.type;
+    if (updateData.seatingCategory !== undefined) table.seatingCategory = updateData.seatingCategory;
+    if (updateData.description !== undefined) table.description = updateData.description;
+
+    await branch.save();
+    return branch;
+  }
+
+  async toggleTableAvailability(branchId: string, tableNumber: string, isAvailable: boolean) {
+    const branch = await this.getBranchById(branchId);
+    const upperTableNumber = tableNumber.trim().toUpperCase();
+
+    const table = branch.tables?.find((t) => t.tableNumber === upperTableNumber);
+    if (!table) throw new NotFoundError(`Table ${upperTableNumber}`);
+
+    table.isAvailable = isAvailable;
+    await branch.save();
+    return branch;
+  }
+
+  async getTableQR(branchId: string, tableNumber: string) {
+    const branch = await this.getBranchById(branchId);
+    const upperTableNumber = tableNumber.trim().toUpperCase();
+
+    let table = branch.tables?.find((t) => t.tableNumber === upperTableNumber);
+    if (!table) {
+      // If table doesn't exist yet, auto-create table entry with token
+      const qrCodeToken = this.generateQRToken(`${branch.code}-${upperTableNumber}`, upperTableNumber);
+      table = {
+        tableNumber: upperTableNumber,
+        capacity: 4,
+        type: 'indoor',
+        seatingCategory: 'regular',
+        isAvailable: true,
+        qrCodeToken,
+        qrCodeUrl: `/dine-in?branch=${branch.code}&table=${upperTableNumber}&token=${qrCodeToken}`,
+      };
+      branch.tables = branch.tables || [];
+      branch.tables.push(table as any);
+      branch.tablesCount = branch.tables.length;
+      await branch.save();
+    } else if (!table.qrCodeToken) {
+      table.qrCodeToken = this.generateQRToken(`${branch.code}-${upperTableNumber}`, upperTableNumber);
+      table.qrCodeUrl = `/dine-in?branch=${branch.code}&table=${upperTableNumber}&token=${table.qrCodeToken}`;
+      await branch.save();
+    }
+
+    const restaurant = await Restaurant.findById(branch.restaurantId).select('name logo slug');
+
+    return {
+      branchId: branch._id.toString(),
+      branchName: branch.name,
+      branchCode: branch.code,
+      restaurantId: branch.restaurantId,
+      restaurantName: restaurant?.name || branch.name,
+      restaurantLogo: restaurant?.logo,
+      tableNumber: table.tableNumber,
+      capacity: table.capacity,
+      type: table.type,
+      seatingCategory: table.seatingCategory,
+      qrCodeToken: table.qrCodeToken,
+      qrCodeUrl: table.qrCodeUrl || `/dine-in?branch=${branch.code}&table=${table.tableNumber}&token=${table.qrCodeToken}`,
+    };
+  }
+
+  async resolveQRToken(token: string) {
+    // 1. Check if token matches a branch
+    let branch = await Branch.findOne({ qrCodeToken: token });
+    if (branch) {
+      const restaurant = await Restaurant.findById(branch.restaurantId);
+      return {
+        type: 'BRANCH',
+        branch: {
+          id: branch._id.toString(),
+          name: branch.name,
+          code: branch.code,
+          phone: branch.phone,
+          address: branch.address,
+        },
+        restaurant: restaurant ? {
+          id: restaurant._id.toString(),
+          name: restaurant.name,
+          slug: restaurant.slug,
+          logo: restaurant.logo,
+        } : null,
+      };
+    }
+
+    // 2. Check if token matches a table inside any branch
+    branch = await Branch.findOne({ 'tables.qrCodeToken': token });
+    if (branch) {
+      const table = branch.tables.find((t) => t.qrCodeToken === token);
+      const restaurant = await Restaurant.findById(branch.restaurantId);
+      return {
+        type: 'TABLE',
+        branch: {
+          id: branch._id.toString(),
+          name: branch.name,
+          code: branch.code,
+          phone: branch.phone,
+          address: branch.address,
+        },
+        table,
+        restaurant: restaurant ? {
+          id: restaurant._id.toString(),
+          name: restaurant.name,
+          slug: restaurant.slug,
+          logo: restaurant.logo,
+        } : null,
+      };
+    }
+
+    throw new NotFoundError('Invalid or expired QR code token');
   }
 }
 

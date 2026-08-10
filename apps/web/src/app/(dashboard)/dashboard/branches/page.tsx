@@ -5,13 +5,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, UserCheck,
-  CheckCircle2, XCircle, Store, X, UserPlus, Lock, ShieldCheck, Sparkles, Pencil
+  CheckCircle2, XCircle, Store, X, UserPlus, Lock, ShieldCheck, Sparkles, Pencil, QrCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useMyRestaurants } from '@/hooks/useRestaurants';
+import { BranchQRModal } from '@/components/dashboard/BranchQRModal';
 
 interface BranchItem {
   _id: string;
@@ -32,6 +33,7 @@ export default function BranchesPage() {
   const [isEditBranchOpen, setIsEditBranchOpen] = useState(false);
   const [isAssignManagerOpen, setIsAssignManagerOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>(null);
+  const [selectedQRBranch, setSelectedQRBranch] = useState<BranchItem | null>(null);
 
   const [branchForm, setBranchForm] = useState({
     name: '',
@@ -259,6 +261,15 @@ export default function BranchesPage() {
                 <h3 className="text-lg font-black text-white mt-1">{b.name}</h3>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedQRBranch(b)}
+                  className="h-7 text-xs font-bold gap-1 px-2.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10 rounded-lg cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-purple-400" />
+                  <span>QR Code</span>
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -634,6 +645,16 @@ export default function BranchesPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Branch QR Modal */}
+      {selectedQRBranch && (
+        <BranchQRModal
+          isOpen={!!selectedQRBranch}
+          onClose={() => setSelectedQRBranch(null)}
+          branch={selectedQRBranch}
+          restaurantName={restaurant?.name || 'Paragon'}
+        />
+      )}
     </div>
   );
 }
