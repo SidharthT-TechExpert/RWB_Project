@@ -4,22 +4,31 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Bell, Search, Menu, X, Sun, Moon,
-  User, LogOut, ChevronDown, UtensilsCrossed,
+  User, LogOut, ChevronDown, UtensilsCrossed, Wallet,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthModalStore } from '@/store/authModalStore';
-import { cn, getInitials } from '@/lib/utils';
+import { cn, getInitials, formatCurrency } from '@/lib/utils';
+import api from '@/lib/api';
 
-const navLinks = [
-  { href: '#find-table',   label: 'Find a table'    },
-  { href: '#how-it-works', label: 'How it works'    },
-  { href: '#explore',      label: 'Explore options' },
-  { href: '/restaurant/login', label: 'For partners' },
+const guestNavLinks = [
+  { href: '#find-table',       label: 'Find a table'    },
+  { href: '#how-it-works',     label: 'How it works'    },
+  { href: '#explore',          label: 'Explore options' },
+  { href: '/restaurant/login', label: 'For partners'    },
+];
+
+const authNavLinks = [
+  { href: '/',            label: 'Home'        },
+  { href: '/explore',     label: 'Explore'     },
+  { href: '/bookings',    label: 'My Bookings' },
+  { href: '/favorites',   label: 'Favorites'   },
 ];
 
 export function Navbar() {
@@ -29,9 +38,18 @@ export function Navbar() {
   const { logout } = useAuth();
   const { openModal } = useAuthModalStore();
   const itemCount = useCartStore((s) => s.getItemCount());
-  const [menuOpen, setMenuOpen]     = useState(false);
+  const [menuOpen, setMenuOpen]         = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [scrolled, setScrolled]     = useState(false);
+  const [scrolled, setScrolled]         = useState(false);
+
+  /* Wallet balance — only fetch when authenticated */
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet'],
+    queryFn: async () => { const { data } = await api.get('/users/wallet'); return data.data; },
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+  const walletBalance = walletData?.balance ?? null;
 
   /* Close mobile menu on route change */
   useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -79,7 +97,7 @@ export function Navbar() {
 
         {/* ── Desktop nav links (lg+) ── */}
         <div className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 shrink-0">
-          {navLinks.map((link) => (
+          {(isAuthenticated ? authNavLinks : guestNavLinks).map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -97,6 +115,19 @@ export function Navbar() {
 
         {/* ── Right-side actions ── */}
         <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
+          {/* Wallet balance (authenticated, desktop only) */}
+          {isAuthenticated && (
+            <Link href="/wallet"
+              className="hidden sm:flex items-center gap-1.5 bg-[#FFF5F0] dark:bg-zinc-800
+                         border border-[#FFE8DC] dark:border-zinc-700 rounded-xl px-3 py-1.5
+                         hover:border-[#FF6B35] transition-colors group">
+              <Wallet className="w-3.5 h-3.5 text-[#FF6B35]" />
+              <span className="text-xs font-black text-[#FF6B35]">
+                {walletBalance !== null ? formatCurrency(walletBalance) : '...'}
+              </span>
+            </Link>
+          )}
+
           {/* Search — hidden on small mobile, shown sm+ */}
           <Link href="/search" className="hidden sm:flex">
             <Button variant="ghost" size="icon" aria-label="Search"
@@ -275,7 +306,7 @@ export function Navbar() {
           >
             <div className="px-4 pt-3 pb-6 pb-safe space-y-1.5">
               {/* Nav links */}
-              {navLinks.map((link, i) => (
+              {(isAuthenticated ? authNavLinks : guestNavLinks).map((link, i) => (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, x: -12 }}

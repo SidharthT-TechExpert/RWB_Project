@@ -133,6 +133,66 @@
   100% { transform: translateX(200%); }
 }
 
+/* ── Infinite marquee (left scroll) ─────────────────────────── */
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-left 28s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+.marquee-track-fast {
+  animation-duration: 18s;
+}
+
+/* ── Reverse marquee (right scroll) ─────────────────────────── */
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.marquee-track-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 32s linear infinite;
+}
+
+/* ── Floating blob glow ──────────────────────────────────────── */
+@keyframes float-blob {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-30px) scale(1.06); }
+}
+.blob-float {
+  animation: float-blob 8s ease-in-out infinite;
+}
+.blob-float-delay {
+  animation: float-blob 10s ease-in-out infinite 2s;
+}
+
+/* ── Subtle pulse ring ───────────────────────────────────────── */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  70%  { transform: scale(1.6); opacity: 0;   }
+  100% { transform: scale(1.6); opacity: 0;   }
+}
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* ── Live dot blink ──────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.live-dot { animation: blink 1.4s ease-in-out infinite; }
+
 /* ── Custom premium scrollbar ───────────────────────────────── */
 .custom-scrollbar::-webkit-scrollbar { width: 3px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
