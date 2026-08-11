@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ManagerHeader } from '@/components/manager/ManagerHeader';
 import { useCurrentBranch } from '@/hooks/useBranches';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import toast from 'react-hot-toast';
 import {
   Layers,
@@ -22,7 +24,8 @@ import {
   Flame,
   Check,
   X,
-  AlertCircle
+  AlertCircle,
+  ImageIcon,
 } from 'lucide-react';
 
 interface PortionVariant {
@@ -41,6 +44,7 @@ interface MenuItem {
   description: string;
   ordersToday: number;
   rating: number;
+  image: string;
   hasPortions?: boolean;
   portions?: PortionVariant[];
 }
@@ -52,7 +56,7 @@ const INITIAL_CATEGORIES = [
   'Specialty Pizzas',
   'Desserts',
   'Beverages',
-  'Chef Specials'
+  'Chef Specials',
 ];
 
 const INITIAL_ITEMS: MenuItem[] = [
@@ -67,6 +71,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: 'Aromatic basmati rice cooked with tender chicken, saffron & authentic spices.',
     ordersToday: 64,
     rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=700&q=80',
     hasPortions: true,
     portions: [
       { name: 'Quarter', price: 180 },
@@ -85,6 +90,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: 'San Marzano tomato sauce, fresh buffalo mozzarella, basil & extra virgin olive oil.',
     ordersToday: 42,
     rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=700&q=80',
     hasPortions: true,
     portions: [
       { name: 'Small (8")', price: 280 },
@@ -103,6 +109,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: 'Thinly sliced cured salmon with capers, red onion & lemon-dill vinaigrette.',
     ordersToday: 18,
     rating: 4.7,
+    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=700&q=80',
     hasPortions: false,
     portions: [],
   },
@@ -117,6 +124,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: '300g prime Angus beef served with garlic herb butter & roasted asparagus.',
     ordersToday: 12,
     rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=700&q=80',
     hasPortions: false,
     portions: [],
   },
@@ -131,6 +139,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: 'Molten chocolate cake served with Madagascar vanilla bean gelato.',
     ordersToday: 31,
     rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=700&q=80',
     hasPortions: false,
     portions: [],
   },
@@ -145,6 +154,7 @@ const INITIAL_ITEMS: MenuItem[] = [
     description: '18-hour slow steeped single-origin Ethiopian coffee over crystal ice cubes.',
     ordersToday: 55,
     rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=700&q=80',
     hasPortions: true,
     portions: [
       { name: '250 ml', price: 140 },
@@ -175,6 +185,7 @@ export default function ManagerMenuPage() {
     prepTimeMinutes: '15',
     isVeg: true,
     description: '',
+    image: '',
     hasPortions: false,
     portions: [
       { name: 'Quarter', price: 0 },
@@ -263,11 +274,21 @@ export default function ManagerMenuPage() {
     }
   };
 
-  // Add Item Handler
+  // Add Item Handler (MANDATORY Cloudinary Image Check)
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!itemForm.name.trim()) {
       toast.error('Please fill in dish name');
+      return;
+    }
+
+    // MANDATORY IMAGE CHECK
+    if (!itemForm.image || !itemForm.image.trim()) {
+      toast.error('Food photo is required! Please upload an image to Cloudinary.', {
+        icon: '📸',
+        duration: 4000,
+      });
       return;
     }
 
@@ -275,9 +296,10 @@ export default function ManagerMenuPage() {
       ? itemForm.portions.filter((p) => p.name.trim() !== '')
       : [];
 
-    const basePrice = activePortions.length > 0
-      ? activePortions[0].price
-      : parseFloat(itemForm.price) || 200;
+    const basePrice =
+      activePortions.length > 0
+        ? activePortions[0].price
+        : parseFloat(itemForm.price) || 200;
 
     const created: MenuItem = {
       id: `m_${Date.now()}`,
@@ -288,6 +310,7 @@ export default function ManagerMenuPage() {
       isAvailable: true,
       isVeg: itemForm.isVeg,
       description: itemForm.description.trim() || 'Freshly prepared branch specialty dish.',
+      image: itemForm.image.trim(),
       ordersToday: 0,
       rating: 5.0,
       hasPortions: activePortions.length > 0,
@@ -304,6 +327,7 @@ export default function ManagerMenuPage() {
       prepTimeMinutes: '15',
       isVeg: true,
       description: '',
+      image: '',
       hasPortions: false,
       portions: [
         { name: 'Quarter', price: 0 },
@@ -324,14 +348,16 @@ export default function ManagerMenuPage() {
       prepTimeMinutes: item.prepTimeMinutes.toString(),
       isVeg: item.isVeg,
       description: item.description,
+      image: item.image || '',
       hasPortions: !!(item.hasPortions && item.portions && item.portions.length > 0),
-      portions: item.portions && item.portions.length > 0
-        ? item.portions
-        : [
-            { name: 'Quarter', price: 0 },
-            { name: 'Half', price: 0 },
-            { name: 'Full', price: 0 },
-          ],
+      portions:
+        item.portions && item.portions.length > 0
+          ? item.portions
+          : [
+              { name: 'Quarter', price: 0 },
+              { name: 'Half', price: 0 },
+              { name: 'Full', price: 0 },
+            ],
     });
   };
 
@@ -344,13 +370,23 @@ export default function ManagerMenuPage() {
       return;
     }
 
+    // MANDATORY IMAGE CHECK
+    if (!itemForm.image || !itemForm.image.trim()) {
+      toast.error('Food photo is required! Please upload an image.', {
+        icon: '📸',
+        duration: 4000,
+      });
+      return;
+    }
+
     const activePortions = itemForm.hasPortions
       ? itemForm.portions.filter((p) => p.name.trim() !== '')
       : [];
 
-    const basePrice = activePortions.length > 0
-      ? activePortions[0].price
-      : parseFloat(itemForm.price) || editingItem.price;
+    const basePrice =
+      activePortions.length > 0
+        ? activePortions[0].price
+        : parseFloat(itemForm.price) || editingItem.price;
 
     setItems((prev) =>
       prev.map((i) =>
@@ -363,6 +399,7 @@ export default function ManagerMenuPage() {
               prepTimeMinutes: parseInt(itemForm.prepTimeMinutes) || i.prepTimeMinutes,
               isVeg: itemForm.isVeg,
               description: itemForm.description.trim(),
+              image: itemForm.image.trim(),
               hasPortions: activePortions.length > 0,
               portions: activePortions,
             }
@@ -412,12 +449,18 @@ export default function ManagerMenuPage() {
       <ManagerHeader pageTitle="Menu & Catalog Management" />
 
       <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-[2400px] w-full mx-auto pb-24">
-
         {/* ── Hero Banner ── */}
         <div className="relative overflow-hidden rounded-2xl border border-white/8">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-[#0d1528] to-blue-900/20" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(168,85,247,0.12),transparent_60%)]" />
-          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px)', backgroundSize: '24px 24px' }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
 
           <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 sm:p-7">
             <div className="space-y-1.5">
@@ -425,10 +468,17 @@ export default function ManagerMenuPage() {
                 <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
                   <UtensilsCrossed className="w-4 h-4 text-purple-400" />
                 </div>
-                <span className="text-[10px] font-mono font-black text-purple-400 uppercase tracking-[0.2em]">OUTLET DISHES &amp; PORTIONS</span>
+                <span className="text-[10px] font-mono font-black text-purple-400 uppercase tracking-[0.2em]">
+                  OUTLET DISHES &amp; PORTIONS
+                </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Menu &amp; Portion Pricing Management</h1>
-              <p className="text-xs text-slate-400 max-w-md">Assign portion pricing (Quarter, Half, Full, Sizes, Volumes), live stock availability, and preparation categories.</p>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Menu &amp; Portion Pricing Management
+              </h1>
+              <p className="text-xs text-slate-400 max-w-md">
+                Assign portion pricing (Quarter, Half, Full, Sizes, Volumes), live stock availability,
+                and upload high-res food photos to Cloudinary.
+              </p>
             </div>
 
             <div className="flex items-center gap-2.5">
@@ -443,11 +493,12 @@ export default function ManagerMenuPage() {
                 onClick={() => {
                   setItemForm({
                     name: '',
-                    category: categories.find(c => c !== 'All Items') || 'Appetizers',
+                    category: categories.find((c) => c !== 'All Items') || 'Appetizers',
                     price: '',
                     prepTimeMinutes: '15',
                     isVeg: true,
                     description: '',
+                    image: '',
                     hasPortions: true,
                     portions: [
                       { name: 'Quarter', price: 150 },
@@ -472,27 +523,37 @@ export default function ManagerMenuPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">Total Dishes</p>
+                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">
+                  Total Dishes
+                </p>
               </div>
               <div className="w-7 h-7 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 flex items-center justify-center">
                 <UtensilsCrossed className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-3xl font-black text-purple-400 leading-none tabular-nums">{totalItemsCount}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1.5">across {categories.length - 1} categories</p>
+            <p className="text-3xl font-black text-purple-400 leading-none tabular-nums">
+              {totalItemsCount}
+            </p>
+            <p className="text-[10px] text-slate-500 font-medium mt-1.5">
+              across {categories.length - 1} categories
+            </p>
           </div>
 
           <div className="relative rounded-2xl bg-emerald-500/8 border border-emerald-500/20 p-4 sm:p-5 overflow-hidden shadow-lg shadow-emerald-500/10">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">In Stock &amp; Active</p>
+                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">
+                  In Stock &amp; Active
+                </p>
               </div>
               <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-3xl font-black text-emerald-400 leading-none tabular-nums">{availableItemsCount}</p>
+            <p className="text-3xl font-black text-emerald-400 leading-none tabular-nums">
+              {availableItemsCount}
+            </p>
             <p className="text-[10px] text-slate-500 font-medium mt-1.5">ready for guest orders</p>
           </div>
 
@@ -500,13 +561,17 @@ export default function ManagerMenuPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">Out of Stock</p>
+                <p className="text-[9px] sm:text-[10px] font-mono font-black text-slate-400 uppercase tracking-[0.15em]">
+                  Out of Stock
+                </p>
               </div>
               <div className="w-7 h-7 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-400 flex items-center justify-center">
                 <XCircle className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-3xl font-black text-rose-400 leading-none tabular-nums">{outOfStockCount}</p>
+            <p className="text-3xl font-black text-rose-400 leading-none tabular-nums">
+              {outOfStockCount}
+            </p>
             <p className="text-[10px] text-slate-500 font-medium mt-1.5">temporarily disabled</p>
           </div>
         </div>
@@ -588,24 +653,44 @@ export default function ManagerMenuPage() {
                   className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors group"
                 >
                   <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                    <div
-                      className={`w-4 h-4 rounded mt-1 shrink-0 flex items-center justify-center border ${
-                        item.isVeg
-                          ? 'border-emerald-500/80 bg-emerald-500/10'
-                          : 'border-rose-500/80 bg-rose-500/10'
-                      }`}
-                      title={item.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
-                    >
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'
-                        }`}
-                      />
+                    {/* Food Image Thumbnail */}
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-black/40 border border-white/10 shrink-0 shadow-md">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          unoptimized
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-purple-500/10 text-purple-400">
+                          <ImageIcon className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="absolute top-1.5 left-1.5">
+                        <div
+                          className={`w-3.5 h-3.5 rounded flex items-center justify-center border shadow ${
+                            item.isVeg
+                              ? 'border-emerald-500/80 bg-emerald-950/80'
+                              : 'border-rose-500/80 bg-rose-950/80'
+                          }`}
+                          title={item.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
+                        >
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              item.isVeg ? 'bg-emerald-400' : 'bg-rose-400'
+                            }`}
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <div className="min-w-0 flex-1 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-extrabold text-white tracking-tight">{item.name}</h4>
+                        <h4 className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+                          {item.name}
+                        </h4>
                         <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
                           {item.category}
                         </span>
@@ -619,9 +704,14 @@ export default function ManagerMenuPage() {
                       {/* Portion variants display badge line */}
                       {item.hasPortions && item.portions && item.portions.length > 0 ? (
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                          <span className="text-[10px] font-mono text-purple-400 font-bold">📏 Portions:</span>
+                          <span className="text-[10px] font-mono text-purple-400 font-bold">
+                            📏 Portions:
+                          </span>
                           {item.portions.map((p, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/25 text-purple-300">
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/25 text-purple-300"
+                            >
                               <span>{p.name}:</span>
                               <span className="text-white font-extrabold">₹{p.price}</span>
                             </span>
@@ -630,7 +720,8 @@ export default function ManagerMenuPage() {
                       ) : (
                         <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 pt-0.5">
                           <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" /> {item.prepTimeMinutes} mins prep
+                            <Clock className="w-3 h-3 text-slate-400" /> {item.prepTimeMinutes} mins
+                            prep
                           </span>
                           <span>&bull;</span>
                           <span>{item.ordersToday} ordered today</span>
@@ -712,8 +803,18 @@ export default function ManagerMenuPage() {
             </div>
 
             <form onSubmit={handleAddItem} className="space-y-4">
+              {/* 📸 MANDATORY CLOUDINARY IMAGE UPLOAD */}
+              <ImageUpload
+                value={itemForm.image}
+                onChange={(url) => setItemForm((prev) => ({ ...prev, image: url }))}
+                required={true}
+                label="Food Photo (Cloudinary Upload)"
+              />
+
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-300 uppercase">Dish / Item Name</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase">
+                  Dish / Item Name <span className="text-rose-400">*</span>
+                </label>
                 <input
                   type="text"
                   value={itemForm.name}
@@ -743,7 +844,9 @@ export default function ManagerMenuPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Base Price (₹)</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Base Price (₹)
+                  </label>
                   <input
                     type="number"
                     value={itemForm.price}
@@ -760,11 +863,15 @@ export default function ManagerMenuPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
                     <span>📏 Portion Quantity Pricing</span>
-                    <span className="text-[10px] text-slate-400 font-normal">(Quarter, Half, Full)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      (Quarter, Half, Full)
+                    </span>
                   </label>
                   <button
                     type="button"
-                    onClick={() => setItemForm((prev) => ({ ...prev, hasPortions: !prev.hasPortions }))}
+                    onClick={() =>
+                      setItemForm((prev) => ({ ...prev, hasPortions: !prev.hasPortions }))
+                    }
                     className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                       itemForm.hasPortions
                         ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
@@ -813,7 +920,9 @@ export default function ManagerMenuPage() {
                             className="flex-1 bg-[#030816] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-purple-500"
                           />
                           <div className="relative w-32">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">₹</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">
+                              ₹
+                            </span>
                             <input
                               type="number"
                               value={p.price || ''}
@@ -846,21 +955,29 @@ export default function ManagerMenuPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Prep Time (mins)</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Prep Time (mins)
+                  </label>
                   <input
                     type="number"
                     value={itemForm.prepTimeMinutes}
-                    onChange={(e) => setItemForm({ ...itemForm, prepTimeMinutes: e.target.value })}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, prepTimeMinutes: e.target.value })
+                    }
                     placeholder="15"
                     className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Dietary Type</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Dietary Type
+                  </label>
                   <select
                     value={itemForm.isVeg ? 'veg' : 'nonveg'}
-                    onChange={(e) => setItemForm({ ...itemForm, isVeg: e.target.value === 'veg' })}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, isVeg: e.target.value === 'veg' })
+                    }
                     className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
                   >
                     <option value="veg">🟢 Vegetarian</option>
@@ -870,12 +987,14 @@ export default function ManagerMenuPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-300 uppercase">Description</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase">
+                  Description
+                </label>
                 <textarea
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   placeholder="Brief ingredients and preparation details…"
-                  rows={3}
+                  rows={2}
                   className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 resize-none"
                 />
               </div>
@@ -890,9 +1009,10 @@ export default function ManagerMenuPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 cursor-pointer flex items-center gap-1.5"
                 >
-                  Add Dish to Menu
+                  <Plus className="w-4 h-4" />
+                  <span>Add Dish to Menu</span>
                 </button>
               </div>
             </form>
@@ -918,8 +1038,18 @@ export default function ManagerMenuPage() {
             </div>
 
             <form onSubmit={handleUpdateItem} className="space-y-4">
+              {/* 📸 MANDATORY CLOUDINARY IMAGE UPLOAD */}
+              <ImageUpload
+                value={itemForm.image}
+                onChange={(url) => setItemForm((prev) => ({ ...prev, image: url }))}
+                required={true}
+                label="Food Photo (Cloudinary Upload)"
+              />
+
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-300 uppercase">Dish Name</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase">
+                  Dish Name <span className="text-rose-400">*</span>
+                </label>
                 <input
                   type="text"
                   value={itemForm.name}
@@ -948,7 +1078,9 @@ export default function ManagerMenuPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Base Price (₹)</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Base Price (₹)
+                  </label>
                   <input
                     type="number"
                     value={itemForm.price}
@@ -964,11 +1096,15 @@ export default function ManagerMenuPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
                     <span>📏 Portion Quantity Pricing</span>
-                    <span className="text-[10px] text-slate-400 font-normal">(Quarter, Half, Full)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      (Quarter, Half, Full)
+                    </span>
                   </label>
                   <button
                     type="button"
-                    onClick={() => setItemForm((prev) => ({ ...prev, hasPortions: !prev.hasPortions }))}
+                    onClick={() =>
+                      setItemForm((prev) => ({ ...prev, hasPortions: !prev.hasPortions }))
+                    }
                     className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                       itemForm.hasPortions
                         ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
@@ -1017,7 +1153,9 @@ export default function ManagerMenuPage() {
                             className="flex-1 bg-[#030816] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-purple-500"
                           />
                           <div className="relative w-32">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">₹</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">
+                              ₹
+                            </span>
                             <input
                               type="number"
                               value={p.price || ''}
@@ -1050,20 +1188,28 @@ export default function ManagerMenuPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Prep Time (mins)</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Prep Time (mins)
+                  </label>
                   <input
                     type="number"
                     value={itemForm.prepTimeMinutes}
-                    onChange={(e) => setItemForm({ ...itemForm, prepTimeMinutes: e.target.value })}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, prepTimeMinutes: e.target.value })
+                    }
                     className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-300 uppercase">Dietary Type</label>
+                  <label className="block text-xs font-bold text-slate-300 uppercase">
+                    Dietary Type
+                  </label>
                   <select
                     value={itemForm.isVeg ? 'veg' : 'nonveg'}
-                    onChange={(e) => setItemForm({ ...itemForm, isVeg: e.target.value === 'veg' })}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, isVeg: e.target.value === 'veg' })
+                    }
                     className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
                   >
                     <option value="veg">🟢 Vegetarian</option>
@@ -1073,11 +1219,13 @@ export default function ManagerMenuPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-300 uppercase">Description</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase">
+                  Description
+                </label>
                 <textarea
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
-                  rows={3}
+                  rows={2}
                   className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 resize-none"
                 />
               </div>
@@ -1121,7 +1269,9 @@ export default function ManagerMenuPage() {
 
             <form onSubmit={handleAddCategory} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-300 uppercase">Category Name</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase">
+                  Category Name
+                </label>
                 <input
                   type="text"
                   value={newCatName}
@@ -1155,4 +1305,3 @@ export default function ManagerMenuPage() {
     </div>
   );
 }
-
