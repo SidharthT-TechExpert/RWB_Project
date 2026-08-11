@@ -20,6 +20,7 @@ import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import branchRoutes from './routes/branch.routes';
+import uploadRoutes from './routes/upload.routes';
 
 const app = express();
 
@@ -104,6 +105,7 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/branches', branchRoutes);
+app.use('/api/v1/upload', uploadRoutes);
 
 // 404 & error handling
 app.use(notFoundHandler);

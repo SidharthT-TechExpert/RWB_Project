@@ -2,119 +2,276 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
-import { 
-  Search, MapPin, Clock, Star, Users, Store, ShoppingBag, 
-  ChevronRight, ArrowRight, CheckCircle2, XCircle, 
-  Smartphone, CreditCard, Gift, Utensils, Zap, Map, 
-  ArrowUp, Apple, Play
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search, MapPin, Clock, Star, Users, Store, ShoppingBag,
+  ChevronRight, ArrowRight, CheckCircle2, XCircle,
+  Smartphone, CreditCard, Gift, Utensils, Zap, Map,
+  ArrowUp, Apple, Play, Sparkles, Flame, Check,
+  QrCode, CalendarCheck, ShieldCheck, Heart, ChefHat,
+  Navigation, Calendar, Minus, Plus, Bell, Award,
+  Compass, Eye, SlidersHorizontal,
 } from 'lucide-react';
+import { useAuthModalStore } from '@/store/authModalStore';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import { formatCurrency } from '@/lib/utils';
+import { Locate, RefreshCw, Crosshair } from 'lucide-react';
 
-// --- Data ---
+/* ─── Static Data ────────────────────────────────────────────── */
 const stats = [
-  { id: 1, value: 50000, suffix: '+', label: 'Active Users', icon: Users },
-  { id: 2, value: 1200, suffix: '+', label: 'Partner Restaurants', icon: Store },
-  { id: 3, value: 250000, suffix: '+', label: 'Orders Delivered', icon: ShoppingBag },
-  { id: 4, value: 4.9, suffix: '★', label: 'App Rating', icon: Star, decimals: 1 },
+  { id: 1, value: 50000, suffix: '+', label: 'Active Diners',       sub: 'Across 25+ cities', icon: Users },
+  { id: 2, value: 1200,  suffix: '+', label: 'Partner Restaurants', sub: 'Top-tier curated venues', icon: Store },
+  { id: 3, value: 250000,suffix: '+', label: 'Orders Delivered',   sub: 'Zero waiting queue', icon: ShoppingBag },
+  { id: 4, value: 4.9,   suffix: '★', label: 'Customer Rating',     sub: 'From 18,400+ reviews', icon: Star, decimals: 1 },
 ];
 
-const cuisines = [
-  { id: 1, name: 'Sushi', emoji: '🍣' },
-  { id: 2, name: 'Pizza', emoji: '🍕' },
-  { id: 3, name: 'Burgers', emoji: '🍔' },
-  { id: 4, name: 'Italian', emoji: '🍝' },
-  { id: 5, name: 'Thai', emoji: '🍜' },
-  { id: 6, name: 'Indian', emoji: '🍛' },
+const mockRestaurants = [
+  {
+    id: 'r1',
+    name: 'The Gilded Fork',
+    cuisine: 'Fine Dining & Steakhouse',
+    address: '428 Hudson St, Manhattan',
+    wait: '~12 min wait',
+    waitMins: 12,
+    rating: 4.9,
+    reviews: 1420,
+    tablesLeft: 4,
+    coords: { x: '35%', y: '42%' },
+    img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80',
+    popularDish: 'Charcoal Angus Wagyu & Truffle Risotto',
+  },
+  {
+    id: 'r2',
+    name: 'Bella Cucina',
+    cuisine: 'Authentic Italian & Wine Bar',
+    address: '184 Bleecker St, Greenwich Village',
+    wait: 'No Wait',
+    waitMins: 0,
+    rating: 4.8,
+    reviews: 980,
+    tablesLeft: 6,
+    coords: { x: '68%', y: '58%' },
+    img: 'https://images.unsplash.com/photo-1513104890d38-7c0f4fff2b02?w=600&q=80',
+    popularDish: 'Wood-Fired Burrata & Prosciutto Pizza',
+  },
+  {
+    id: 'r3',
+    name: 'Serena Sushi & Omakase',
+    cuisine: 'Japanese & Raw Bar',
+    address: '92 Spring St, SoHo',
+    wait: '~15 min wait',
+    waitMins: 15,
+    rating: 4.9,
+    reviews: 1850,
+    tablesLeft: 2,
+    coords: { x: '52%', y: '28%' },
+    img: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80',
+    popularDish: 'Bluefin Toro & Uni Nigiri Tasting',
+  },
 ];
 
-const steps = [
-  { id: 1, title: 'Discover', desc: 'Find top-rated restaurants near you with real-time wait times.', icon: Search },
-  { id: 2, title: 'Select & Pre-order', desc: 'Choose your table and pre-order your favorite dishes in advance.', icon: Utensils },
-  { id: 3, title: 'Get Notified', desc: 'Receive instant updates on your table status and food preparation.', icon: Zap },
-  { id: 4, title: 'Walk In & Eat', desc: 'Skip the line, sit down, and enjoy your meal immediately.', icon: Clock },
+const chefDishes = [
+  {
+    id: 1,
+    name: 'Truffle Mushroom Artisan Pizza',
+    category: 'Pizza',
+    restaurant: 'Bella Cucina',
+    price: 340,
+    rating: 4.9,
+    prepTime: '12m',
+    isVeg: true,
+    isChefPick: true,
+    description: 'Wild forest mushrooms, Fior di Latte mozzarella, black summer truffle oil & aged parmesan.',
+    img: 'https://images.unsplash.com/photo-1513104890d38-7c0f4fff2b02?w=800&q=80',
+  },
+  {
+    id: 2,
+    name: 'Charcoal Grilled Angus Ribeye',
+    category: 'Steaks',
+    restaurant: 'The Gilded Fork',
+    price: 890,
+    rating: 5.0,
+    prepTime: '18m',
+    isVeg: false,
+    isChefPick: true,
+    description: '350g USDA Prime beef seared over Japanese binchotan charcoal with roasted bone marrow butter.',
+    img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80',
+  },
+  {
+    id: 3,
+    name: 'Mediterranean Burrata & Salmon',
+    category: 'Appetizers',
+    restaurant: 'L’Aromate Bistro',
+    price: 520,
+    rating: 4.8,
+    prepTime: '8m',
+    isVeg: false,
+    isChefPick: false,
+    description: 'Creamy artisanal Puglia burrata, citrus-cured Atlantic salmon, caper berries & basil vinaigrette.',
+    img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+  },
+  {
+    id: 4,
+    name: 'Royal Saffron Chicken Biryani',
+    category: 'Indian',
+    restaurant: 'Spice Route',
+    price: 420,
+    rating: 4.9,
+    prepTime: '15m',
+    isVeg: false,
+    isChefPick: true,
+    description: 'Aged basmati rice slow-cooked in dum with organic spring chicken, pure Kashmiri saffron & mint.',
+    img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80',
+  },
+  {
+    id: 5,
+    name: 'Artisan Dark Chocolate Fondant',
+    category: 'Desserts',
+    restaurant: 'Bistro 44',
+    price: 280,
+    rating: 4.9,
+    prepTime: '10m',
+    isVeg: true,
+    isChefPick: false,
+    description: '70% Valrhona dark molten chocolate cake served with Madagascar vanilla bean gelato.',
+    img: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&q=80',
+  },
+  {
+    id: 6,
+    name: 'Dragon Roll & Tuna Carpaccio',
+    category: 'Sushi',
+    restaurant: 'Serena Sushi',
+    price: 640,
+    rating: 4.9,
+    prepTime: '14m',
+    isVeg: false,
+    isChefPick: true,
+    description: 'Crispy king prawn, sliced avocado, unagi glaze, topped with thinly sliced yellowfin tuna.',
+    img: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80',
+  },
 ];
 
-const foods = [
-  { id: 1, name: 'Mediterranean Salad Bowl', price: 18.90, rating: 4.9, img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80' },
-  { id: 2, name: 'Truffle Mushroom Pizza', price: 24.50, rating: 4.8, img: 'https://images.unsplash.com/photo-1513104890d38-7c0f4fff2b02?w=800&q=80' },
-  { id: 3, name: 'Charcoal Grilled Wagyu', price: 72.00, rating: 5.0, img: 'https://images.unsplash.com/photo-1544025162-8369fd998aa8?w=800&q=80' },
+const stepsData = [
+  {
+    id: '01',
+    title: 'Discover & Lock Table',
+    desc: 'Browse verified high-end restaurants, check real-time seating availability, and reserve your table instantly.',
+    icon: Search,
+    highlight: 'Instant Confirmation',
+  },
+  {
+    id: '02',
+    title: 'Pre-Order Signature Dishes',
+    desc: 'Select your meals, portion sizes, and dietary preferences from the digital interactive menu before leaving.',
+    icon: Utensils,
+    highlight: 'Chef Pre-Notification',
+  },
+  {
+    id: '03',
+    title: 'Smart Kitchen Sync',
+    desc: 'Our GPS-timed kitchen coordinator begins cooking so your food reaches peak tenderness right at your arrival.',
+    icon: Zap,
+    highlight: 'GPS Precision Timing',
+  },
+  {
+    id: '04',
+    title: 'Walk In & Feast Like VIP',
+    desc: 'Bypass any waiting queue, sit down at your reserved table, enjoy hot food in 2 mins, and pay with 1 tap.',
+    icon: Clock,
+    highlight: 'Zero Waiting Guaranteed',
+  },
 ];
 
-const reviewsRow1 = [
-  { id: 1, name: 'Sarah J.', text: 'Literally saved me 40 minutes of waiting on a Friday night. The food was hot when we sat down!', restaurant: 'The Rusty Spoon' },
-  { id: 2, name: 'Mike T.', text: 'Best app for busy professionals. I walk in and my lunch is already waiting for me.', restaurant: 'Bistro 44' },
-  { id: 3, name: 'Emily R.', text: 'I love how easy it is to split the bill and pay securely from my phone.', restaurant: 'Sushi Samba' },
-  { id: 4, name: 'David L.', text: 'A game changer for date nights. No more awkward waiting at the bar.', restaurant: 'Lumina' },
-  { id: 5, name: 'Jessica W.', text: 'The interface is beautiful and so easy to use. Highly recommend!', restaurant: 'Thai Orchid' },
-  { id: 6, name: 'Chris P.', text: 'QuickBite has revolutionized my dining experience entirely.', restaurant: 'Burger Joint' },
+const reviews = [
+  {
+    id: 1,
+    name: 'Sarah Jenkins',
+    role: 'Verified Diner · New York',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80',
+    stars: 5,
+    text: 'Saved our entire anniversary night! We walked right past a 45-minute wait line, sat down at table #4, and our steak was served steaming hot in 3 minutes.',
+    restaurant: 'The Gilded Fork',
+  },
+  {
+    id: 2,
+    name: 'Marcus Thorne',
+    role: 'Executive · Chicago',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
+    stars: 5,
+    text: 'Essential tool for business lunches. Pre-ordering means we get 45 minutes of actual conversation instead of waiting for menus and bills.',
+    restaurant: 'Bella Cucina',
+  },
+  {
+    id: 3,
+    name: 'Emily Zhang',
+    role: 'Food Critic · San Francisco',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+    stars: 5,
+    text: 'The wallet checkout with automatic 2% cashback is brilliant. No waving at waiters for the bill — you just stand up and leave when done.',
+    restaurant: 'Serena Sushi',
+  },
 ];
 
-const reviewsRow2 = [
-  { id: 7, name: 'Amanda B.', text: 'I never dine out without QuickBite anymore. It\'s just too convenient.', restaurant: 'Pasta Bella' },
-  { id: 8, name: 'Tom H.', text: 'Incredible app! The pre-ordering feature ensures my food is ready when I am.', restaurant: 'Grill House' },
-  { id: 9, name: 'Nina S.', text: 'Five stars! The best way to secure a table at popular spots.', restaurant: 'Vegan Eats' },
-  { id: 10, name: 'Mark D.', text: 'Sleek design, flawless execution. It really is VIP treatment.', restaurant: 'Ocean View' },
-  { id: 11, name: 'Rachel K.', text: 'Love the touchless payments. Makes the end of the meal so smooth.', restaurant: 'Café Z' },
-  { id: 12, name: 'Kevin G.', text: 'Finally, an app that actually respects my time. Great job!', restaurant: 'The Steakhouse' },
-];
-
-const trendingRestaurants = ['Nobu', 'Catch', 'Carbone', 'Balthazar', 'Lartusi', 'Peter Luger', 'Katz\'s Deli', 'Le Bernardin', 'Per Se', 'Eleven Madison Park'];
-
-// --- Subcomponents ---
-
-const AnimatedCounter = ({ value, duration = 2, decimals = 0 }: { value: number, duration?: number, decimals?: number }) => {
+/* ─── Animated Number Counter ────────────────────────────────── */
+function Counter({ value, decimals = 0 }: { value: number; decimals?: number }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.1 }
+      ([e]) => { if (e.isIntersecting) setStarted(true); },
+      { threshold: 0.15 }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!isVisible) return;
-    let startTimestamp: number | null = null;
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / (duration * 1000), 1);
-      // easeOutCubic
+    if (!started) return;
+    let start: number | null = null;
+    const duration = 1800;
+    const step = (now: number) => {
+      if (!start) start = now;
+      const progress = Math.min((now - start) / duration, 1);
       const ease = 1 - Math.pow(1 - progress, 3);
       setCount(value * ease);
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      }
+      if (progress < 1) requestAnimationFrame(step);
     };
-    window.requestAnimationFrame(step);
-  }, [isVisible, value, duration]);
+    requestAnimationFrame(step);
+  }, [started, value]);
 
   return <span ref={ref}>{count.toFixed(decimals)}</span>;
-};
+}
 
-// --- Main Component ---
-
+/* ════════════════════════════════════════════════════════════════
+   MAIN LANDING PAGE
+════════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<'Table' | 'Food' | 'Table+Food'>('Table+Food');
+  const { openModal } = useAuthModalStore();
+  const { location: userGeo, status: geoStatus, refresh: refreshGeo } = useUserLocation();
+  const [searchTab, setSearchTab] = useState<'table' | 'food' | 'both'>('both');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationInput, setLocationInput] = useState('');
+  const [guestsCount, setGuestsCount] = useState(2);
+  const [timeSlot, setTimeSlot] = useState('Tonight, 8:00 PM');
+  const [activeVenue, setActiveVenue] = useState(mockRestaurants[0]);
+  const [selectedDishCategory, setSelectedDishCategory] = useState('All');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
+  // Auto-fill user's real live location when geocoded
+  useEffect(() => {
+    if (userGeo?.display) {
+      setLocationInput(userGeo.display);
+    } else if (!locationInput && geoStatus === 'idle') {
+      setLocationInput('Locating your city…');
+    }
+  }, [userGeo, geoStatus]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -122,744 +279,721 @@ export default function LandingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const containerCls = 'w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 max-w-7xl 2xl:max-w-[1500px] 3xl:max-w-[1800px]';
+
+  const filteredDishes = selectedDishCategory === 'All'
+    ? chefDishes
+    : chefDishes.filter(d => d.category === selectedDishCategory || (selectedDishCategory === 'Veg' && d.isVeg));
+
   return (
-    <div className="min-h-screen bg-orange-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 overflow-hidden font-sans">
-      
-      {/* Progress bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-brand-500 origin-left z-50"
-        style={{ scaleX }}
-      />
+    <div className="min-h-screen bg-[#FFF8F4] dark:bg-[#0A0908] text-[#1C1917] dark:text-slate-100 font-sans selection:bg-[#FF6B35] selection:text-white relative overflow-hidden transition-colors duration-300">
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
-        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-brand-500/15 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen blob-float -z-10"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-brand-400/20 rounded-full blur-[80px] mix-blend-multiply dark:mix-blend-screen blob-float-delay -z-10"></div>
+      {/* ── Dynamic Ambient Illumination ── */}
+      <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-gradient-to-br from-[#FF6B35]/20 via-[#FF4D0F]/10 to-transparent rounded-full blur-[150px] pointer-events-none -z-10" />
+      <div className="absolute top-[600px] right-0 w-[600px] h-[600px] bg-gradient-to-bl from-amber-500/15 via-[#FF6B35]/5 to-transparent rounded-full blur-[140px] pointer-events-none -z-10" />
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex-1 w-full z-10"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 text-sm font-medium mb-6 border border-brand-200 dark:border-brand-500/20 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-brand-500 animate-ping absolute opacity-75"></span>
-            <span className="w-2 h-2 rounded-full bg-brand-500 relative"></span>
-            NOW LIVE IN NEW YORK
+      {/* ══════════════════════════════════════════════════════════
+          1. HERO SECTION
+      ══════════════════════════════════════════════════════════ */}
+      <section className="relative pt-6 sm:pt-10 lg:pt-14 pb-14 sm:pb-20">
+        <div className={containerCls}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+            {/* Left Hero Column */}
+            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+              
+              {/* Glowing City Badge (Live Dynamic Location) */}
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/80 dark:bg-white/[0.06] backdrop-blur-md border border-[#FFE8DC] dark:border-white/10 shadow-sm"
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B35] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6B35]" />
+                </span>
+                <span className="text-[11px] font-black text-[#FF6B35] uppercase tracking-widest">
+                  {userGeo?.city ? `NOW LIVE IN ${userGeo.city.toUpperCase()}` : 'NOW LIVE IN YOUR AREA'} · 25+ CITIES
+                </span>
+              </motion.div>
+
+              {/* Hero Headline */}
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.08 }}
+                className="space-y-2"
+              >
+                <h1 className="text-[2.9rem] xs:text-[3.5rem] sm:text-[4.2rem] lg:text-[4.8rem] xl:text-[5.4rem] font-black leading-[1.02] tracking-tight text-[#1C1917] dark:text-white">
+                  Skip the Wait.<br />
+                  <span className="bg-gradient-to-r from-[#FF6B35] via-[#FF8042] to-[#FF4D0F] bg-clip-text text-transparent drop-shadow-[0_4px_24px_rgba(255,107,53,0.3)]">
+                    Eat Faster.
+                  </span>
+                </h1>
+                <p className="text-sm sm:text-base lg:text-lg text-[#78716C] dark:text-zinc-300/90 font-medium max-w-xl pt-1 leading-relaxed">
+                  Book your table, pre-order your favorite meal, and walk into a VIP dining experience with zero wait time.
+                </p>
+              </motion.div>
+
+              {/* ── Modern Frosted Glass Search Engine ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.16 }}
+                className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-2xl border border-[#FFE8DC] dark:border-white/10 rounded-[2rem] p-4 sm:p-5 shadow-[0_16px_50px_rgba(255,107,53,0.12)] space-y-4 relative"
+              >
+                {/* Search Mode Switcher Tabs */}
+                <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F0] dark:bg-white/[0.06] rounded-2xl w-fit border border-[#FFE8DC]/60 dark:border-white/5">
+                  {[
+                    { id: 'table', label: '🪑 Table' },
+                    { id: 'food',  label: '🍽️ Food'  },
+                    { id: 'both',  label: '⚡ Table + Food' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setSearchTab(t.id as any)}
+                      className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
+                        searchTab === t.id
+                          ? 'bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] text-white shadow-[0_4px_14px_rgba(255,107,53,0.4)]'
+                          : 'text-[#78716C] dark:text-zinc-400 hover:text-[#1C1917] dark:hover:text-white'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Primary Search Inputs Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
+                  <div className="sm:col-span-6 relative flex items-center bg-[#FFF8F4] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 rounded-2xl px-3.5 py-3 focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] transition-all">
+                    <Search className="w-4 h-4 text-[#FF6B35] mr-2.5 shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Restaurant, cuisine, or dish..."
+                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#1C1917] dark:text-white placeholder-[#A8A29E] outline-none"
+                    />
+                  </div>
+
+                  {/* 📍 Live GPS Autodetect Location Input */}
+                  <div className="sm:col-span-6 relative flex items-center bg-[#FFF8F4] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 rounded-2xl px-3.5 py-3 focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] transition-all">
+                    <MapPin className="w-4 h-4 text-[#FF6B35] mr-2.5 shrink-0" />
+                    <input
+                      type="text"
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      placeholder={geoStatus === 'loading' ? 'Detecting your GPS location…' : 'City or area…'}
+                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#1C1917] dark:text-white placeholder-[#A8A29E] outline-none pr-8"
+                    />
+                    {/* Live GPS Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={refreshGeo}
+                      title={geoStatus === 'success' ? 'Location detected · Click to refresh GPS' : 'Click to detect your current location'}
+                      className="absolute right-2.5 p-1.5 rounded-xl hover:bg-[#FF6B35]/15 text-[#FF6B35] transition-all cursor-pointer group"
+                    >
+                      {geoStatus === 'loading' ? (
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#FF6B35]" />
+                      ) : geoStatus === 'success' ? (
+                        <div className="relative flex items-center justify-center">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5" />
+                          <Crosshair className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+                        </div>
+                      ) : (
+                        <Crosshair className="w-4 h-4 text-[#FF6B35] group-hover:scale-110 transition-transform" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Guest & Time Strip */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-[#FFF5F0] dark:border-white/5">
+                  <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-[#78716C] dark:text-zinc-300">
+                    <div className="flex items-center gap-1.5 bg-[#FFF8F4] dark:bg-white/[0.05] px-3 py-1.5 rounded-xl border border-[#FFE8DC] dark:border-white/10">
+                      <Users className="w-3.5 h-3.5 text-[#FF6B35]" />
+                      <span>{guestsCount} Guests</span>
+                      <button onClick={() => setGuestsCount(Math.max(1, guestsCount - 1))} className="hover:text-[#FF6B35] ml-1 px-1">-</button>
+                      <button onClick={() => setGuestsCount(guestsCount + 1)} className="hover:text-[#FF6B35] px-1">+</button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 bg-[#FFF8F4] dark:bg-white/[0.05] px-3 py-1.5 rounded-xl border border-[#FFE8DC] dark:border-white/10">
+                      <Clock className="w-3.5 h-3.5 text-[#FF6B35]" />
+                      <span>{timeSlot}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={openModal}
+                    className="px-6 py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] hover:from-[#FF551A] hover:to-[#E8390A] text-white font-black text-xs sm:text-sm rounded-2xl shadow-[0_6px_22px_rgba(255,107,53,0.35)] hover:shadow-[0_10px_32px_rgba(255,107,53,0.5)] transition-all shrink-0 cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Book Now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Popular Tags */}
+                <div className="flex items-center gap-2 flex-wrap pt-0.5 text-[11px] text-[#78716C] dark:text-zinc-400 font-bold">
+                  <span className="text-[#A8A29E] uppercase tracking-wide">Trending:</span>
+                  {['Sushi', 'Truffle Pizza', 'Burgers', 'Steak', 'Biryani'].map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSearchQuery(tag)}
+                      className="px-2.5 py-0.5 rounded-lg bg-[#FFF5F0] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 hover:text-[#FF6B35] hover:border-[#FF6B35] transition-colors"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Hero Column: Showcase Photo with Layered Badges */}
+            <div className="lg:col-span-5 relative">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="relative h-[440px] sm:h-[500px] lg:h-[560px] rounded-[2.5rem] overflow-hidden shadow-[0_25px_70px_rgba(0,0,0,0.25)] border border-white/60 dark:border-white/15 group"
+              >
+                <Image
+                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=85"
+                  alt="Luxury Dining Experience"
+                  fill
+                  priority
+                  unoptimized
+                  className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30" />
+
+                {/* 1. Table Ready Badge (Top Left) */}
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute top-4 left-4 bg-black/75 backdrop-blur-xl border border-white/20 rounded-2xl px-3.5 py-2.5 shadow-2xl flex items-center gap-2.5 text-white"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black">Table Ready</p>
+                    <p className="text-[10px] text-zinc-300">Walk right in · Confirmed</p>
+                  </div>
+                </motion.div>
+
+                {/* 2. Wait Saved Badge (Center Right) */}
+                <motion.div
+                  animate={{ y: [0, 6, 0] }}
+                  transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="absolute top-1/2 -translate-y-1/2 right-4 bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] text-white rounded-2xl px-4 py-2.5 shadow-[0_8px_25px_rgba(255,107,53,0.4)] flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 fill-white" />
+                  <span className="text-xs font-black tracking-wide">-30 mins wait saved</span>
+                </motion.div>
+
+                {/* 3. Rating Badge (Bottom Right) */}
+                <div className="absolute bottom-16 right-4 bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-3 shadow-2xl text-white">
+                  <div className="flex items-center gap-1 text-amber-400 text-xs font-black mb-0.5">
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-amber-400" />)}
+                  </div>
+                  <p className="text-xs font-black">4.9/5.0 Rating</p>
+                  <p className="text-[10px] text-zinc-300">2.4k verified reviews</p>
+                </div>
+
+                {/* 4. Live Availability Badge (Bottom Left) */}
+                <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-xl border border-white/20 rounded-full px-3.5 py-1.5 text-white text-xs font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>34 tables available near you</span>
+                </div>
+              </motion.div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          2. STATS MILESTONE BAR
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-8 bg-white/80 dark:bg-white/[0.02] backdrop-blur-md border-y border-[#FFE8DC] dark:border-white/10">
+        <div className={containerCls}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            {stats.map((s) => (
+              <div key={s.id} className="space-y-0.5">
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1C1917] dark:text-white tracking-tight">
+                  <Counter value={s.value} decimals={s.decimals || 0} />{s.suffix}
+                </p>
+                <p className="text-xs sm:text-sm font-bold text-[#78716C] dark:text-zinc-400">{s.label}</p>
+                <p className="text-[10px] text-[#A8A29E] font-medium hidden sm:block">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          3. WHY QUICKBITE? (COMPARISON SECTION)
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-24 bg-[#12100E] text-white relative">
+        <div className={containerCls}>
+          <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+              Why QuickBite?
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-1.5">
+              Redefining the dining out experience with VIP treatment for everyone.
+            </p>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-fluid-hero">
-            Skip the Wait.<br/>
-            <span className="text-brand-500">Eat Faster.</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 mb-8 max-w-xl text-fluid-lg">
-            Book your table, pre-order your favorite meal, and walk into a VIP dining experience with zero wait time.
-          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            
+            {/* The Old Way */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-zinc-900/90 rounded-3xl p-6 sm:p-8 border border-zinc-800 space-y-4 shadow-sm"
+            >
+              <div className="flex items-center gap-2.5 pb-2 border-b border-zinc-800">
+                <XCircle className="w-5 h-5 text-red-400" />
+                <h3 className="text-base sm:text-lg font-black text-white">The Old Way</h3>
+              </div>
+              <div className="space-y-3 pt-1">
+                {[
+                  'Wait 45+ minutes in crowded lines for an open table',
+                  'Struggle to get a busy waiter’s attention for placing orders',
+                  'Wait another 20+ minutes for food to cook after seating',
+                  'Rush through your dessert because staff is waiting for the table',
+                  'Wait endlessly for the paper check & card machine to pay',
+                ].map((txt, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-zinc-400 font-medium">
+                    <XCircle className="w-4 h-4 text-red-400/80 shrink-0 mt-0.5" />
+                    <span>{txt}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
 
-          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl p-3 sm:p-4 rounded-2xl shadow-xl shadow-brand-500/5 border border-zinc-200 dark:border-zinc-800">
-            <div className="flex gap-2 mb-3 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl">
-              {['Table', 'Food', 'Table+Food'].map(tab => (
-                <button 
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === tab 
-                      ? 'bg-white dark:bg-zinc-700 text-brand-600 dark:text-brand-400 shadow-sm' 
-                      : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+            {/* QuickBite Experience */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative bg-gradient-to-br from-[#FF6B35] to-[#FF4D0F] rounded-3xl p-6 sm:p-8 text-white shadow-[0_15px_40px_rgba(255,107,53,0.3)] space-y-4"
+            >
+              <div className="absolute top-6 right-6 bg-white/20 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+                FEATURED
+              </div>
+              <div className="flex items-center gap-2.5 pb-2 border-b border-white/20">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+                <h3 className="text-base sm:text-lg font-black text-white">QuickBite Experience</h3>
+              </div>
+              <div className="space-y-3 pt-1">
+                {[
+                  'Walk straight to your reserved table with your name waiting',
+                  'Order & customize meals and drinks in the app beforehand',
+                  'Food arrives piping hot within 2 minutes of seating',
+                  'Enjoy dining at your own relaxed pace with zero rush',
+                  'One-tap contactless wallet payment & instant 2% cashback',
+                ].map((txt, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-white font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-white shrink-0 mt-0.5" />
+                    <span>{txt}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          4. FOUR STEPS TO PERFECTION
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-24">
+        <div className={containerCls}>
+          <div className="text-center max-w-xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#1C1917] dark:text-white tracking-tight">
+              Four Steps to Perfection
+            </h2>
+            <p className="text-xs sm:text-sm text-[#78716C] dark:text-zinc-400 font-medium mt-1.5">
+              Everything designed for effortless, delightful dining.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stepsData.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  whileHover={{ y: -6 }}
+                  className="bg-white dark:bg-white/[0.03] backdrop-blur-md rounded-3xl p-6 border border-[#FFE8DC] dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-[#FF6B35] transition-all text-center space-y-3"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-[#FFF5F0] dark:bg-white/[0.06] border border-[#FFE8DC] dark:border-white/10 shadow-sm flex items-center justify-center mx-auto text-[#FF6B35]">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-black font-mono text-[#FF6B35]">{s.id}</span>
+                  <h3 className="text-base font-black text-[#1C1917] dark:text-white">{s.title}</h3>
+                  <p className="text-xs text-[#78716C] dark:text-zinc-400 font-medium leading-relaxed max-w-xs mx-auto">
+                    {s.desc}
+                  </p>
+                  <span className="inline-block text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
+                    {s.highlight}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          5. LIVE NEARBY RESTAURANTS & INTERACTIVE MAP
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-14 sm:py-20 bg-[#FFF5F0]/70 dark:bg-white/[0.02] border-y border-[#FFE8DC] dark:border-white/10">
+        <div className={containerCls}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white dark:bg-white/[0.03] backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-8 border border-[#FFE8DC] dark:border-white/10 shadow-lg items-center">
+            
+            {/* Interactive Map Preview (Left) */}
+            <div className="lg:col-span-7 relative h-72 sm:h-84 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700/50">
+              <Image
+                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80"
+                alt="Live Area Map"
+                fill
+                unoptimized
+                className="object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+              {/* Dynamic Interactive Venue Markers on Map */}
+              {mockRestaurants.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setActiveVenue(v)}
+                  style={{ left: v.coords.x, top: v.coords.y }}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black shadow-2xl transition-all cursor-pointer ${
+                    activeVenue.id === v.id
+                      ? 'bg-[#FF6B35] text-white scale-110 ring-4 ring-[#FF6B35]/30 z-20'
+                      : 'bg-white dark:bg-zinc-900 text-[#1C1917] dark:text-white hover:scale-105 z-10'
                   }`}
                 >
-                  {tab}
+                  <span className={`w-2 h-2 rounded-full ${v.waitMins === 0 ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
+                  <span className="truncate max-w-[120px]">{v.name}</span>
+                </button>
+              ))}
+
+              {/* Selected Venue Bottom Pill */}
+              <div className="absolute bottom-3 left-3 right-3 bg-black/75 backdrop-blur-md rounded-xl p-2.5 text-white flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 truncate">
+                  <Navigation className="w-3.5 h-3.5 text-[#FF6B35]" />
+                  <span className="font-bold truncate">{activeVenue.name} · {activeVenue.popularDish}</span>
+                </div>
+                <span className="text-[10px] font-black text-emerald-400 shrink-0">{activeVenue.wait}</span>
+              </div>
+            </div>
+
+            {/* List Right */}
+            <div className="lg:col-span-5 space-y-4">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-[#1C1917] dark:text-white">
+                  Live Nearby Restaurants
+                </h3>
+                <p className="text-xs text-[#78716C] dark:text-zinc-400 font-medium">
+                  Instant table booking with live availability in your area.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {mockRestaurants.map((venue) => (
+                  <div
+                    key={venue.id}
+                    onClick={() => setActiveVenue(venue)}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer ${
+                      activeVenue.id === venue.id
+                        ? 'bg-[#FFF5F0] dark:bg-white/[0.08] border-[#FF6B35] shadow-sm'
+                        : 'bg-white dark:bg-white/[0.03] border-[#FFE8DC] dark:border-white/10 hover:border-[#FF6B35]/50'
+                    }`}
+                  >
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0">
+                      <Image src={venue.img} alt={venue.name} fill unoptimized className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-black text-[#1C1917] dark:text-white truncate">{venue.name}</p>
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{venue.wait} · {venue.tablesLeft} tables open</p>
+                    </div>
+                    <span className="text-xs font-black text-amber-500 shrink-0">★ {venue.rating}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={openModal}
+                className="w-full py-3 bg-[#1C1917] dark:bg-[#FF6B35] hover:bg-black dark:hover:bg-[#FF551A] text-white text-xs font-black rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Explore Full Map &amp; Book</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          6. CHEF'S RECOMMENDATIONS (WITH CATEGORY FILTER)
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-24">
+        <div className={containerCls}>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#1C1917] dark:text-white tracking-tight">
+                Chef’s Recommendations
+              </h2>
+              <p className="text-xs sm:text-sm text-[#78716C] dark:text-zinc-400 font-medium mt-1">
+                Top curated culinary creations ready to be pre-ordered.
+              </p>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {['All', 'Veg', 'Pizza', 'Steaks', 'Sushi'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedDishCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    selectedDishCategory === cat
+                      ? 'bg-[#FF6B35] text-white shadow-sm'
+                      : 'bg-white dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 text-[#78716C] dark:text-zinc-400 hover:border-[#FF6B35]'
+                  }`}
+                >
+                  {cat}
                 </button>
               ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                <input 
-                  type="text" 
-                  placeholder="Restaurant or cuisine..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all dark:text-zinc-100"
-                />
-              </div>
-              <div className="relative flex-1">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                <input 
-                  type="text" 
-                  placeholder="Location"
-                  defaultValue="New York, NY"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all dark:text-zinc-100"
-                />
-              </div>
-              <button className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-brand-500/25 whitespace-nowrap">
-                Book Now
-              </button>
-            </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-zinc-500 font-medium">Popular:</span>
-            {['Sushi', 'Pizza', 'Burgers', 'Italian', 'Thai'].map(tag => (
-              <button key={tag} className="px-3 py-1 text-sm rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-                {tag}
-              </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDishes.map((dish) => (
+              <motion.div
+                key={dish.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -6 }}
+                onClick={openModal}
+                className="bg-white dark:bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden border border-[#FFE8DC] dark:border-white/10 shadow-md hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="relative h-48 sm:h-52 overflow-hidden">
+                    <Image
+                      src={dish.img}
+                      alt={dish.name}
+                      fill
+                      unoptimized
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-black text-white shadow">
+                      ⭐ {dish.rating}
+                    </div>
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      {dish.isChefPick && (
+                        <span className="bg-[#FF6B35] text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow">
+                          Chef Pick
+                        </span>
+                      )}
+                      <span className="bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] font-black">
+                        ⚡ {dish.prepTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 sm:p-5 space-y-1.5">
+                    <p className="text-[11px] font-mono font-bold text-[#FF6B35] uppercase">{dish.restaurant}</p>
+                    <h4 className="text-sm sm:text-base font-black text-[#1C1917] dark:text-white truncate">
+                      {dish.name}
+                    </h4>
+                    <p className="text-xs text-[#78716C] dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                      {dish.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 sm:p-5 pt-0 flex items-center justify-between border-t border-[#FFF5F0] dark:border-white/5 mt-2">
+                  <p className="text-base sm:text-lg font-black text-[#1C1917] dark:text-white">
+                    {formatCurrency(dish.price)}
+                  </p>
+                  <button className="px-4 py-2 bg-[#FF6B35] hover:bg-[#FF4D0F] text-white text-xs font-black rounded-xl shadow transition-colors">
+                    Pre-Order
+                  </button>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex-1 relative w-full aspect-square lg:aspect-auto lg:h-[600px] z-10"
-        >
-          <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-            <Image 
-              src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80" 
-              alt="Luxury dining experience" 
-              fill 
-              className="object-cover"
-              unoptimized
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          </div>
-
-          {/* Floating Elements */}
-          <motion.div 
-            animate={{ y: [0, -10, 0] }} 
-            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="absolute top-10 -left-6 sm:-left-12 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl shadow-black/10 border border-zinc-100 dark:border-zinc-700 flex items-center gap-3 backdrop-blur-md"
-          >
-            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Table Ready</p>
-              <p className="text-xs text-zinc-500">Walk right in</p>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            animate={{ y: [0, 10, 0] }} 
-            transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-            className="absolute bottom-20 -right-4 sm:-right-8 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl shadow-black/10 border border-zinc-100 dark:border-zinc-700 flex flex-col gap-1 backdrop-blur-md"
-          >
-            <div className="flex items-center gap-1 text-brand-500">
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
-            </div>
-            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">4.9/5.0 Rating</p>
-            <p className="text-xs text-zinc-500">2k+ reviews</p>
-          </motion.div>
-
-          <motion.div 
-            animate={{ y: [0, -8, 0] }} 
-            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-500 text-white px-5 py-3 rounded-2xl shadow-xl shadow-brand-500/30 font-semibold flex items-center gap-2"
-          >
-            <Clock className="w-5 h-5" />
-            -30 mins wait saved
-          </motion.div>
-          
-          <div className="absolute bottom-6 left-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md text-white text-sm font-medium border border-white/20">
-            <span className="w-2 h-2 rounded-full bg-green-400"></span>
-            34 tables available near you
-          </div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Marquee Section */}
-      <div className="w-full bg-white dark:bg-zinc-900 py-6 border-y border-zinc-200 dark:border-zinc-800 overflow-hidden flex items-center">
-        <div className="flex whitespace-nowrap animate-[marquee-track_30s_linear_infinite] gap-12 px-6">
-          {[...trendingRestaurants, ...trendingRestaurants].map((name, i) => (
-            <span key={i} className="text-xl font-bold text-zinc-300 dark:text-zinc-700 uppercase tracking-widest flex items-center gap-4">
-              {name}
-              <Star className="w-4 h-4 text-brand-500/50" />
-            </span>
-          ))}
+      {/* ── Partner Ticker ── */}
+      <div className="py-8 bg-white/80 dark:bg-white/[0.02] border-y border-[#FFE8DC] dark:border-white/10 text-center">
+        <p className="text-[11px] font-mono font-black text-[#A8A29E] uppercase tracking-[0.25em] mb-4">
+          TRUSTED BY WORLD-CLASS CHEFS &amp; DINING GROUPS
+        </p>
+        <div className="flex items-center justify-center gap-8 sm:gap-14 flex-wrap text-xs sm:text-sm font-black text-[#78716C] dark:text-zinc-400 uppercase tracking-widest opacity-70">
+          <span>CULINARY GIANTS</span>
+          <span>BISTRO CO.</span>
+          <span>GOURMET ELITE</span>
+          <span>THE LOCAL TABLE</span>
+          <span>EPICUREAN</span>
         </div>
       </div>
 
-      {/* Trust Stats */}
-      <section className="py-20 bg-zinc-50 dark:bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, idx) => (
-            <motion.div 
-              key={stat.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className="flex flex-col items-center text-center p-6 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm border border-zinc-100 dark:border-zinc-800"
-            >
-              <div className="w-12 h-12 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center mb-4">
-                <stat.icon className="w-6 h-6 text-brand-500" />
-              </div>
-              <h3 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-50 mb-1">
-                <AnimatedCounter value={stat.value} decimals={stat.decimals} />{stat.suffix}
-              </h3>
-              <p className="text-zinc-500 dark:text-zinc-400 font-medium">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Cuisine Categories */}
-      <section className="py-20 bg-white dark:bg-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Explore by Cuisine</h2>
-              <p className="text-zinc-500 dark:text-zinc-400">Find exactly what you're craving right now.</p>
-            </div>
-            <button className="hidden sm:flex items-center gap-2 text-brand-600 font-semibold hover:gap-3 transition-all">
-              View all <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 gap-6 sm:gap-8 no-scrollbar snap-x">
-            {cuisines.map((cuisine) => (
-              <motion.a
-                key={cuisine.id}
-                href={`/search?cuisine=${cuisine.name.toLowerCase()}`}
-                whileHover={{ scale: 1.1 }}
-                className="flex flex-col items-center gap-4 flex-shrink-0 snap-center group cursor-pointer"
-              >
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-brand-100 to-orange-200 dark:from-brand-900/40 dark:to-orange-800/40 flex items-center justify-center text-4xl sm:text-5xl shadow-sm group-hover:shadow-xl group-hover:shadow-brand-500/20 transition-all">
-                  {cuisine.emoji}
-                </div>
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                  {cuisine.name}
-                </span>
-              </motion.a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why QuickBite? */}
-      <section className="py-24 bg-zinc-950 relative overflow-hidden text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-900/20 via-zinc-950 to-zinc-950 pointer-events-none"></div>
-        
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold mb-6">Redefining Dining Out</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto text-lg">Don't let waiting ruin your appetite. See how we compare to the old way of eating out.</p>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-stretch gap-8 relative">
-            {/* Traditional Card */}
-            <div className="flex-1 bg-zinc-900/80 border border-zinc-800 rounded-3xl p-8 backdrop-blur-sm">
-              <h3 className="text-xl font-bold text-zinc-400 mb-6 flex items-center gap-2">
-                <XCircle className="w-6 h-6 text-red-500" />
-                The Traditional Way
-              </h3>
-              <ul className="space-y-6">
-                {[
-                  'Wait 45+ minutes for a table',
-                  'Struggle to get a waiter\'s attention',
-                  'Wait 20+ minutes for food to arrive',
-                  'Rush through your meal',
-                  'Wait for the bill to pay'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-zinc-300">
-                    <XCircle className="w-5 h-5 text-red-500/50 mt-0.5 shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* VS Divider */}
-            <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-zinc-950 border-4 border-zinc-800 items-center justify-center z-20">
-              <span className="font-black text-xl italic text-zinc-500">VS</span>
-              <div className="absolute inset-0 rounded-full border-2 border-brand-500 animate-ping opacity-20"></div>
-            </div>
-
-            {/* QuickBite Card */}
-            <div className="flex-1 bg-gradient-to-br from-brand-600/20 to-orange-600/10 border border-brand-500/30 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/20 blur-3xl rounded-full"></div>
-              
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 relative z-10">
-                <CheckCircle2 className="w-6 h-6 text-brand-500" />
-                QuickBite Experience
-              </h3>
-              <ul className="space-y-6 relative z-10">
-                {[
-                  'Walk straight to your reserved table',
-                  'Order & customize pre-prep in app',
-                  'Food arrives within 2 minutes of sitting',
-                  'Enjoy at your own pace',
-                  'One-tap payment & earn VIP rewards'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-zinc-100 font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-brand-500 mt-0.5 shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-24 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">How QuickBite Works</h2>
-            <p className="text-zinc-500 dark:text-zinc-400">Four simple steps to a perfect dining experience.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-            {/* SVG Connecting Line */}
-            <div className="hidden lg:block absolute top-1/4 left-[10%] right-[10%] h-0.5 border-t-2 border-dashed border-brand-200 dark:border-brand-900/50 z-0"></div>
-
-            {steps.map((step, idx) => (
-              <motion.div 
-                key={step.id}
-                whileHover={{ rotateY: 10, rotateX: -10, y: -5 }}
-                className="relative z-10 bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-lg shadow-zinc-200/50 dark:shadow-none border border-zinc-100 dark:border-zinc-800 transition-all duration-300 hover:shadow-brand-500/20 hover:border-brand-500/50"
-                style={{ perspective: 1000 }}
-              >
-                <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center mb-6 text-brand-600 dark:text-brand-400 relative">
-                  <step.icon className="w-7 h-7" />
-                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center border-4 border-white dark:border-zinc-900 text-sm">
-                    {step.id}
+      {/* ══════════════════════════════════════════════════════════
+          7. APP SHOWCASE ("Elevate Every Dining Moment")
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-24 bg-[#12100E] text-white">
+        <div className={containerCls}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
+            
+            {/* Phone Showcase Frame Left */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-[260px] h-[460px] rounded-[3rem] border-4 border-zinc-700 bg-zinc-950 p-3 shadow-2xl relative">
+                <div className="w-full h-full rounded-[2.3rem] overflow-hidden relative bg-gradient-to-b from-[#FF6B35] to-[#E8390A] p-4 text-white flex flex-col justify-between">
+                  <div>
+                    <div className="w-16 h-3.5 bg-white/20 rounded-full mx-auto mb-4" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Table #4 Confirmed</p>
+                    <p className="text-sm font-black">The Gilded Fork</p>
+                  </div>
+                  <div className="bg-black/40 backdrop-blur-md rounded-2xl p-3 text-xs space-y-1">
+                    <p className="font-black text-white flex items-center gap-1">
+                      <Zap className="w-3.5 h-3.5 text-amber-400" /> VIP Fast-Track
+                    </p>
+                    <p className="text-[10px] text-white/80">Dishes timed for your arrival</p>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-zinc-900 dark:text-zinc-100">{step.title}</h3>
-                <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Live Nearby Map Section */}
-      <section className="py-24 bg-white dark:bg-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-12 items-center">
-            <div className="flex-1 w-full relative">
-              <div className="relative w-full aspect-square sm:aspect-video lg:aspect-square rounded-3xl overflow-hidden shadow-2xl border border-zinc-100 dark:border-zinc-800">
-                <Image 
-                  src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80" 
-                  alt="Map view" 
-                  fill 
-                  className="object-cover opacity-90 dark:opacity-70 dark:grayscale-[30%]"
-                  unoptimized
-                />
-                
-                {/* Animated Map Pins */}
-                <motion.div 
-                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 }}
-                  className="absolute top-[30%] left-[40%] flex flex-col items-center cursor-pointer group"
-                >
-                  <div className="bg-brand-500 text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-lg transform group-hover:scale-110 transition-transform">
-                    2 tables
-                  </div>
-                  <div className="w-4 h-4 bg-brand-500 rounded-full border-2 border-white shadow-md relative">
-                    <div className="absolute inset-0 rounded-full bg-brand-500 animate-ping opacity-75"></div>
-                  </div>
-                </motion.div>
-
-                <motion.div 
-                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 }}
-                  className="absolute top-[60%] left-[70%] flex flex-col items-center cursor-pointer group"
-                >
-                  <div className="bg-zinc-900 text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-lg transform group-hover:scale-110 transition-transform">
-                    Waitlist
-                  </div>
-                  <div className="w-4 h-4 bg-zinc-900 rounded-full border-2 border-white shadow-md"></div>
-                </motion.div>
               </div>
             </div>
 
-            <div className="flex-1 w-full">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Find Available Tables Instantly</h2>
-              <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
-                Our live map shows exactly which restaurants have immediate availability. Stop guessing and start eating.
+            {/* Copy Right */}
+            <div className="lg:col-span-7 space-y-5">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                Elevate Every<br />
+                <span className="text-[#FF6B35]">Dining Moment.</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
+                Experience seamless reservations, zero wait times, and VIP contactless payments right from your mobile device.
               </p>
 
-              <div className="space-y-4 mb-8">
-                {[
-                  { name: 'The Rustic Grill', distance: '0.2 mi', status: 'Immediate Seating', rating: '4.8' },
-                  { name: 'Sushi Nakazawa', distance: '0.5 mi', status: '2 Tables Left', rating: '4.9' },
-                ].map((venue, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-brand-500 dark:hover:border-brand-500 transition-colors bg-zinc-50 dark:bg-zinc-900/50 cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-200 dark:bg-zinc-800 rounded-xl flex items-center justify-center">
-                        <MapPin className="w-6 h-6 text-zinc-500" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-zinc-900 dark:text-zinc-100">{venue.name}</h4>
-                        <p className="text-sm text-zinc-500">{venue.distance} away • ⭐ {venue.rating}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-3 py-1 rounded-full">
-                      {venue.status}
-                    </span>
-                  </div>
-                ))}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-white">
+                  <CheckCircle2 className="w-4 h-4 text-[#FF6B35]" /> Priority Table Reservations
+                </div>
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-white">
+                  <CheckCircle2 className="w-4 h-4 text-[#FF6B35]" /> Touchless 1-Tap Wallet Payments
+                </div>
               </div>
 
-              <button className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-xl font-semibold transition-colors">
-                <Map className="w-5 h-5" />
-                Explore Full Map
-              </button>
+              <div className="flex items-center gap-3 pt-2">
+                <button className="px-4 py-2.5 rounded-xl bg-white text-[#1C1917] font-black text-xs flex items-center gap-2 shadow">
+                  <Apple className="w-4 h-4" /> App Store
+                </button>
+                <button className="px-4 py-2.5 rounded-xl bg-zinc-800 text-white font-black text-xs flex items-center gap-2 border border-zinc-700">
+                  <Play className="w-4 h-4" /> Google Play
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* Chef's Recommendations */}
-      <section className="py-24 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Trending Dishes</h2>
-              <p className="text-zinc-500 dark:text-zinc-400">Pre-order these local favorites to skip the prep time.</p>
-            </div>
+      {/* ══════════════════════════════════════════════════════════
+          8. TESTIMONIALS
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-24">
+        <div className={containerCls}>
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <p className="text-xs font-mono font-black text-[#FF6B35] uppercase tracking-widest">
+              Trusted by World-Class Diners
+            </p>
           </div>
 
-          <motion.div 
-            className="flex lg:grid lg:grid-cols-3 gap-6 sm:gap-8 overflow-visible"
-            drag="x"
-            dragConstraints={{ left: -1000, right: 0 }}
-            dragElastic={0.1}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {reviews.map((rev) => (
+              <div key={rev.id} className="bg-white dark:bg-white/[0.03] backdrop-blur-md rounded-3xl p-6 border border-[#FFE8DC] dark:border-white/10 shadow-sm space-y-3 flex flex-col justify-between">
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-1 text-amber-400 text-xs">
+                    {[...Array(rev.stars)].map((_, idx) => <Star key={idx} className="w-3.5 h-3.5 fill-amber-400" />)}
+                  </div>
+                  <p className="text-xs sm:text-sm text-[#78716C] dark:text-zinc-300 font-medium leading-relaxed">
+                    “{rev.text}”
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-[#FFF5F0] dark:border-white/5 flex items-center gap-3">
+                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#FFE8DC]">
+                    <Image src={rev.avatar} alt={rev.name} fill unoptimized className="object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-[#1C1917] dark:text-white leading-tight">{rev.name}</p>
+                    <p className="text-[10px] text-[#A8A29E] font-bold">{rev.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          9. BOTTOM CTA ("Ready to Skip the Wait?")
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-12 sm:py-20">
+        <div className={containerCls}>
+          <div
+            className="relative rounded-3xl sm:rounded-[2.5rem] overflow-hidden p-8 sm:p-14 text-center text-white shadow-2xl"
+            style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D0F 50%, #E8390A 100%)' }}
           >
-            {foods.map((food) => (
-              <motion.div 
-                key={food.id}
-                whileHover={{ y: -8 }}
-                className="min-w-[280px] sm:min-w-[320px] lg:min-w-0 bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-lg border border-zinc-100 dark:border-zinc-800 group cursor-grab active:cursor-grabbing shrink-0"
-              >
-                <div className="relative h-64 w-full overflow-hidden">
-                  <Image 
-                    src={food.img} 
-                    alt={food.name} 
-                    fill 
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                  
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-zinc-900 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
-                    <Star className="w-4 h-4 text-brand-500 fill-brand-500" />
-                    {food.rating}
-                  </div>
-                  
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md">{food.name}</h3>
-                    <p className="text-brand-300 font-semibold drop-shadow-md">${food.price.toFixed(2)}</p>
-                  </div>
-                </div>
-                <div className="p-4 flex gap-2">
-                  <button className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-3 rounded-xl font-semibold transition-colors text-sm">
-                    View Restaurant
-                  </button>
-                  <button className="flex-1 bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-semibold transition-colors text-sm flex justify-center items-center gap-2">
-                    <Zap className="w-4 h-4" /> Pre-order
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials Marquee */}
-      <section className="py-24 bg-white dark:bg-zinc-900 overflow-hidden">
-        <div className="text-center mb-16 px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">What Our Diners Say</h2>
-          <p className="text-zinc-500 dark:text-zinc-400">Join thousands of foodies who have revolutionized their dining experience.</p>
-        </div>
-
-        <div className="flex flex-col gap-6 relative">
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white dark:from-zinc-900 to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white dark:from-zinc-900 to-transparent z-10 pointer-events-none"></div>
-          
-          {/* Row 1 */}
-          <div className="flex whitespace-nowrap animate-[marquee-track_40s_linear_infinite] gap-6 px-4">
-            {[...reviewsRow1, ...reviewsRow1].map((review, i) => (
-              <div key={`r1-${i}`} className="w-[350px] whitespace-normal bg-zinc-50 dark:bg-zinc-950 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800 shrink-0">
-                <div className="flex items-center gap-1 mb-4 text-brand-500">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-zinc-700 dark:text-zinc-300 italic mb-6 line-clamp-3">"{review.text}"</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Image 
-                      src={`https://ui-avatars.com/api/?name=${review.name.replace(' ', '+')}&background=FF6B35&color=fff&size=40`}
-                      alt={review.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                      unoptimized
-                    />
-                    <div>
-                      <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{review.name}</h4>
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-zinc-500 bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded-md">
-                    @ {review.restaurant}
-                  </span>
-                </div>
+            <div className="relative max-w-xl mx-auto space-y-5">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                Ready to Skip the Wait?
+              </h2>
+              <p className="text-xs sm:text-sm text-white/85 font-medium">
+                Join 50,000+ smart diners enjoying VIP restaurant experiences every day.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={openModal}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-[#1C1917] hover:bg-black text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl transition-all cursor-pointer"
+                >
+                  Start Booking Now
+                </button>
+                <Link
+                  href="/restaurant/login"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-white text-[#1C1917] font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all text-center"
+                >
+                  Partner with Us
+                </Link>
               </div>
-            ))}
-          </div>
-
-          {/* Row 2 */}
-          <div className="flex whitespace-nowrap animate-[marquee-track-reverse_45s_linear_infinite] gap-6 px-4">
-            {[...reviewsRow2, ...reviewsRow2].map((review, i) => (
-              <div key={`r2-${i}`} className="w-[350px] whitespace-normal bg-zinc-50 dark:bg-zinc-950 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800 shrink-0">
-                <div className="flex items-center gap-1 mb-4 text-brand-500">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-zinc-700 dark:text-zinc-300 italic mb-6 line-clamp-3">"{review.text}"</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Image 
-                      src={`https://ui-avatars.com/api/?name=${review.name.replace(' ', '+')}&background=FF6B35&color=fff&size=40`}
-                      alt={review.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                      unoptimized
-                    />
-                    <div>
-                      <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{review.name}</h4>
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-zinc-500 bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded-md">
-                    @ {review.restaurant}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* App Download Promo */}
-      <section className="py-24 bg-[#0A0A0A] text-white overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 relative w-full max-w-md mx-auto">
-            {/* Phone Mockup */}
-            <div className="relative aspect-[9/17.5] bg-zinc-950 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl p-2 overflow-hidden ring-1 ring-brand-500/50">
-              {/* Dynamic Island */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-full z-20 flex items-center justify-between px-3">
-                <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                </div>
-              </div>
-
-              {/* Screen Content */}
-              <div className="w-full h-full bg-zinc-100 rounded-[2.25rem] overflow-hidden flex flex-col relative">
-                <div className="bg-brand-500 pt-16 pb-8 px-6 text-white rounded-b-3xl">
-                  <p className="opacity-80 text-sm mb-1">Your Reservation</p>
-                  <h3 className="text-2xl font-bold">Carbone</h3>
-                  <div className="flex items-center gap-2 mt-4 bg-white/20 p-3 rounded-xl backdrop-blur-md">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-medium">Table ready in 12 mins</span>
-                  </div>
-                </div>
-
-                <div className="p-6 flex-1 bg-zinc-50">
-                  <h4 className="font-bold text-zinc-900 mb-4">Pre-ordered Items</h4>
-                  <div className="space-y-3">
-                    <div className="bg-white p-3 rounded-xl shadow-sm border border-zinc-100 flex items-center gap-3">
-                      <div className="w-12 h-12 bg-zinc-200 rounded-lg overflow-hidden relative">
-                         <Image src={foods[1].img} alt="Food" fill className="object-cover" unoptimized />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-zinc-900 text-sm">Truffle Pasta</p>
-                        <p className="text-brand-500 font-semibold text-sm">$28.00</p>
-                      </div>
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded-xl shadow-sm border border-zinc-100 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-brand-50 rounded-full flex items-center justify-center shrink-0">
-                         <Smartphone className="w-5 h-5 text-brand-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-zinc-900 text-sm">Touchless Pay</p>
-                        <p className="text-zinc-500 text-xs">Card ending in 4242</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-xl shadow-sm border border-zinc-100 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center shrink-0">
-                         <Gift className="w-5 h-5 text-purple-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-zinc-900 text-sm">VIP Perk Applied</p>
-                        <p className="text-zinc-500 text-xs">Free dessert included</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Badges */}
-            <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 4 }}
-              className="absolute top-1/4 -right-8 bg-zinc-800 border border-zinc-700 p-3 rounded-2xl shadow-xl flex items-center gap-3 z-30"
-            >
-              <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center">
-                <Star className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">Priority Waitlist</p>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              animate={{ y: [0, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 5 }}
-              className="absolute bottom-1/4 -left-8 bg-zinc-800 border border-zinc-700 p-3 rounded-2xl shadow-xl flex items-center gap-3 z-30"
-            >
-              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">-35 mins/visit</p>
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="flex-1 z-10">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Elevate Every <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-orange-300">Dining Moment.</span>
-            </h2>
-            <p className="text-xl text-zinc-400 mb-8 max-w-lg">
-              Download the app to access priority reservations, pre-ordering, and touchless payments all in one place.
-            </p>
-            
-            <ul className="space-y-4 mb-10">
-              {['Priority Reservations at Top Spots', 'Real-time Table Status Tracking', 'Seamless Split & Touchless Payments'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-zinc-300">
-                  <CheckCircle2 className="w-6 h-6 text-brand-500" />
-                  <span className="text-lg">{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="flex items-center justify-center gap-3 bg-white text-black px-6 py-4 rounded-2xl font-bold hover:bg-zinc-200 transition-colors">
-                <Apple className="w-6 h-6" />
-                <div className="text-left">
-                  <div className="text-[10px] uppercase tracking-wider font-semibold opacity-60">Download on the</div>
-                  <div className="text-sm leading-none">App Store</div>
-                </div>
-              </button>
-              <button className="flex items-center justify-center gap-3 bg-zinc-800 text-white px-6 py-4 rounded-2xl font-bold hover:bg-zinc-700 transition-colors border border-zinc-700">
-                <Play className="w-6 h-6" />
-                <div className="text-left">
-                  <div className="text-[10px] uppercase tracking-wider font-semibold opacity-60">GET IT ON</div>
-                  <div className="text-sm leading-none">Google Play</div>
-                </div>
-              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Gradient Card */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="relative rounded-[3rem] bg-gradient-to-br from-brand-500 via-orange-500 to-red-500 p-12 lg:p-20 text-center overflow-hidden shadow-2xl shadow-brand-500/20">
-          {/* Sparkles */}
-          {[...Array(15)].map((_, i) => (
-            <div 
-              key={i}
-              className="absolute w-2 h-2 bg-white rounded-full animate-ping opacity-60"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animationDuration: `${Math.random() * 3 + 2}s`,
-                animationDelay: `${Math.random() * 2}s`
-              }}
-            ></div>
-          ))}
-
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <div className="flex justify-center gap-4 mb-8">
-              {[Star, Users, CreditCard].map((Icon, i) => (
-                <div key={i} className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-              ))}
-            </div>
-            
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight">
-              Ready to Skip the Wait?
-            </h2>
-            <p className="text-xl text-white/90 mb-10 font-medium">
-              Join over 50,000 users who are dining smarter, faster, and better.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button className="bg-zinc-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-black transition-colors shadow-xl">
-                Start Booking Now
-              </button>
-              <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-colors">
-                Partner with Us
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Scroll to Top FAB */}
+      {/* ── Scroll To Top Button ── */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 20 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-8 right-8 z-50 group flex items-center justify-center"
+            className="fixed bottom-6 right-6 w-11 h-11 rounded-full bg-[#FF6B35] text-white shadow-lg flex items-center justify-center hover:bg-[#FF4D0F] transition-all z-40 cursor-pointer"
             title="Back to Top"
           >
-            {/* SVG Ring for scroll progress */}
-            <svg className="w-14 h-14 transform -rotate-90 drop-shadow-lg">
-              <circle
-                cx="28"
-                cy="28"
-                r="24"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="transparent"
-                className="text-white dark:text-zinc-800"
-              />
-              <motion.circle
-                cx="28"
-                cy="28"
-                r="24"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="transparent"
-                className="text-brand-500"
-                strokeDasharray="150"
-                style={{ strokeDashoffset: scaleX as any }}
-              />
-            </svg>
-            <div className="absolute inset-0 m-auto w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform">
-              <ArrowUp className="w-5 h-5" />
-            </div>
-            
-            <span className="absolute -top-10 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Back to Top
-            </span>
+            <ArrowUp className="w-5 h-5" />
           </motion.button>
         )}
       </AnimatePresence>
