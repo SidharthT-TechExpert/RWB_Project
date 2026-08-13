@@ -1250,6 +1250,208 @@ export default function ManagerMenuPage() {
         </div>
       )}
 
+      {/* ── MODAL: EDIT MENU ITEM ── */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-[#080F22] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200 my-8">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-purple-400" />
+                Edit Dish &amp; Portion Pricing
+              </h3>
+              <button
+                onClick={() => setEditingItem(null)}
+                className="text-slate-500 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateItem} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase">Dish Name</label>
+                <input
+                  type="text"
+                  value={itemForm.name}
+                  onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                  required
+                  className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase">Category</label>
+                  <select
+                    value={itemForm.category}
+                    onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })}
+                    className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                  >
+                    {categories
+                      .filter((c) => c !== 'All Items')
+                      .map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase">Base Price (₹)</label>
+                  <input
+                    type="number"
+                    value={itemForm.price}
+                    onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                    required={!itemForm.hasPortions}
+                    className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              {/* ── Portion / Quantity Options Block ── */}
+              <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
+                    <span>📏 Portion Quantity Pricing</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Quarter, Half, Full)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setItemForm((prev) => ({ ...prev, hasPortions: !prev.hasPortions }))}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                      itemForm.hasPortions
+                        ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+                        : 'bg-white/5 border-white/10 text-slate-400'
+                    }`}
+                  >
+                    {itemForm.hasPortions ? 'Enabled' : 'Enable Portions'}
+                  </button>
+                </div>
+
+                {itemForm.hasPortions && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-[11px] text-slate-400 font-medium">Quick Portion Presets:</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => applyPortionPreset('quarter_half_full')}
+                        className="px-2.5 py-1 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold hover:bg-purple-500/25"
+                      >
+                        ⚡ Quarter / Half / Full
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPortionPreset('small_medium_large')}
+                        className="px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-bold hover:bg-blue-500/25"
+                      >
+                        ⚡ Small / Medium / Large
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPortionPreset('volume')}
+                        className="px-2.5 py-1 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-bold hover:bg-teal-500/25"
+                      >
+                        ⚡ 250ml / 500ml / 1L
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                      {itemForm.portions.map((p, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={p.name}
+                            onChange={(e) => updatePortionRow(idx, 'name', e.target.value)}
+                            placeholder="Portion Name (e.g. Quarter)"
+                            className="flex-1 bg-[#030816] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-purple-500"
+                          />
+                          <div className="relative w-32">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono">₹</span>
+                            <input
+                              type="number"
+                              value={p.price || ''}
+                              onChange={(e) => updatePortionRow(idx, 'price', e.target.value)}
+                              placeholder="Price"
+                              className="w-full bg-[#030816] border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-white outline-none focus:border-purple-500 font-bold"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePortionRow(idx)}
+                            className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={addPortionRow}
+                        className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 pt-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Portion Option
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase">Prep Time (mins)</label>
+                  <input
+                    type="number"
+                    value={itemForm.prepTimeMinutes}
+                    onChange={(e) => setItemForm({ ...itemForm, prepTimeMinutes: e.target.value })}
+                    className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase">Dietary Type</label>
+                  <select
+                    value={itemForm.isVeg ? 'veg' : 'nonveg'}
+                    onChange={(e) => setItemForm({ ...itemForm, isVeg: e.target.value === 'veg' })}
+                    className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                  >
+                    <option value="veg">🟢 Vegetarian</option>
+                    <option value="nonveg">🔴 Non-Vegetarian</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase">Description</label>
+                <textarea
+                  value={itemForm.description}
+                  onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-[#030816] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ── MODAL: ADD CATEGORY ── */}
       {showAddCatModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1305,3 +1507,4 @@ export default function ManagerMenuPage() {
     </div>
   );
 }
+
