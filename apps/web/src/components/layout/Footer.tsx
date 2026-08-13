@@ -32,37 +32,6 @@ const footerLinks = {
 export function Footer() {
   return (
     <footer className="bg-muted/30 dark:bg-zinc-950/80 border-t border-border mt-auto">
-      {/* ── Newsletter Banner ── */}
-      <div className="bg-brand-500/8 dark:bg-brand-500/10 border-b border-border">
-        <div className="max-w-7xl 3xl:max-w-[100rem] mx-auto px-3.5 xs:px-5 sm:px-6 lg:px-8 xl:px-10 3xl:px-20 py-4 xs:py-5 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-500/15 flex items-center justify-center shrink-0">
-                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs xs:text-sm sm:text-base font-black text-foreground leading-tight">Get dining deals straight to your inbox</p>
-                <p className="text-xs text-muted-foreground font-medium hidden sm:block mt-0.5">Weekly curated restaurant picks. No spam.</p>
-              </div>
-            </div>
-            <form className="flex w-full sm:w-auto gap-2 shrink-0" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 min-w-0 sm:w-64 md:w-72 px-3 xs:px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-border bg-background text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/10 transition-all"
-              />
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs sm:text-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
-              >
-                <span>Subscribe</span>
-                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
       {/* ── Main footer grid ── */}
       <div className="
         max-w-7xl 3xl:max-w-[100rem] 4xl:max-w-[130rem] mx-auto
