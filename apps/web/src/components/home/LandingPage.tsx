@@ -1,29 +1,31 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, Clock, Star, Users, Store, ShoppingBag,
-  ChevronRight, ArrowRight, CheckCircle2, XCircle,
+  ChevronRight, ChevronDown, ArrowRight, CheckCircle2, XCircle, X,
   Smartphone, CreditCard, Gift, Utensils, Zap, Map,
   ArrowUp, Apple, Play, Sparkles, Flame, Check,
   QrCode, CalendarCheck, ShieldCheck, Heart, ChefHat,
-  Navigation, Calendar, Minus, Plus, Bell, Award,
+  Navigation, Bell, Award,
   Compass, Eye, SlidersHorizontal,
 } from 'lucide-react';
 import { useAuthModalStore } from '@/store/authModalStore';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { formatCurrency } from '@/lib/utils';
-import { Locate, RefreshCw, Crosshair } from 'lucide-react';
+import { Locate, RefreshCw, Crosshair, Loader2 } from 'lucide-react';
+
+import { LocationSuggestionItem, popularLocations, cleanPlaceName } from '@/lib/locationData';
 
 /* ─── Static Data ────────────────────────────────────────────── */
 const stats = [
-  { id: 1, value: 50000, suffix: '+', label: 'Active Diners',       sub: 'Across 25+ cities', icon: Users },
-  { id: 2, value: 1200,  suffix: '+', label: 'Partner Restaurants', sub: 'Top-tier curated venues', icon: Store },
-  { id: 3, value: 250000,suffix: '+', label: 'Orders Delivered',   sub: 'Zero waiting queue', icon: ShoppingBag },
-  { id: 4, value: 4.9,   suffix: '★', label: 'Customer Rating',     sub: 'From 18,400+ reviews', icon: Star, decimals: 1 },
+  { id: 1, value: 50, suffix: 'K+', label: 'Active Diners',       sub: 'Across 25+ cities', icon: Users },
+  { id: 2, value: 1200, suffix: '+', label: 'Partner Restaurants', sub: 'Top-tier curated venues', icon: Store, formatCommas: true },
+  { id: 3, value: 250, suffix: 'K+', label: 'Orders Delivered',   sub: 'Zero waiting queue', icon: ShoppingBag },
+  { id: 4, value: 4.9, suffix: '★', label: 'Customer Rating',     sub: 'From 18,400+ reviews', icon: Star, decimals: 1 },
 ];
 
 const mockRestaurants = [
@@ -214,7 +216,7 @@ const reviews = [
 ];
 
 /* ─── Animated Number Counter ────────────────────────────────── */
-function Counter({ value, decimals = 0 }: { value: number; decimals?: number }) {
+function Counter({ value, decimals = 0, formatCommas = false }: { value: number; decimals?: number; formatCommas?: boolean }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const [started, setStarted] = useState(false);
@@ -231,7 +233,7 @@ function Counter({ value, decimals = 0 }: { value: number; decimals?: number }) 
   useEffect(() => {
     if (!started) return;
     let start: number | null = null;
-    const duration = 1800;
+    const duration = 1600;
     const step = (now: number) => {
       if (!start) start = now;
       const progress = Math.min((now - start) / duration, 1);
@@ -242,7 +244,13 @@ function Counter({ value, decimals = 0 }: { value: number; decimals?: number }) 
     requestAnimationFrame(step);
   }, [started, value]);
 
-  return <span ref={ref}>{count.toFixed(decimals)}</span>;
+  const formatted = decimals > 0 
+    ? count.toFixed(decimals) 
+    : formatCommas 
+    ? Math.floor(count).toLocaleString() 
+    : Math.floor(count).toString();
+
+  return <span ref={ref}>{formatted}</span>;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -250,24 +258,280 @@ function Counter({ value, decimals = 0 }: { value: number; decimals?: number }) 
 ════════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { openModal } = useAuthModalStore();
-  const { location: userGeo, status: geoStatus, refresh: refreshGeo } = useUserLocation();
+  const { location: userGeo, status: geoStatus, refresh: refreshGeo, setManual } = useUserLocation();
   const [searchTab, setSearchTab] = useState<'table' | 'food' | 'both'>('both');
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationInput, setLocationInput] = useState('');
-  const [guestsCount, setGuestsCount] = useState(2);
-  const [timeSlot, setTimeSlot] = useState('Tonight, 8:00 PM');
+  const [locationInput, setLocationInput] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('quickbite_user_location');
+        if (saved) return saved;
+      } catch {}
+    }
+    return '';
+  });
+  const [isLocDropdownOpen, setIsLocDropdownOpen] = useState(false);
+  const [remoteSuggestions, setRemoteSuggestions] = useState<LocationSuggestionItem[]>([]);
+  const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const locDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileLocDropdownRef = useRef<HTMLDivElement>(null);
   const [activeVenue, setActiveVenue] = useState(mockRestaurants[0]);
   const [selectedDishCategory, setSelectedDishCategory] = useState('All');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Auto-fill user's real live location when geocoded
+  const selectLocation = (locStr: string) => {
+    setLocationInput(locStr);
+    setManual(locStr);
+    setIsLocDropdownOpen(false);
+  };
+
+  // Close location dropdown when clicking outside
   useEffect(() => {
-    if (userGeo?.display) {
-      setLocationInput(userGeo.display);
-    } else if (!locationInput && geoStatus === 'idle') {
-      setLocationInput('Locating your city…');
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        locDropdownRef.current && !locDropdownRef.current.contains(target) &&
+        mobileLocDropdownRef.current && !mobileLocDropdownRef.current.contains(target)
+      ) {
+        setIsLocDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fast Live Geocoding / Places API (Photon OpenStreetMap + Nominatim)
+  useEffect(() => {
+    const trimmed = locationInput.trim();
+    if (trimmed.length < 2) {
+      setRemoteSuggestions([]);
+      setIsSearchingLoc(false);
+      return;
     }
-  }, [userGeo, geoStatus]);
+
+    const controller = new AbortController();
+    setIsSearchingLoc(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        // Query Photon Places API with location bias for Kerala / India (lat 10.85, lon 76.27)
+        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&lat=10.8505&lon=76.2711&limit=12&lang=en`;
+        const res = await fetch(photonUrl, { signal: controller.signal });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.features && data.features.length > 0) {
+            const seenKeys = new Set<string>();
+            const results: LocationSuggestionItem[] = [];
+
+            for (const f of data.features) {
+              const p = f.properties || {};
+              const rawName = p.name || p.city || p.town || p.district || '';
+              if (!rawName) continue;
+
+              // Clean out redundant POI institution suffixes (schools, anganwadis, bus stands)
+              const name = rawName
+                .replace(/,?\s*(Central Upper Primary|Lower Primary|Upper Primary|Primary School|LP School|UP School|School|Anganavadi|Anganwadi|Hospital|Junction|Bus Stand|Sub Post Office).*$/i, '')
+                .trim() || rawName;
+
+              const rawDistrict = p.district || p.county || '';
+              const cleanDist = rawDistrict && rawDistrict !== name ? rawDistrict.replace(/ District$/i, '').trim() : '';
+              const state = p.state || 'Kerala';
+              const country = p.country || 'India';
+
+              // Filter out unrelated foreign places when searching local queries
+              if (country !== 'India' && !trimmed.toLowerCase().includes(country.toLowerCase()) && !trimmed.toLowerCase().includes('usa')) {
+                continue;
+              }
+
+              const dedupeKey = `${name.toLowerCase()}-${(cleanDist || state).toLowerCase()}`;
+              if (seenKeys.has(dedupeKey)) continue;
+              seenKeys.add(dedupeKey);
+
+              const subtitleParts = [
+                cleanDist ? `${cleanDist} District` : '',
+                state,
+                country,
+              ].filter(Boolean);
+
+              const displayParts = [name, cleanDist, state].filter(
+                (v, idx, arr) => Boolean(v) && arr.indexOf(v) === idx
+              );
+
+              results.push({
+                city: name,
+                district: cleanDist || p.city || '',
+                state,
+                country,
+                subtitle: subtitleParts.join(', '),
+                display: displayParts.join(', '),
+              });
+            }
+
+            if (results.length > 0) {
+              setRemoteSuggestions(results);
+              setIsSearchingLoc(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback: Query Nominatim with India countrycode filter
+        const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&countrycodes=in&format=json&addressdetails=1&limit=8&accept-language=en`;
+        const nomRes = await fetch(nomUrl, {
+          headers: { 'User-Agent': 'QuickBite-App/1.0 (contact@quickbite.app)' },
+          signal: controller.signal,
+        });
+        if (nomRes.ok) {
+          const nomData = await nomRes.json();
+          if (Array.isArray(nomData) && nomData.length > 0) {
+            const seenKeys = new Set<string>();
+            const nResults: LocationSuggestionItem[] = [];
+
+            for (const item of nomData) {
+              const addr = item.address || {};
+              const rawName =
+                addr.suburb ||
+                addr.village ||
+                addr.town ||
+                addr.neighbourhood ||
+                addr.hamlet ||
+                addr.city ||
+                item.name ||
+                '';
+              if (!rawName) continue;
+
+              const name = rawName
+                .replace(/,?\s*(Central Upper Primary|Lower Primary|Upper Primary|Primary School|LP School|UP School|School|Anganavadi|Anganwadi|Hospital|Junction|Bus Stand).*$/i, '')
+                .trim() || rawName;
+
+              const rawDistrict = addr.state_district || addr.county || addr.district || '';
+              const cleanDistrict = rawDistrict.replace(/ District$/i, '').trim();
+              const state = addr.state || addr.region || 'Kerala';
+              const country = addr.country || 'India';
+
+              const dedupeKey = `${name.toLowerCase()}-${(cleanDistrict || state).toLowerCase()}`;
+              if (seenKeys.has(dedupeKey)) continue;
+              seenKeys.add(dedupeKey);
+
+              const subParts = [
+                cleanDistrict ? `${cleanDistrict} District` : '',
+                state,
+              ].filter(Boolean);
+
+              const display = [name, cleanDistrict, state].filter(
+                (v, idx, arr) => Boolean(v) && arr.indexOf(v) === idx
+              ).join(', ');
+
+              nResults.push({
+                city: name || 'Place',
+                district: cleanDistrict,
+                state,
+                country,
+                subtitle: subParts.join(', '),
+                display: display || item.display_name,
+              });
+            }
+
+            setRemoteSuggestions(nResults);
+          }
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          // ignore network errors cleanly
+        }
+      } finally {
+        setIsSearchingLoc(false);
+      }
+    }, 140);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [locationInput]);
+
+  // Combined instant local suggestions + live remote suggestions with exact relevance ranking
+  const filteredLocations = useMemo(() => {
+    const trimmed = locationInput.trim().toLowerCase();
+    
+    // When input is empty, show curated popular list
+    if (!trimmed) {
+      return popularLocations;
+    }
+
+    const queryParts = trimmed.split(/[\s,]+/).filter(Boolean);
+    const firstWord = queryParts[0] || '';
+
+    const seen = new Set<string>();
+    const candidates: LocationSuggestionItem[] = [];
+
+    // 1. LIVE API RESULTS FIRST
+    for (const rem of remoteSuggestions) {
+      const key = rem.display.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        candidates.push(rem);
+      }
+    }
+
+    // 2. Local matches ONLY if they start with or contain the query
+    const localMatches = popularLocations.filter((loc) => {
+      const cityLow = loc.city.toLowerCase();
+      const str = `${loc.city} ${loc.district || ''} ${loc.display}`.toLowerCase();
+      return queryParts.every((part) => str.includes(part)) || cityLow.startsWith(firstWord);
+    });
+
+    for (const loc of localMatches) {
+      const key = loc.display.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        candidates.push(loc);
+      }
+    }
+
+    // 3. Exact Relevance Sorting so the exact place typed is ALWAYS #1
+    const scored = candidates.map((item) => {
+      const cityLow = item.city.toLowerCase();
+      const displayLow = item.display.toLowerCase();
+      let score = 0;
+
+      // Exact place match
+      if (cityLow === firstWord) {
+        score += 160;
+      } else if (cityLow.startsWith(firstWord)) {
+        score += 110;
+      } else if (displayLow.startsWith(firstWord)) {
+        score += 80;
+      } else if (cityLow.includes(firstWord)) {
+        score += 50;
+      } else if (displayLow.includes(firstWord)) {
+        score += 30;
+      }
+
+      // Secondary match on district/state
+      for (let i = 1; i < queryParts.length; i++) {
+        if (displayLow.includes(queryParts[i])) {
+          score += 20;
+        }
+      }
+
+      return { item, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    return scored.map((s) => s.item);
+  }, [locationInput, remoteSuggestions]);
+
+  // Auto-fill initial location if empty
+  useEffect(() => {
+    if (userGeo?.display && !locationInput) {
+      setLocationInput(userGeo.display);
+    }
+  }, [userGeo]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -295,12 +559,12 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════════
           1. HERO SECTION
       ══════════════════════════════════════════════════════════ */}
-      <section className="relative pt-6 sm:pt-10 lg:pt-14 pb-14 sm:pb-20">
+      <section className="relative pt-6 sm:pt-10 lg:pt-14 pb-14 sm:pb-20 z-30 overflow-visible">
         <div className={containerCls}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
             {/* Left Hero Column */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+            <div className="lg:col-span-7 space-y-6 sm:space-y-7 relative z-40 overflow-visible">
               
               {/* Glowing City Badge (Live Dynamic Location) */}
               <motion.div
@@ -335,27 +599,28 @@ export default function LandingPage() {
                 </p>
               </motion.div>
 
-              {/* ── Modern Frosted Glass Search Engine ── */}
+              {/* ── Modern Luxury Floating Search Console ── */}
               <motion.div
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.16 }}
-                className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-2xl border border-[#FFE8DC] dark:border-white/10 rounded-[2rem] p-4 sm:p-5 shadow-[0_16px_50px_rgba(255,107,53,0.12)] space-y-4 relative"
+                className="space-y-3 relative z-40"
               >
-                {/* Search Mode Switcher Tabs */}
-                <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F0] dark:bg-white/[0.06] rounded-2xl w-fit border border-[#FFE8DC]/60 dark:border-white/5">
+                {/* Minimalist Floating Tabs */}
+                <div className="flex items-center gap-2 flex-wrap">
                   {[
-                    { id: 'table', label: '🪑 Table' },
-                    { id: 'food',  label: '🍽️ Food'  },
+                    { id: 'table', label: '🪑 Book a Table' },
+                    { id: 'food',  label: '🍽️ Order Food' },
                     { id: 'both',  label: '⚡ Table + Food' },
                   ].map((t) => (
                     <button
                       key={t.id}
+                      type="button"
                       onClick={() => setSearchTab(t.id as any)}
-                      className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                         searchTab === t.id
-                          ? 'bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] text-white shadow-[0_4px_14px_rgba(255,107,53,0.4)]'
-                          : 'text-[#78716C] dark:text-zinc-400 hover:text-[#1C1917] dark:hover:text-white'
+                          ? 'bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] text-white shadow-[0_4px_16px_rgba(255,107,53,0.4)]'
+                          : 'bg-[#181513]/80 hover:bg-[#221E1B] text-[#A8A29E] hover:text-white border border-[#2C2724] dark:border-white/10'
                       }`}
                     >
                       {t.label}
@@ -363,87 +628,316 @@ export default function LandingPage() {
                   ))}
                 </div>
 
-                {/* Primary Search Inputs Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
-                  <div className="sm:col-span-6 relative flex items-center bg-[#FFF8F4] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 rounded-2xl px-3.5 py-3 focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] transition-all">
-                    <Search className="w-4 h-4 text-[#FF6B35] mr-2.5 shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Restaurant, cuisine, or dish..."
-                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#1C1917] dark:text-white placeholder-[#A8A29E] outline-none"
-                    />
-                  </div>
+                {/* Unified Seamless Dark Luxury Search Capsule */}
+                <div className="bg-[#181513]/95 backdrop-blur-2xl border border-[#2C2724] dark:border-white/15 rounded-2xl sm:rounded-full p-2 sm:p-2.5 shadow-[0_16px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(255,107,53,0.06)] focus-within:border-[#FF6B35] focus-within:ring-2 focus-within:ring-[#FF6B35]/20 transition-all">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-0">
+                    {/* Search Field */}
+                    <div className="flex-1 min-w-0 w-full flex items-center pl-3 sm:pl-4 pr-2 py-1.5 sm:py-0 relative">
+                      <Search className="w-5 h-5 text-[#FF6B35] shrink-0 mr-3" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={
+                          searchTab === 'table'
+                            ? 'Search restaurants, cuisines, cafes...'
+                            : searchTab === 'food'
+                            ? 'Search dishes, pizzas, sushi, burgers...'
+                            : 'Search restaurants, cuisines, or dishes...'
+                        }
+                        className="w-full bg-transparent text-sm sm:text-base font-medium text-white placeholder-[#8E8782] outline-none pr-7"
+                      />
+                      {searchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchQuery('');
+                            searchInputRef.current?.focus();
+                          }}
+                          title="Clear search"
+                          className="absolute right-2 p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
 
-                  {/* 📍 Live GPS Autodetect Location Input */}
-                  <div className="sm:col-span-6 relative flex items-center bg-[#FFF8F4] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 rounded-2xl px-3.5 py-3 focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] transition-all">
-                    <MapPin className="w-4 h-4 text-[#FF6B35] mr-2.5 shrink-0" />
-                    <input
-                      type="text"
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      placeholder={geoStatus === 'loading' ? 'Detecting your GPS location…' : 'City or area…'}
-                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#1C1917] dark:text-white placeholder-[#A8A29E] outline-none pr-8"
-                    />
-                    {/* Live GPS Trigger Button */}
+                    {/* Vertical Divider */}
+                    <div className="hidden sm:block w-[1px] h-7 bg-[#2E2824] dark:bg-white/15 shrink-0 mx-2" />
+
+                    {/* Location Field (Desktop / Tablet) */}
+                    <div ref={locDropdownRef} className="hidden sm:flex items-center w-52 lg:w-64 shrink-0 px-2 relative group/loc">
+                      <MapPin className="w-4 h-4 text-[#FF6B35] shrink-0 mr-2" />
+                      <input
+                        ref={locationInputRef}
+                        type="text"
+                        value={locationInput}
+                        onFocus={() => setIsLocDropdownOpen(true)}
+                        onChange={(e) => {
+                          setLocationInput(e.target.value);
+                          setIsLocDropdownOpen(true);
+                        }}
+                        placeholder={geoStatus === 'loading' ? 'Detecting...' : 'Type city or area...'}
+                        className="w-full bg-transparent text-sm font-medium text-white placeholder-[#8E8782] outline-none pr-14"
+                      />
+                      <div className="absolute right-1.5 flex items-center gap-1">
+                        {locationInput && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLocationInput('');
+                              locationInputRef.current?.focus();
+                              setIsLocDropdownOpen(true);
+                            }}
+                            title="Clear location"
+                            className="p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            refreshGeo();
+                            setIsLocDropdownOpen(false);
+                          }}
+                          title={geoStatus === 'success' ? 'Location detected · Click to refresh GPS' : 'Click to detect your current location'}
+                          className="p-1 rounded-full hover:bg-[#FF6B35]/20 text-[#FF6B35] transition-colors cursor-pointer"
+                        >
+                          {geoStatus === 'loading' ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#FF6B35]" />
+                          ) : geoStatus === 'success' ? (
+                            <div className="relative flex items-center justify-center">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5" />
+                              <Crosshair className="w-3.5 h-3.5 text-emerald-500" />
+                            </div>
+                          ) : (
+                            <Crosshair className="w-3.5 h-3.5 text-[#FF6B35]" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Desktop Auto-Suggestion Dropdown */}
+                      <AnimatePresence>
+                        {isLocDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 top-full mt-2.5 w-80 sm:w-[380px] bg-[#13110F] border border-[#2E2722] rounded-2xl p-2.5 shadow-[0_30px_90px_rgba(0,0,0,0.98),0_0_40px_rgba(255,107,53,0.12)] z-[9999] space-y-1.5"
+                          >
+                            {/* Live GPS Option */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                refreshGeo();
+                                setIsLocDropdownOpen(false);
+                              }}
+                              className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all bg-[#1C1815] hover:bg-[#26201B] border border-[#2C2621] hover:border-[#FF6B35]/40 text-[#FF6B35] cursor-pointer group"
+                            >
+                              <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/15 border border-[#FF6B35]/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <Crosshair className="w-4 h-4 text-[#FF6B35]" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-xs text-white">Use Current GPS Location</span>
+                                  {geoStatus === 'success' && (
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                                  )}
+                                </div>
+                                <span className="block text-[11px] text-[#A8A29E] font-medium truncate mt-0.5">
+                                  {userGeo?.display || 'Auto-detect via satellite & Wi-Fi'}
+                                </span>
+                              </div>
+                            </button>
+
+                            <div className="flex items-center justify-between px-2 pt-1 pb-0.5 text-[10px] font-black uppercase tracking-wider text-[#8E8782] border-b border-[#241F1B]">
+                              <span>{locationInput.trim() ? 'Search Results' : 'Popular Cities & Towns'}</span>
+                              {isSearchingLoc ? (
+                                <div className="flex items-center gap-1 text-[#FF6B35]">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span className="text-[10px] lowercase">searching...</span>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-zinc-500 font-normal lowercase">
+                                  {filteredLocations.length} places
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Suggestions List */}
+                            <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                              {filteredLocations.length > 0 ? (
+                                filteredLocations.map((loc, idx) => {
+                                  const isSelected =
+                                    locationInput.toLowerCase() === loc.display.toLowerCase() ||
+                                    locationInput.toLowerCase() === loc.city.toLowerCase();
+                                  return (
+                                    <button
+                                      key={`${loc.display}-${idx}`}
+                                      type="button"
+                                      onClick={() => selectLocation(loc.display)}
+                                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold transition-all text-left cursor-pointer group ${
+                                        isSelected
+                                          ? 'bg-[#FF6B35] text-white shadow-md'
+                                          : 'bg-[#181412] hover:bg-[#221D19] text-zinc-200 border border-[#241F1B] hover:border-[#382F28]'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                          isSelected ? 'bg-white/20 text-white' : 'bg-[#FF6B35]/15 text-[#FF6B35]'
+                                        }`}>
+                                          <MapPin className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div className="truncate flex flex-col min-w-0">
+                                          <div className="flex items-center gap-2 truncate">
+                                            <span className={`font-bold text-sm leading-tight ${isSelected ? 'text-white' : 'text-white'}`}>
+                                              {loc.city}
+                                            </span>
+                                            {loc.district && (
+                                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
+                                                isSelected ? 'bg-white/25 text-white' : 'bg-[#FF6B35]/20 text-[#FF6B35] border border-[#FF6B35]/30'
+                                              }`}>
+                                                {loc.district}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className={`text-[11px] truncate mt-0.5 ${isSelected ? 'text-white/90' : 'text-[#8E8782]'}`}>
+                                            {loc.subtitle || `${loc.state}, ${loc.country}`}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {isSelected && <Check className="w-4 h-4 shrink-0 ml-2" />}
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => selectLocation(locationInput)}
+                                  className="w-full flex items-center gap-2.5 p-3 rounded-xl text-xs font-semibold text-zinc-300 hover:bg-[#221D19] hover:text-white transition-all text-left cursor-pointer border border-[#241F1B]"
+                                >
+                                  <MapPin className="w-4 h-4 text-[#FF6B35] shrink-0" />
+                                  <span>Search directly for &quot;{locationInput}&quot;</span>
+                                </button>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Location Field (Mobile only) */}
+                    <div ref={mobileLocDropdownRef} className="sm:hidden w-full flex flex-col border-t border-[#2C2724] dark:border-white/10 relative">
+                      <div className="flex items-center px-3 py-2 relative">
+                        <MapPin className="w-4 h-4 text-[#FF6B35] shrink-0 mr-2" />
+                        <input
+                          type="text"
+                          value={locationInput}
+                          onFocus={() => setIsLocDropdownOpen(true)}
+                          onChange={(e) => {
+                            setLocationInput(e.target.value);
+                            setIsLocDropdownOpen(true);
+                          }}
+                          placeholder={geoStatus === 'loading' ? 'Detecting GPS...' : 'City or area...'}
+                          className="w-full bg-transparent text-xs font-medium text-white placeholder-[#8E8782] outline-none pr-14"
+                        />
+                        <div className="absolute right-3 flex items-center gap-1.5">
+                          {locationInput && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLocationInput('');
+                                setIsLocDropdownOpen(true);
+                              }}
+                              title="Clear location"
+                              className="p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              refreshGeo();
+                              setIsLocDropdownOpen(false);
+                            }}
+                            title="Detect GPS"
+                            className="p-1 text-[#FF6B35]"
+                          >
+                            <Crosshair className="w-3.5 h-3.5 text-[#FF6B35]" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Mobile Suggestions Dropdown */}
+                      <AnimatePresence>
+                        {isLocDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 6 }}
+                            className="p-2.5 bg-[#13110F] border-t border-[#2C2724] space-y-1.5 max-h-64 overflow-y-auto"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                refreshGeo();
+                                setIsLocDropdownOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2.5 p-2 rounded-lg text-xs font-bold text-[#FF6B35] bg-[#1C1815] border border-[#2C2621] text-left"
+                            >
+                              <Crosshair className="w-3.5 h-3.5 text-[#FF6B35]" />
+                              <span>Use Current GPS Location</span>
+                            </button>
+
+                            <div className="flex items-center justify-between px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#8E8782]">
+                              <span>{locationInput.trim() ? 'Matching Locations' : 'Popular Cities'}</span>
+                              {isSearchingLoc && <Loader2 className="w-2.5 h-2.5 text-[#FF6B35] animate-spin" />}
+                            </div>
+
+                            {filteredLocations.slice(0, 8).map((loc, idx) => (
+                              <button
+                                key={`m-${loc.display}-${idx}`}
+                                type="button"
+                                onClick={() => selectLocation(loc.display)}
+                                className="w-full flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-zinc-200 bg-[#181412] hover:bg-[#221D19] border border-[#241F1B] text-left"
+                              >
+                                <div className="truncate flex flex-col min-w-0">
+                                  <div className="flex items-center gap-1.5 truncate">
+                                    <span className="font-bold text-white">{loc.city}</span>
+                                    {loc.district && (
+                                      <span className="text-[9px] px-1 py-0.2 rounded bg-[#FF6B35]/20 text-[#FF6B35] font-bold uppercase border border-[#FF6B35]/30">
+                                        {loc.district}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-[#8E8782] truncate">
+                                    {loc.subtitle || `${loc.state}, ${loc.country}`}
+                                  </span>
+                                </div>
+                                {locationInput.toLowerCase() === loc.display.toLowerCase() && (
+                                  <Check className="w-3.5 h-3.5 text-[#FF6B35] shrink-0 ml-2" />
+                                )}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Action Button */}
                     <button
                       type="button"
-                      onClick={refreshGeo}
-                      title={geoStatus === 'success' ? 'Location detected · Click to refresh GPS' : 'Click to detect your current location'}
-                      className="absolute right-2.5 p-1.5 rounded-xl hover:bg-[#FF6B35]/15 text-[#FF6B35] transition-all cursor-pointer group"
+                      onClick={openModal}
+                      className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] hover:from-[#FF5A1F] hover:to-[#E03A00] text-white font-bold text-sm sm:text-base rounded-xl sm:rounded-full shadow-[0_4px_18px_rgba(255,107,53,0.4)] hover:shadow-[0_6px_24px_rgba(255,107,53,0.6)] transition-all shrink-0 cursor-pointer flex items-center justify-center gap-2 group"
                     >
-                      {geoStatus === 'loading' ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-[#FF6B35]" />
-                      ) : geoStatus === 'success' ? (
-                        <div className="relative flex items-center justify-center">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5" />
-                          <Crosshair className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-                        </div>
-                      ) : (
-                        <Crosshair className="w-4 h-4 text-[#FF6B35] group-hover:scale-110 transition-transform" />
-                      )}
+                      <span>Search</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   </div>
-                </div>
-
-                {/* Guest & Time Strip */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-[#FFF5F0] dark:border-white/5">
-                  <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-[#78716C] dark:text-zinc-300">
-                    <div className="flex items-center gap-1.5 bg-[#FFF8F4] dark:bg-white/[0.05] px-3 py-1.5 rounded-xl border border-[#FFE8DC] dark:border-white/10">
-                      <Users className="w-3.5 h-3.5 text-[#FF6B35]" />
-                      <span>{guestsCount} Guests</span>
-                      <button onClick={() => setGuestsCount(Math.max(1, guestsCount - 1))} className="hover:text-[#FF6B35] ml-1 px-1">-</button>
-                      <button onClick={() => setGuestsCount(guestsCount + 1)} className="hover:text-[#FF6B35] px-1">+</button>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 bg-[#FFF8F4] dark:bg-white/[0.05] px-3 py-1.5 rounded-xl border border-[#FFE8DC] dark:border-white/10">
-                      <Clock className="w-3.5 h-3.5 text-[#FF6B35]" />
-                      <span>{timeSlot}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={openModal}
-                    className="px-6 py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FF4D0F] hover:from-[#FF551A] hover:to-[#E8390A] text-white font-black text-xs sm:text-sm rounded-2xl shadow-[0_6px_22px_rgba(255,107,53,0.35)] hover:shadow-[0_10px_32px_rgba(255,107,53,0.5)] transition-all shrink-0 cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <span>Book Now</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Popular Tags */}
-                <div className="flex items-center gap-2 flex-wrap pt-0.5 text-[11px] text-[#78716C] dark:text-zinc-400 font-bold">
-                  <span className="text-[#A8A29E] uppercase tracking-wide">Trending:</span>
-                  {['Sushi', 'Truffle Pizza', 'Burgers', 'Steak', 'Biryani'].map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => setSearchQuery(tag)}
-                      className="px-2.5 py-0.5 rounded-lg bg-[#FFF5F0] dark:bg-white/[0.05] border border-[#FFE8DC] dark:border-white/10 hover:text-[#FF6B35] hover:border-[#FF6B35] transition-colors"
-                    >
-                      {tag}
-                    </button>
-                  ))}
                 </div>
               </motion.div>
             </div>
@@ -515,18 +1009,46 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════════
           2. STATS MILESTONE BAR
       ══════════════════════════════════════════════════════════ */}
-      <section className="py-8 bg-white/80 dark:bg-white/[0.02] backdrop-blur-md border-y border-[#FFE8DC] dark:border-white/10">
+      <section className="py-10 sm:py-14 bg-white/40 dark:bg-white/[0.02] backdrop-blur-xl border-y border-[#FFE8DC] dark:border-white/10 relative overflow-hidden">
         <div className={containerCls}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {stats.map((s) => (
-              <div key={s.id} className="space-y-0.5">
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1C1917] dark:text-white tracking-tight">
-                  <Counter value={s.value} decimals={s.decimals || 0} />{s.suffix}
-                </p>
-                <p className="text-xs sm:text-sm font-bold text-[#78716C] dark:text-zinc-400">{s.label}</p>
-                <p className="text-[10px] text-[#A8A29E] font-medium hidden sm:block">{s.sub}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {stats.map((s) => {
+              const Icon = s.icon;
+              return (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: s.id * 0.08 }}
+                  className="group relative bg-white/70 dark:bg-[#151311]/90 backdrop-blur-xl border border-[#FFE8DC] dark:border-white/10 hover:border-[#FF6B35]/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm hover:shadow-[0_10px_30px_rgba(255,107,53,0.12)] transition-all duration-300 hover:-translate-y-1 flex flex-col items-center sm:items-start text-center sm:text-left"
+                >
+                  {/* Ambient Corner Glow on Hover */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-tr-2xl sm:rounded-tr-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  {/* Icon Badge */}
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#FFF5F0] dark:bg-white/[0.06] border border-[#FFE8DC] dark:border-white/10 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-[#FF6B35]/15 transition-all duration-300">
+                    <Icon className="w-5 h-5 text-[#FF6B35]" />
+                  </div>
+
+                  {/* Value */}
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1C1917] dark:text-white tracking-tight leading-none mb-1.5 flex items-center">
+                    <Counter value={s.value} decimals={s.decimals || 0} formatCommas={s.formatCommas} />
+                    <span className="text-[#FF6B35]">{s.suffix}</span>
+                  </div>
+
+                  {/* Label */}
+                  <p className="text-xs sm:text-sm font-bold text-[#1C1917] dark:text-zinc-200 leading-snug">
+                    {s.label}
+                  </p>
+
+                  {/* Subtext */}
+                  <p className="text-[11px] text-[#A8A29E] dark:text-zinc-400 font-medium mt-0.5">
+                    {s.sub}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
