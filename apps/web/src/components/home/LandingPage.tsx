@@ -19,6 +19,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Locate, RefreshCw, Crosshair, Loader2 } from 'lucide-react';
 
 import { LocationSuggestionItem, popularLocations, cleanPlaceName } from '@/lib/locationData';
+import { LocationPickerModal } from '@/components/location/LocationPickerModal';
 
 /* ─── Static Data ────────────────────────────────────────────── */
 const stats = [
@@ -258,19 +259,21 @@ function Counter({ value, decimals = 0, formatCommas = false }: { value: number;
 ════════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { openModal } = useAuthModalStore();
-  const { location: userGeo, status: geoStatus, refresh: refreshGeo, setManual } = useUserLocation();
+  const { location: userGeo, status: geoStatus, refresh: refreshGeo, setManual, clearLocation } = useUserLocation();
   const [searchTab, setSearchTab] = useState<'table' | 'food' | 'both'>('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationInput, setLocationInput] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('quickbite_user_location');
-        if (saved) return saved;
+        if (saved && !saved.toLowerCase().includes('thekkinezhath')) return saved;
+        if (saved) localStorage.removeItem('quickbite_user_location');
       } catch {}
     }
     return '';
   });
   const [isLocDropdownOpen, setIsLocDropdownOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [remoteSuggestions, setRemoteSuggestions] = useState<LocationSuggestionItem[]>([]);
   const [isSearchingLoc, setIsSearchingLoc] = useState(false);
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -528,7 +531,7 @@ export default function LandingPage() {
 
   // Auto-fill initial location if empty
   useEffect(() => {
-    if (userGeo?.display && !locationInput) {
+    if (userGeo?.display && !locationInput && !userGeo.display.toLowerCase().includes('thekkinezhath')) {
       setLocationInput(userGeo.display);
     }
   }, [userGeo]);
@@ -577,7 +580,11 @@ export default function LandingPage() {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6B35]" />
                 </span>
                 <span className="text-[11px] font-black text-[#FF6B35] uppercase tracking-widest">
-                  {userGeo?.city ? `NOW LIVE IN ${userGeo.city.toUpperCase()}` : 'NOW LIVE IN YOUR AREA'} · 25+ CITIES
+                  {locationInput.trim()
+                    ? `NOW LIVE IN ${cleanPlaceName(locationInput.split(',')[0]).toUpperCase()}`
+                    : userGeo?.city
+                    ? `NOW LIVE IN ${userGeo.city.toUpperCase()}`
+                    : 'NOW LIVE IN YOUR AREA'} · 25+ CITIES
                 </span>
               </motion.div>
 
@@ -687,6 +694,7 @@ export default function LandingPage() {
                             type="button"
                             onClick={() => {
                               setLocationInput('');
+                              clearLocation();
                               locationInputRef.current?.focus();
                               setIsLocDropdownOpen(true);
                             }}
@@ -766,6 +774,26 @@ export default function LandingPage() {
                                 </span>
                               )}
                             </div>
+
+                            {/* Quick City Chips */}
+                            {!locationInput.trim() && (
+                              <div className="flex items-center gap-1.5 flex-wrap px-1 py-1">
+                                {['Vengara', 'Malappuram', 'Kozhikode', 'Kannur', 'Kakkancheri', 'Kochi', 'Thrissur'].map((c) => (
+                                  <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => {
+                                      const match = popularLocations.find((l) => l.city.toLowerCase() === c.toLowerCase());
+                                      if (match) selectLocation(match.display);
+                                      else selectLocation(`${c}, Kerala`);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-[#1D1916] hover:bg-[#FF6B35]/20 border border-[#2D2620] hover:border-[#FF6B35]/40 text-zinc-300 hover:text-white text-[11px] font-bold transition-all cursor-pointer"
+                                  >
+                                    {c}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
 
                             {/* Suggestions List */}
                             <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
@@ -850,6 +878,7 @@ export default function LandingPage() {
                               type="button"
                               onClick={() => {
                                 setLocationInput('');
+                                clearLocation();
                                 setIsLocDropdownOpen(true);
                               }}
                               title="Clear location"
@@ -897,6 +926,26 @@ export default function LandingPage() {
                               <span>{locationInput.trim() ? 'Matching Locations' : 'Popular Cities'}</span>
                               {isSearchingLoc && <Loader2 className="w-2.5 h-2.5 text-[#FF6B35] animate-spin" />}
                             </div>
+
+                            {/* Mobile Quick City Chips */}
+                            {!locationInput.trim() && (
+                              <div className="flex items-center gap-1 flex-wrap px-1 py-1">
+                                {['Vengara', 'Malappuram', 'Kozhikode', 'Kannur', 'Kakkancheri', 'Kochi'].map((c) => (
+                                  <button
+                                    key={`mob-chip-${c}`}
+                                    type="button"
+                                    onClick={() => {
+                                      const match = popularLocations.find((l) => l.city.toLowerCase() === c.toLowerCase());
+                                      if (match) selectLocation(match.display);
+                                      else selectLocation(`${c}, Kerala`);
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-[#1D1916] border border-[#2D2620] text-zinc-300 text-[10px] font-bold"
+                                  >
+                                    {c}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
 
                             {filteredLocations.slice(0, 8).map((loc, idx) => (
                               <button
@@ -1519,6 +1568,14 @@ export default function LandingPage() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* ── Exact Location Picker Modal ── */}
+      <LocationPickerModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        currentLocation={locationInput}
+        onSelectLocation={selectLocation}
+      />
 
     </div>
   );

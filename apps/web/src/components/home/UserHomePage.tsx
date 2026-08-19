@@ -139,12 +139,13 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
   const [query, setQuery] = useState('');
   const [nearbyIndex, setNearbyIndex] = useState(0);
 
-  const { location: userGeo, status: geoStatus, refresh: refreshGeo, setManual } = useUserLocation();
+  const { location: userGeo, status: geoStatus, refresh: refreshGeo, setManual, clearLocation } = useUserLocation();
   const [locationInput, setLocationInput] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('quickbite_user_location');
-        if (saved) return saved;
+        if (saved && !saved.toLowerCase().includes('thekkinezhath')) return saved;
+        if (saved) localStorage.removeItem('quickbite_user_location');
       } catch {}
     }
     return '';
@@ -358,7 +359,7 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
 
   // Initial location fill if empty
   useEffect(() => {
-    if (userGeo?.display && !locationInput) {
+    if (userGeo?.display && !locationInput && !userGeo.display.toLowerCase().includes('thekkinezhath')) {
       setLocationInput(userGeo.display);
     }
   }, [userGeo]);
@@ -496,6 +497,7 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
                       type="button"
                       onClick={() => {
                         setLocationInput('');
+                        clearLocation();
                         locationInputRef.current?.focus();
                         setIsLocDropdownOpen(true);
                       }}
@@ -575,6 +577,26 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
                           </span>
                         )}
                       </div>
+
+                      {/* Quick City Chips */}
+                      {!locationInput.trim() && (
+                        <div className="flex items-center gap-1.5 flex-wrap px-1 py-1">
+                          {['Vengara', 'Malappuram', 'Kozhikode', 'Kannur', 'Kakkancheri', 'Kochi', 'Thrissur'].map((c) => (
+                            <button
+                              key={`user-chip-${c}`}
+                              type="button"
+                              onClick={() => {
+                                const match = popularLocations.find((l) => l.city.toLowerCase() === c.toLowerCase());
+                                if (match) selectLocation(match.display);
+                                else selectLocation(`${c}, Kerala`);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-[#1D1916] hover:bg-[#FF6B35]/20 border border-[#2D2620] hover:border-[#FF6B35]/40 text-zinc-300 hover:text-white text-[11px] font-bold transition-all cursor-pointer"
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Suggestions List */}
                       <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
@@ -659,6 +681,7 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
                         type="button"
                         onClick={() => {
                           setLocationInput('');
+                          clearLocation();
                           setIsLocDropdownOpen(true);
                         }}
                         title="Clear location"
@@ -706,6 +729,26 @@ export default function UserHomePage({ user }: { user: AuthUser }) {
                         <span>{locationInput.trim() ? 'Matching Locations' : 'Popular Cities'}</span>
                         {isSearchingLoc && <Loader2 className="w-2.5 h-2.5 text-[#FF6B35] animate-spin" />}
                       </div>
+
+                      {/* Mobile Quick City Chips */}
+                      {!locationInput.trim() && (
+                        <div className="flex items-center gap-1 flex-wrap px-1 py-1">
+                          {['Vengara', 'Malappuram', 'Kozhikode', 'Kannur', 'Kakkancheri', 'Kochi'].map((c) => (
+                            <button
+                              key={`user-mob-chip-${c}`}
+                              type="button"
+                              onClick={() => {
+                                const match = popularLocations.find((l) => l.city.toLowerCase() === c.toLowerCase());
+                                if (match) selectLocation(match.display);
+                                else selectLocation(`${c}, Kerala`);
+                              }}
+                              className="px-2 py-0.5 rounded bg-[#1D1916] border border-[#2D2620] text-zinc-300 text-[10px] font-bold"
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {filteredLocations.slice(0, 8).map((loc, idx) => (
                         <button

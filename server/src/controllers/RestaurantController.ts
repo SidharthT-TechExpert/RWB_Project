@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { restaurantService } from '../services/RestaurantService';
+import { bankVerificationService } from '../services/BankVerificationService';
 import { sendSuccess, sendCreated } from '../utils/response';
 
 export class RestaurantController {
@@ -45,7 +46,7 @@ export class RestaurantController {
     } catch (error) { next(error); }
   }
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try { sendSuccess(res, 'Restaurant updated', await restaurantService.updateRestaurant(req.params.id, req.user!.userId, req.body)); }
+    try { sendSuccess(res, 'Restaurant updated', await restaurantService.updateRestaurant(req.params.id, req.user!.userId, req.body, req.user!.role)); }
     catch (error) { next(error); }
   }
   async addTable(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -89,6 +90,23 @@ export class RestaurantController {
       const { q, page, limit } = req.query;
       const result = await restaurantService.searchRestaurants(q as string, page ? Number(page) : undefined, limit ? Number(limit) : undefined);
       sendSuccess(res, 'Search results', result.restaurants, 200, result.meta);
+    } catch (error) { next(error); }
+  }
+
+  async getBankDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ownerId = req.user!.userId;
+      const restaurantId = req.query.restaurantId as string | undefined;
+      const data = await bankVerificationService.getOwnerBankDetails(ownerId, restaurantId);
+      sendSuccess(res, 'Bank details retrieved', data);
+    } catch (error) { next(error); }
+  }
+
+  async submitBankRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ownerId = req.user!.userId;
+      const data = await bankVerificationService.submitBankRequest(ownerId, req.body);
+      sendCreated(res, 'Bank verification request submitted. Pending admin approval.', data);
     } catch (error) { next(error); }
   }
 }

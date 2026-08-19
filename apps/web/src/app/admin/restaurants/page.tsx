@@ -37,6 +37,8 @@ const STATUS_COLORS: Record<string, string> = {
   inactive: 'secondary',
 };
 
+import { AdminBankApprovals } from '@/components/admin/AdminBankApprovals';
+
 interface MinimalRestaurantForm {
   name: string;
   ownerName: string;
@@ -56,6 +58,7 @@ const DEFAULT_MINIMAL_FORM: MinimalRestaurantForm = {
 };
 
 export default function AdminRestaurantsPage() {
+  const [activeView, setActiveView] = useState<'restaurants' | 'bank-approvals'>('restaurants');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -224,6 +227,43 @@ export default function AdminRestaurantsPage() {
           </Button>
         </div>
       </div>
+
+      {/* ── View Switcher Tabs ── */}
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveView('restaurants')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer ${
+            activeView === 'restaurants'
+              ? 'bg-brand-500 text-white shadow-md'
+              : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>All Restaurants</span>
+          <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-white/20">
+            {restaurants.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveView('bank-approvals')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all cursor-pointer ${
+            activeView === 'bank-approvals'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Bank Verification & Approvals</span>
+        </button>
+      </div>
+
+      {activeView === 'bank-approvals' ? (
+        <AdminBankApprovals />
+      ) : (
+        <>
 
       {/* ── Main Restaurants Table ── */}
       <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
@@ -540,6 +580,8 @@ export default function AdminRestaurantsPage() {
           </div>
         )}
       </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }

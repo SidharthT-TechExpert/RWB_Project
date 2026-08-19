@@ -15,6 +15,12 @@ router.get('/restaurants/pending', adminController.getPendingRestaurants.bind(ad
 router.patch('/restaurants/:id/approve', adminController.approveRestaurant.bind(adminController));
 router.patch('/restaurants/:id/reject', adminController.rejectRestaurant.bind(adminController));
 router.patch('/restaurants/:id/suspend', adminController.suspendRestaurant.bind(adminController));
+
+// Bank Verification Requests Management
+router.get('/bank-requests', adminController.getBankRequests.bind(adminController));
+router.patch('/bank-requests/:id/approve', adminController.approveBankRequest.bind(adminController));
+router.patch('/bank-requests/:id/reject', adminController.rejectBankRequest.bind(adminController));
+
 router.post('/coupons', adminController.createCoupon.bind(adminController));
 router.get('/coupons', adminController.getCoupons.bind(adminController));
 router.put('/coupons/:id', adminController.updateCoupon.bind(adminController));

@@ -28,6 +28,30 @@ export interface IRestaurant extends Document {
   minimumOrderAmount?: number; preparationTime: number;
   taxPercentage: number; serviceChargePercentage: number;
   acceptsPreOrders: boolean; acceptsTableBooking: boolean;
+  bankDetails?: {
+    bankName: string;
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    branchName?: string;
+    accountType: 'current' | 'savings';
+    upiId?: string;
+    payoutSchedule: 'daily' | 'weekly' | 'monthly';
+    isVerified: boolean;
+    lastApprovedAt?: Date;
+  };
+  pendingBankRequest?: {
+    requestId: string;
+    bankName: string;
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    branchName?: string;
+    accountType: 'current' | 'savings';
+    upiId?: string;
+    payoutSchedule: 'daily' | 'weekly' | 'monthly';
+    submittedAt: Date;
+  };
   createdAt: Date; updatedAt: Date;
 }
 
@@ -61,6 +85,30 @@ const RestaurantSchema = new Schema<IRestaurant>(
     tags: [String], minimumOrderAmount: Number, preparationTime: { type: Number, default: 30 },
     taxPercentage: { type: Number, default: 5 }, serviceChargePercentage: { type: Number, default: 10 },
     acceptsPreOrders: { type: Boolean, default: true }, acceptsTableBooking: { type: Boolean, default: true },
+    bankDetails: {
+      bankName: { type: String, trim: true },
+      accountHolderName: { type: String, trim: true },
+      accountNumber: { type: String, trim: true },
+      ifscCode: { type: String, trim: true, uppercase: true },
+      branchName: { type: String, trim: true },
+      accountType: { type: String, enum: ['current', 'savings'], default: 'current' },
+      upiId: { type: String, trim: true },
+      payoutSchedule: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'daily' },
+      isVerified: { type: Boolean, default: false },
+      lastApprovedAt: { type: Date },
+    },
+    pendingBankRequest: {
+      requestId: { type: String },
+      bankName: { type: String },
+      accountHolderName: { type: String },
+      accountNumber: { type: String },
+      ifscCode: { type: String },
+      branchName: { type: String },
+      accountType: { type: String },
+      upiId: { type: String },
+      payoutSchedule: { type: String },
+      submittedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );

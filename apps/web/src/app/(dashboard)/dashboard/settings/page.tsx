@@ -3,18 +3,19 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, Clock, MapPin, Phone, Globe, Percent } from 'lucide-react';
+import { Save, Clock, MapPin, Phone, Globe, Percent, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
 import { useMyRestaurants } from '@/hooks/useRestaurants';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/utils';
+import { BankDetailsManager } from '@/components/dashboard/BankDetailsManager';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export default function DashboardSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'hours' | 'payments'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'hours' | 'payments' | 'bank'>('general');
   const { data: myRestaurants } = useMyRestaurants();
   const restaurant = myRestaurants?.data?.[0];
   const qc = useQueryClient();
@@ -69,6 +70,7 @@ export default function DashboardSettingsPage() {
     { id: 'general', label: 'General', icon: Globe },
     { id: 'hours', label: 'Opening Hours', icon: Clock },
     { id: 'payments', label: 'Pricing', icon: Percent },
+    { id: 'bank', label: 'Bank & Payouts', icon: Building2 },
   ] as const;
 
   if (!restaurant) {
@@ -138,34 +140,44 @@ export default function DashboardSettingsPage() {
       {/* Opening hours */}
       {activeTab === 'hours' && (
         <div className="space-y-4">
-          {hours.map((h, i) => (
-            <div key={h.day} className="flex items-center gap-4 p-4 rounded-xl border">
-              <div className="w-28 shrink-0">
-                <p className="text-sm font-medium capitalize">{h.day}</p>
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer shrink-0">
+          {hours.map((entry, idx) => (
+            <div key={entry.day} className="flex items-center justify-between p-3 rounded-xl border bg-card">
+              <span className="text-sm font-medium capitalize w-28">{entry.day}</span>
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={h.isOpen}
-                  onChange={(e) => setHours((prev) => prev.map((x, idx) => idx === i ? { ...x, isOpen: e.target.checked } : x))}
+                  checked={entry.isOpen}
+                  onChange={(e) => {
+                    const next = [...hours];
+                    next[idx].isOpen = e.target.checked;
+                    setHours(next);
+                  }}
                   className="w-4 h-4 rounded accent-brand-500"
                 />
-                <span className="text-sm">{h.isOpen ? 'Open' : 'Closed'}</span>
+                <span className="text-xs text-muted-foreground">{entry.isOpen ? 'Open' : 'Closed'}</span>
               </label>
-              {h.isOpen && (
-                <div className="flex items-center gap-3 flex-1">
+              {entry.isOpen && (
+                <div className="flex items-center gap-2">
                   <input
                     type="time"
-                    value={h.openTime}
-                    onChange={(e) => setHours((prev) => prev.map((x, idx) => idx === i ? { ...x, openTime: e.target.value } : x))}
-                    className="h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={entry.openTime}
+                    onChange={(e) => {
+                      const next = [...hours];
+                      next[idx].openTime = e.target.value;
+                      setHours(next);
+                    }}
+                    className="px-2 py-1 text-xs border rounded-lg bg-background"
                   />
-                  <span className="text-muted-foreground text-sm">to</span>
+                  <span className="text-xs text-muted-foreground">to</span>
                   <input
                     type="time"
-                    value={h.closeTime}
-                    onChange={(e) => setHours((prev) => prev.map((x, idx) => idx === i ? { ...x, closeTime: e.target.value } : x))}
-                    className="h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={entry.closeTime}
+                    onChange={(e) => {
+                      const next = [...hours];
+                      next[idx].closeTime = e.target.value;
+                      setHours(next);
+                    }}
+                    className="px-2 py-1 text-xs border rounded-lg bg-background"
                   />
                 </div>
               )}
@@ -189,6 +201,13 @@ export default function DashboardSettingsPage() {
             <Save className="h-4 w-4" /> Save Pricing
           </Button>
         </form>
+      )}
+
+      {/* Bank & Payouts */}
+      {activeTab === 'bank' && (
+        <div className="pt-2">
+          <BankDetailsManager />
+        </div>
       )}
     </div>
   );
