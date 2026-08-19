@@ -142,23 +142,6 @@ export function useUserLocation(): UseUserLocationResult {
     } catch {}
   };
 
-  const setManual = (display: string) => {
-    if (!display.trim()) return;
-    const parts = display.split(',');
-    const newLoc: UserLocation = {
-      city: parts[0]?.trim() || display,
-      state: parts[1]?.trim() || 'Kerala',
-      country: 'India',
-      display,
-      isManual: true,
-    };
-    setLocation(newLoc);
-    setStatus('success');
-    try {
-      localStorage.setItem(STORAGE_KEY, display);
-    } catch {}
-  };
-
   useEffect(() => {
     // Only run GPS when explicitly requested by user (trigger > 0)
     if (trigger === 0) {
