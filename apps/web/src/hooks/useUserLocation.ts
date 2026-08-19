@@ -14,50 +14,81 @@ export interface UserLocation {
 type LocationStatus = 'idle' | 'loading' | 'success' | 'error' | 'denied';
 
 interface UseUserLocationResult {
-  location:    UserLocation | null;
-  status:      LocationStatus;
-  error:       string | null;
-  refresh:     () => void;
-  setManual:   (display: string) => void;
+  location:      UserLocation | null;
+  status:        LocationStatus;
+  error:         string | null;
+  refresh:       () => void;
+  setManual:     (display: string) => void;
+  clearLocation: () => void;
 }
 
 const STORAGE_KEY = 'quickbite_user_location';
 
-/* ─── Reverse geocoding via OpenStreetMap Nominatim ─────────── */
+/* ─── Reverse geocoding via Multi-Source (BigDataCloud + OpenStreetMap Nominatim zoom=14) ─── */
 async function reverseGeocode(lat: number, lon: number): Promise<UserLocation> {
-  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'QuickBite-App/1.0 (contact@quickbite.app)' },
-  });
-  if (!res.ok) throw new Error('Reverse geocoding failed');
-  const json = await res.json();
+  // 1. Try BigDataCloud API first (Clean locality & town names in India/Kerala)
+  try {
+    const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    const bdcRes = await fetch(bdcUrl);
+    if (bdcRes.ok) {
+      const bdc = await bdcRes.json();
+      const city = bdc.locality || bdc.city || bdc.principalSubdivisionDescription || '';
+      const district = bdc.localityInfo?.administrative?.find(
+        (a: any) => a.adminLevel === 6 || a.description?.includes('District')
+      )?.name?.replace(/ District$/i, '') || '';
+      const state = bdc.principalSubdivision || 'Kerala';
+      const country = bdc.countryName || 'India';
 
-  const addr = json.address || {};
+      if (city && !city.toLowerCase().includes('thekkinezhath')) {
+        const parts = [city, district && district !== city ? district : '', state].filter(Boolean);
+        const display = parts.join(', ');
+        return { city, state, country, display, lat, lon, isManual: false };
+      }
+    }
+  } catch {}
 
-  const locality =
-    addr.suburb ||
-    addr.town ||
-    addr.city ||
-    addr.village ||
-    addr.municipality ||
-    addr.neighbourhood ||
-    addr.state_district ||
-    'Your City';
+  // 2. Fallback to OpenStreetMap Nominatim with zoom=14 (town/city scale)
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=14&format=json&addressdetails=1&accept-language=en`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'QuickBite-App/1.0 (contact@quickbite.app)' },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const addr = json.address || {};
 
-  const cleanLocality = locality.replace(/ District$/i, '').trim();
-  const district = (addr.state_district || addr.county || '').replace(/ District$/i, '').trim();
-  const state = addr.state || addr.region || '';
-  const country = addr.country_code?.toUpperCase() || addr.country || 'IN';
+      // Prioritize city -> town -> municipality -> village over micro-compounds
+      const rawLocality =
+        addr.city ||
+        addr.town ||
+        addr.municipality ||
+        addr.village ||
+        addr.county ||
+        addr.state_district ||
+        'Kerala';
 
-  const parts = [
-    cleanLocality,
-    district && district !== cleanLocality ? district : '',
-    state,
-  ].filter(Boolean);
+      const locality = rawLocality.toLowerCase().includes('thekkinezhath')
+        ? (addr.city || addr.town || addr.state_district || 'Kerala')
+        : rawLocality;
 
-  const display = parts.length > 0 ? parts.join(', ') : cleanLocality;
+      const cleanLocality = locality.replace(/ District$/i, '').trim();
+      const district = (addr.state_district || addr.county || '').replace(/ District$/i, '').trim();
+      const state = addr.state || addr.region || 'Kerala';
+      const country = addr.country || 'India';
 
-  return { city: cleanLocality, state, country, display, lat, lon, isManual: false };
+      const parts = [
+        cleanLocality,
+        district && district !== cleanLocality ? district : '',
+        state,
+      ].filter(Boolean);
+
+      const display = parts.length > 0 ? parts.join(', ') : cleanLocality;
+
+      return { city: cleanLocality, state, country, display, lat, lon, isManual: false };
+    }
+  } catch {}
+
+  return { city: 'Kerala', state: 'Kerala', country: 'India', display: 'Kerala, India', lat, lon, isManual: false };
 }
 
 /* ─── Main hook ──────────────────────────────────────────────── */
@@ -66,7 +97,7 @@ export function useUserLocation(): UseUserLocationResult {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
+        if (saved && !saved.toLowerCase().includes('thekkinezhath')) {
           return {
             city: saved.split(',')[0].trim(),
             state: saved.split(',')[1]?.trim() || '',
@@ -74,14 +105,16 @@ export function useUserLocation(): UseUserLocationResult {
             display: saved,
             isManual: true,
           };
+        } else if (saved) {
+          localStorage.removeItem(STORAGE_KEY);
         }
       } catch {}
     }
     return null;
   });
-  const [status,   setStatus  ] = useState<LocationStatus>('idle');
+  const [status,   setStatus  ] = useState<LocationStatus>(() => (location ? 'success' : 'idle'));
   const [error,    setError   ] = useState<string | null>(null);
-  const [trigger,  setTrigger ] = useState(0);   // increment to re-fetch
+  const [trigger,  setTrigger ] = useState(0);   // increment to re-fetch on user demand
 
   const setManual = (display: string) => {
     if (!display.trim()) return;
@@ -100,10 +133,18 @@ export function useUserLocation(): UseUserLocationResult {
     } catch {}
   };
 
+  const clearLocation = () => {
+    setLocation(null);
+    setStatus('idle');
+    setError(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+  };
+
   useEffect(() => {
-    // If user already picked manual location and trigger is 0 (initial load), keep user's manual choice
-    if (location?.isManual && trigger === 0) {
-      setStatus('success');
+    // Only run GPS when explicitly requested by user (trigger > 0)
+    if (trigger === 0) {
       return;
     }
 
@@ -146,5 +187,5 @@ export function useUserLocation(): UseUserLocationResult {
 
   const refresh = () => setTrigger((t) => t + 1);
 
-  return { location, status, error, refresh, setManual };
+  return { location, status, error, refresh, setManual, clearLocation };
 }

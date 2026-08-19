@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Wallet, ArrowDownRight, ArrowUpRight, DollarSign, Building2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { BankDetailsManager } from '@/components/dashboard/BankDetailsManager';
 
 interface Withdrawal {
   id: string;
@@ -41,7 +42,10 @@ export default function WalletPage() {
         </Button>
       </div>
 
-      {/* Balance Cards */}
+      {/* Bank Details Management with Admin Approval Workflow */}
+      <BankDetailsManager />
+
+      {/* Balance & Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="p-6 rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-900/40 via-[#0A1227] to-[#080F22] shadow-xl relative overflow-hidden">
           <div className="absolute right-3 top-3 text-purple-500/10">
@@ -57,18 +61,11 @@ export default function WalletPage() {
 
         <div className="p-6 rounded-2xl border border-white/8 bg-[#080F22]/90 backdrop-blur-xl shadow-xl flex flex-col justify-between">
           <div>
-            <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Linked Bank Account</p>
-            <div className="flex items-center gap-3 mt-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">JP Morgan Chase</p>
-                <p className="text-xs text-slate-400 font-mono">Account ending **** 4821</p>
-              </div>
-            </div>
+            <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Estimated Monthly Payout</p>
+            <p className="text-2xl font-black text-white mt-2">$18,450.00</p>
+            <p className="text-xs text-slate-400 mt-1">Based on rolling 30-day dining volume.</p>
           </div>
-          <p className="text-[10px] text-emerald-400 font-bold mt-4">Verified & Active</p>
+          <p className="text-[10px] text-emerald-400 font-bold mt-4">Verified Settlement Partner</p>
         </div>
 
         <div className="p-6 rounded-2xl border border-white/8 bg-[#080F22]/90 backdrop-blur-xl shadow-xl flex flex-col justify-between">

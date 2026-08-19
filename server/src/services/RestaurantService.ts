@@ -156,10 +156,12 @@ export class RestaurantService {
     return { restaurants, meta: buildPaginationMeta(p, l, total) };
   }
 
-  async updateRestaurant(id: string, ownerId: string, data: Partial<IRestaurant>): Promise<IRestaurant> {
+  async updateRestaurant(id: string, ownerId: string, data: Partial<IRestaurant>, callerRole?: string): Promise<IRestaurant> {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) throw new NotFoundError('Restaurant');
-    if (restaurant.ownerId !== ownerId) throw new AuthorizationError();
+    if (callerRole !== ROLES.BRANCH_MANAGER && callerRole !== ROLES.ADMIN && restaurant.ownerId !== ownerId) {
+      throw new AuthorizationError();
+    }
     const updated = await Restaurant.findByIdAndUpdate(id, data, { new: true }) as IRestaurant;
     await deleteCache(`restaurant:${id}`);
     await deleteCache(`restaurant:slug:${restaurant.slug}`);

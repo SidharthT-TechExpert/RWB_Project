@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { adminService } from '../services/AdminService';
+import { bankVerificationService } from '../services/BankVerificationService';
 import { sendSuccess, sendCreated } from '../utils/response';
 
 export class AdminController {
@@ -48,6 +49,38 @@ export class AdminController {
     try {
       const { code, restaurantId, orderAmount } = req.body;
       sendSuccess(res, 'Coupon validated', await adminService.validateCoupon(code, req.user!.userId, restaurantId, orderAmount));
+    } catch (error) { next(error); }
+  }
+
+  async getBankRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { status, page, limit } = req.query;
+      const result = await bankVerificationService.getAdminBankRequests(
+        status as string | undefined,
+        Number(page) || 1,
+        Number(limit) || 20
+      );
+      sendSuccess(res, 'Bank verification requests retrieved', result.requests, 200, result.meta);
+    } catch (error) { next(error); }
+  }
+
+  async approveBankRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const adminId = req.user!.userId;
+      const { id } = req.params;
+      const { adminNotes } = req.body;
+      const updated = await bankVerificationService.approveBankRequest(id, adminId, adminNotes);
+      sendSuccess(res, 'Bank details approved and activated successfully', updated);
+    } catch (error) { next(error); }
+  }
+
+  async rejectBankRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const adminId = req.user!.userId;
+      const { id } = req.params;
+      const { reason } = req.body;
+      const updated = await bankVerificationService.rejectBankRequest(id, adminId, reason);
+      sendSuccess(res, 'Bank verification request rejected', updated);
     } catch (error) { next(error); }
   }
 }
