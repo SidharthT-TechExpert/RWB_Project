@@ -30,16 +30,15 @@
 - **Company Onboarding & Directory**:
   - Create and edit restaurant/company profiles (brand name, owner contact, address, description, cuisine tags, cover/gallery images, login credentials for the partner).
   - Upload and manage company verification documents (e.g., business license, food safety certificate, tax/GST ID, bank/KYC docs).
-- **Dynamic Split Ratio Management**:
+  - **Company Visibility Status**: `Draft` / `Active` / `Suspended` toggle so Admin can prepare a partner's profile & photos completely before exposing it to VIPs.
+- **Dynamic Split Ratio Management & Snapshot Integrity**:
   - Configure revenue split ratio per company (e.g., `85% Partner / 15% Platform`, adjustable per partner).
+  - Store the exact `platformSplitPct` / `partnerSplitPct` snapshot on every booking at creation time so future ratio edits never corrupt historical revenue or settlements.
 - **Sales, Revenue & Bookings Overview**:
   - Platform-wide KPIs: Total Gross Sales, Platform Commission Earned, Partner Net Payable, Total Bookings (`Table` / `Food` / `Both`).
   - Filterable table of all bookings and sales by restaurant, date range, and status.
-
-#### Recommended Phase 1 Enhancements
-- **Company Visibility Status**: `Draft` / `Active` / `Suspended` toggle so Admin can prepare a partner's profile & photos completely before exposing it to VIPs.
-- **Split Ratio Snapshot Integrity**: Every booking stores the exact `platformSplitPct` / `partnerSplitPct` active at booking creation time so future ratio edits never corrupt historical revenue or settlements.
-- **Settlement Status Controls**: Monthly settlement summary per restaurant with ability to record payout reference (`Pending` → `Paid` with transaction ref & date).
+- **Settlement Status Controls**:
+  - Monthly settlement summary per restaurant with ability to record payout reference (`Pending` → `Paid` with transaction ref & date).
 
 ---
 
@@ -49,19 +48,25 @@
 - **Premium Table Management**:
   - Manage premium table count, seating capacity (e.g., 2, 4, 6, 8 guests), and table price.
   - Upload table photos and set table titles/descriptions (e.g., *Chef's Counter*, *Private Booth*, *Terrace VIP*).
+- **Slot-Based Availability Engine**:
+  - Pair tables with **operating hours + time slots + slot duration** (e.g., 90 or 120 min blocks) so tables are bookable per date/time without double-booking.
+- **Holiday & Availability Calendar**:
+  - **Full Day (Fixed Default)**: All regular dates default to the restaurant's fixed full-day operating schedule and full slot list unless overridden on the calendar.
+  - **Half-Day Override**: Partners can switch any specific date (or date range) to **Half Day** (e.g., First Half / Lunch-only or Second Half / Dinner-only, or custom active hours), automatically exposing only the slots within that half-day window.
+  - **Holiday / Closed Override**: Partners can mark specific dates as **Holiday (Full-Day Closed)** to block bookings for the entire day, and can revert any override back to the default **Full Day** at any time.
 - **Premium Food Menu Setup & Management**:
   - Create and manage menu categories and premium dishes (name, description, price, photo, dietary tag, availability toggle).
 - **Bookings Management**:
   - View all incoming VIP bookings (distinguishing `Table Only`, `Food Only`, and `Both`, with pre-ordered dish list when applicable).
   - **Create Booking ("Create Book Table")**: Ability for the restaurant to manually create/log a table booking (e.g., phone/concierge VIP request) so inventory stays accurate.
+  - **Simple Booking Status Actions**: `Confirmed` → `Checked In / Seated` → `Completed` / `No-Show` / `Cancelled`.
 - **Revenue & Monthly Settlement**:
   - View restaurant-specific gross revenue, platform fee breakdown (per configured split ratio), and net earnings.
   - View monthly settlement history and breakdown.
 
 #### Recommended Phase 1 Enhancements
-- **Slot-Based Availability Engine**: Pair tables with **operating hours + time slots + slot duration** (e.g., 90 or 120 min blocks) so tables are bookable per date/time without double-booking.
 - **Direct vs Platform Booking Flag**: Partner-created offline/walk-in bookings block table availability without charging platform commission (or tracked separately in revenue reports).
-- **Simple Booking Status Actions**: `Confirmed` → `Checked In / Seated` → `Completed` / `No-Show` / `Cancelled`.
+- **Holiday Override Conflict Guard**: Warn the partner if they attempt to mark a date as Holiday/Half-Day when confirmed VIP bookings already exist on affected slots.
 
 ---
 
@@ -76,6 +81,7 @@
   - Primary CTA to start booking.
 - **Adaptive Booking Flow**:
   - **Step 1 — Booking Mode Selector**: User selects **"Table Only"**, **"Food Only"**, or **"Both (Table + Food)"**.
+  - **Calendar-Aware Date & Slot Picker**: Respects the restaurant's Holiday & Availability Calendar (Holiday dates disabled; Half-Day dates show only slots in the active window; unmodified dates use the default Full-Day slots).
   - **Dynamic Form Arrangement**: Remaining fields adapt strictly to the selected mode:
     - If **Table Only**: Date, Time Slot, Party Size → Choose Table (displaying capacity & table price) → Guest notes.
     - If **Food Only**: Fulfillment type (Pickup / Dine-in Pre-order) + Date/Time → Select Premium Menu Items & quantities (with item prices & subtotal).
@@ -99,6 +105,9 @@
    - Individual named/typed VIP tables (e.g., *Window Booth #1 — 4 seats — ₹1,500*) or categorized inventory with quantity, booked against `(restaurantId, tableId, date, timeSlot)`.
 3. **Offline/Manual Restaurant Bookings**:
    - Occupy the same `(tableId, date, timeSlot)` slot to prevent double-booking, tagged `source = 'partner_manual'` so settlement math stays accurate.
+4. **Holiday & Availability Calendar Resolution**:
+   - Every unedited date defaults to **Full Day** (fixed base operating hours & time slots).
+   - Calendar overrides per date support `half_day` (e.g., First Half / Second Half or custom open–close window filtering available slots) and `holiday` (full-day closed — zero bookable slots), with option to reset back to `full_day`.
 
 ---
 
