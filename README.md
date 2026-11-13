@@ -143,10 +143,11 @@ Qickbite/
 ## ⚡ Getting Started
 
 ### Prerequisites
-- **Node.js**: `v20.x` or higher
-- **Package Manager**: `npm` / `pnpm`
-- **Database**: PostgreSQL `v15+`
-- **In-Memory Store**: Redis `v7+`
+- **Runtime Environment**: Node.js (`v20.x` or higher)
+- **Backend Framework**: NestJS (`v10.x` / `@nestjs/cli`)
+- **Package Manager**: `npm` or `pnpm`
+- **Primary Database**: PostgreSQL (`v15+` or any standard SQL engine)
+- **In-Memory Store**: Redis (`v7+` for WebSockets pub/sub and rate limiting)
 
 ### Installation & Local Setup
 
