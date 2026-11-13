@@ -3,10 +3,10 @@
 **Document Type:** Technical Guidelines  
 **Project:** QuickBite – Phase 1 MVP  
 **Stack Overview:**
-- **Frontend:** React (Web), React Native (Mobile), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
+- **Frontend:** React (Web & Table QR Web), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
 - **Backend:** NestJS & TypeScript (Modular Monolith), DTO Validation (`class-validator` / `ValidationPipe`), Centralized Response & Exception Handling, Hardened Security Measurements
 - **Primary Database:** Relational SQL (PostgreSQL Recommended)  
-**Applies To:** Admin Portal, Restaurant B2B Portal, Table QR Digital Menu, Mobile Application, Backend API & Database  
+**Applies To:** Admin Portal, Restaurant B2B Portal, Table QR Digital Menu, Backend API & Database  
 
 ---
 
@@ -14,7 +14,7 @@
 
 This document defines the strict technical standards and architectural mandates for building, scaling, and maintaining the QuickBite platform.
 
-The PRD defines **what the product must do**. These Technical Guidelines define **how every layer must be implemented, validated, secured, cached, and unified across both web and mobile environments**.
+The PRD defines **what the product must do**. These Technical Guidelines define **how every layer must be implemented, validated, secured, cached, and unified across web environments**.
 
 ---
 
@@ -28,7 +28,6 @@ The tech stack is fixed across all development tracks:
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Web Portals (Admin & B2B)      │ React (TypeScript, Tailwind CSS)                      │
 │ On-Table Digital Menu (Diners) │ React (Lightweight Responsive Web, Zero App Download) │
-│ Mobile Application (Staff/Ops) │ React Native (TypeScript, Cross-Platform iOS/Android) │
 │ Form & Input Validation        │ Zod (Strict schema validation across forms)           │
 │ Client State Management        │ Zustand (Lightweight modular client stores)           │
 │ Server State & Caching         │ TanStack Query v5 (Data fetching, caching & sync)     │
@@ -52,11 +51,11 @@ The tech stack is fixed across all development tracks:
 
 ---
 
-# 3. Frontend Architecture Standards (React & React Native)
+# 3. Frontend Architecture Standards (React)
 
 ## 3.1 Form & Schema Validation (Zod)
 
-All form inputs, user mutations, and query parameters on both React and React Native surfaces must be validated using **Zod** schemas:
+All form inputs, user mutations, and query parameters on React surfaces must be validated using **Zod** schemas:
 - **Schema Single Source of Truth:** Form validation schemas reside in dedicated `*.schema.ts` files (e.g. `restaurant.schema.ts`, `menu-item.schema.ts`, `table-order.schema.ts`).
 - **Hook Form Integration:** React forms must use `@hookform/resolvers/zod` with `react-hook-form` to ensure zero uncontrolled re-renders and client-side error feedback before sending HTTP payloads.
 - **Type Inference:** TypeScript types must be inferred directly from Zod schemas (`export type MenuItemFormData = z.infer<typeof MenuItemSchema>;`).
@@ -368,7 +367,7 @@ Whether placed via diner QR or punched manually by restaurant staff, orders must
 ## 8.2 Real-Time Rush Board Sync
 
 - **WebSocket Gateway:** `@nestjs/websockets` handles room-isolated events by `restaurantId`.
-- **Status Progression:** Updates (`CONFIRMED` → `PREPARING` → `SERVED` → `COMPLETED`) push immediately to connected B2B and staff mobile clients ($\le 500\text{ms}$).
+- **Status Progression:** Updates (`CONFIRMED` → `PREPARING` → `SERVED` → `COMPLETED`) push immediately to connected B2B clients ($\le 500\text{ms}$).
 - **Instant Stock Sync:** Sold-out toggles immediately notify active Table QR diner sessions to disable the dish.
 
 ---
@@ -410,16 +409,6 @@ project-root/
 │   ├── package.json
 │   └── README.md
 │
-├── mobile-app/          # React Native Cross-Platform Mobile Application
-│   ├── src/
-│   │   ├── components/  # Native touch components, order cards
-│   │   ├── screens/     # Live Rush Board, Manual Punch, Stock Toggle
-│   │   ├── stores/      # Zustand native stores
-│   │   ├── hooks/       # TanStack Query hooks & WebSocket listeners
-│   │   └── schemas/     # Zod validation schemas
-│   ├── package.json
-│   └── README.md
-│
 ├── backend/             # NestJS & TypeScript Modular Monolith
 │   ├── src/
 │   │   ├── modules/     # 12 domain business modules
@@ -452,7 +441,7 @@ The backend API and UI workflows must strictly enforce the core business rules f
 2. **Split Ratio Scope:** The commercial split ratio is an Admin profile configuration setting only. It must **not** execute automated order deductions or alter customer bill totals in Phase 1 or Phase 2.
 3. **Instant Stock (86'd) Guard:** Dishes marked `is_available = false` must be immediately rejected if submitted in an order.
 4. **Calendar Override Hierarchy:** `Holiday` overrides block all bookings/orders for the date; `Half Day` overrides clamp active slots to the shift window; unmodified days inherit `Full Day` default operating hours.
-5. **Restaurant Order Punching:** B2B Portal and staff mobile app must allow restaurant staff to manually create and manage active table orders without requiring customer QR scanning.
+5. **Restaurant Order Punching:** B2B Portal allows restaurant staff to manually create and manage active table orders without requiring customer QR scanning.
 
 ---
 
@@ -460,7 +449,7 @@ The backend API and UI workflows must strictly enforce the core business rules f
 
 Before releasing each phase, verify:
 
-### Frontend (React & React Native)
+### Frontend (React)
 - [ ] All forms and user inputs validated with **Zod** schemas.
 - [ ] Client UI state managed cleanly with **Zustand** stores.
 - [ ] Server data fetching, caching, and cache invalidation handled via **TanStack Query v5**.
