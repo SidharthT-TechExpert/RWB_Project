@@ -1,315 +1,320 @@
-# QuickBite Buildathon – Technical Guidelines
+# QuickBite – Technical Guidelines
 
 **Document Type:** Technical Guidelines  
 **Project:** QuickBite – Phase 1 MVP  
-**Applies To:** Admin Portal, Restaurant B2B Portal, Table QR Digital Menu, Backend & Database  
-**Status:** Mandatory for all teams  
+**Stack Overview:** Frontend (React, React Native), Backend (NestJS & TypeScript), Database (Relational SQL)  
+**Applies To:** Admin Portal, Restaurant B2B Portal, Table QR Digital Menu, Mobile Application, Backend & Database  
 
 ---
 
 ## 1. Purpose
 
-This document defines the technical implementation standards that teams must follow while building the QuickBite platform during the Buildathon.
+This document defines the technical implementation standards for building and scaling the QuickBite platform.
 
-The PRD defines **what the product must do**. These Technical Guidelines define the minimum standards for **how the product should be built, structured, documented, and submitted**.
+The PRD defines **what the product must do**. These Technical Guidelines define the standards for **how the product must be built, structured, secured, and documented**.
 
-Teams are free to choose suitable technologies where this document does not specify a mandatory choice.
-
-The implementation must remain strictly aligned with the PRD and the official Buildathon Guidelines.
+The implementation must remain strictly aligned with the PRD and the architectural standards detailed below.
 
 ---
 
 # 2. Mandatory Technical Requirements
 
-The following requirements are mandatory.
+The following requirements are mandatory across the entire codebase.
 
 ### 2.1 Backend Architecture
 
-The backend **must use a Modular Monolithic Architecture**.
+The backend **must use a Modular Monolithic Architecture built with NestJS and TypeScript**.
 
-The backend should be developed as one deployable application while maintaining clear internal modules based on business domains.
-
-Do not implement the backend as a collection of independently deployed microservices for this Buildathon unless explicitly approved by the organizers.
+- The backend is developed and deployed as a unified application while enforcing strict internal domain boundaries using NestJS modules (`@Module()`).
+- Each business domain must encapsulate its controllers, services, repositories, DTOs, and entities.
+- Inter-module communication must happen via exported NestJS service interfaces or internal event emitters, maintaining clean dependency injection.
+- Do not implement the backend as a collection of independently deployed microservices; a modular monolith maximizes development velocity, eliminates distributed transaction overhead, and provides clear domain isolation.
 
 ### 2.2 Database
 
-The primary application database **must be SQL-based**.
+The primary application database **must be SQL-based (Relational Database)**.
 
-Acceptable examples include:
-- PostgreSQL (Recommended)
-- MySQL
-- Microsoft SQL Server
-- SQLite
-- Oracle
-- Other suitable relational SQL databases
+Acceptable choices:
+- **PostgreSQL** (Recommended)
+- **MySQL**
+- **Microsoft SQL Server**
+- **SQLite** (for local development/testing only)
 
-NoSQL databases such as MongoDB, DynamoDB, Cassandra, or CouchDB must not be used as the primary application database.
+**Rules:**
+- NoSQL databases (such as MongoDB, DynamoDB, Cassandra, or CouchDB) must **not** be used as the primary application database.
+- Relational integrity, ACID transactions, and strict foreign keys are mandatory for financial orders, table allocations, and compliance documents.
+- Supporting technologies such as **Redis** may be used for caching, WebSockets pub/sub (real-time Live Rush Board), rate limiting, and temporary session data.
 
-Supporting technologies such as Redis may be used for appropriate purposes such as caching, WebSockets pub/sub, queues, or temporary session data.
+### 2.3 Database Design
 
-### 2.3 Database Design Submission
+The database documentation and schema must include:
+- Entities & Tables
+- Columns & Data Types (`NUMERIC`/`DECIMAL` for financial amounts; `UUID`/`CUID` for primary keys)
+- Primary Keys & Foreign Keys
+- Relationships & Cardinality (1:1, 1:N, N:M)
+- Table Constraints (`NOT NULL`, `UNIQUE`, `CHECK`)
+- Performance Indexes
+- Normalization Decisions (Target 3NF for transactional tables)
+- Visual Entity-Relationship Diagram (ERD in Mermaid)
 
-The database design must be prepared and submitted **within the first 2 days of the Buildathon**.
+### 2.4 Application Surfaces & Tech Stack
 
-The database documentation must include, where applicable:
-- Entities
-- Tables
-- Columns
-- Data types
-- Primary keys
-- Foreign keys
-- Relationships
-- Constraints
-- Cardinality
-- Indexes
-- Normalization decisions
-- ER Diagram
-- Important database design decisions
-
-### 2.4 Application Surfaces
-
-The project must contain:
-1. **Admin Portal:** Web application for Super Admins to manage onboarding, documents, split settings, global orders, and monthly settlements.
-2. **B2B Portal:** Web application for Restaurant Owners to manage floor zones, tables, table QR codes, menus, instant stock (86'd) toggles, availability calendars, manual order punching, and live rush boards.
-3. **Table QR Digital Menu:** Responsive mobile web interface for in-venue diners scanning physical table QR codes (zero customer app download required).
-4. **Backend:** Dedicated server-side modular monolith with relational SQL database access.
+| Surface | Target Audience | Technology | Deployment / Environment |
+|---|---|---|---|
+| **Admin Portal** | Super Admins & Platform Ops | **React** (TypeScript, Tailwind CSS) | Web (Desktop/Tablet) |
+| **B2B Portal** | Restaurant Owners & Floor Managers | **React** (TypeScript, Tailwind CSS) | Web (Desktop/Tablet/POS) |
+| **Table QR Digital Menu** | In-Venue Diners | **React** (Lightweight Responsive Web) | Mobile Browsers (Zero App Download) |
+| **Mobile Application** | Restaurant Staff / Operations | **React Native** (TypeScript) | iOS & Android |
+| **Backend API** | All Surfaces | **NestJS & TypeScript** | Node.js Runtime (Modular Monolith) |
+| **Database** | Core Data Store | **SQL (PostgreSQL / Relational)** | Relational Database Engine |
 
 ---
 
 # 3. UI / Brand Guidelines
 
-## 3.1 Design Reference
+## 3.1 Design Standard
 
-The portals must maintain a clean, high-craft, professional aesthetic suitable for modern hospitality and B2B SaaS operations.
-
-**Design Standard:**
-- Responsive desktop and tablet optimization for Admin and B2B Portals.
-- Mobile-first, thumb-friendly, sub-second responsive layout for the Table QR Digital Menu.
-- High contrast, dark/light theme cohesion, accessible touch targets ($\ge 44\text{px}$ on mobile), and clear visual status indicators.
+The platform must maintain a clean, high-craft, professional aesthetic suitable for modern hospitality and B2B SaaS operations:
+- **Admin & B2B Portals:** High-density desktop and tablet layouts with responsive dashboards, data tables, intuitive filter controls, and modal workflows.
+- **Table QR Digital Menu:** Ultra-lightweight, mobile-first, thumb-friendly layout optimized for sub-second loading on cellular connections without requiring diner authentication or app downloads.
+- **Mobile Application (React Native):** Native gestures, fast touch response ($\ge 44\text{px}$ touch targets), high-contrast badges for kitchen rush visibility.
 
 ## 3.2 Theme Consistency
 
-The same visual language must be followed across:
-- Admin Portal
-- Restaurant B2B Portal
-- Table QR Digital Menu
-
-Teams must maintain consistency in:
-- Primary colour
-- Secondary colour
-- Background colours
-- Text colours
-- Button styles
-- Input styles
-- Status indicators (e.g., `Draft` = Amber, `Active` = Green, `Suspended` = Red)
-- Cards
-- Navigation
-- Typography
-- Border radius
-- Spacing
-- Icons
-- Error/success states
-
-The B2B Portal and Table QR Menu should feel like parts of the same cohesive hospitality ecosystem.
-
-## 3.3 Logo
-
-The official QuickBite logo and brand assets must be used consistently across all three surfaces.
-
-Do not modify the logo's proportions, shape, or visual identity without approval.
+The same visual language must be followed across all React and React Native surfaces:
+- **Primary Color:** Deep Slate / Indigo Navy (professional, clean)
+- **Secondary / Accent Color:** Vibrant Emerald Green (active, confirmed, online)
+- **Warning / Alert Colors:** Amber Orange (pending, preparing), Crimson Red (rejected, 86'd sold-out, cancelled)
+- **Backgrounds:** Clean neutral light/dark canvas (`#F8FAFC` light / `#0F172A` dark)
+- **Typography:** Modern clean sans-serif (`Inter`, `system-ui`)
+- **Status Indicators:**
+  - `Draft` = Muted Amber
+  - `Active` / `Approved` = Emerald Green
+  - `Suspended` / `Rejected` = Crimson Red
+  - `Confirmed` = Blue
+  - `Preparing` = Amber
+  - `Served` = Violet
+  - `Completed` = Emerald
 
 ---
 
 # 4. Repository Structure
 
-The root repository **must follow this structure**:
+The repository must follow a clean multi-project structure:
 
 ```text
 project-root/
 │
-├── admin-portal/
+├── admin-portal/        # React Web Application (Super Admin)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── README.md
 │
-├── b2b-portal/
+├── b2b-portal/          # React Web Application (Restaurant Management)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── README.md
 │
-├── table-qr-menu/
+├── table-qr-menu/       # React Mobile Web (On-Table Digital Menu & Ordering)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── README.md
 │
-├── backend/
+├── mobile-app/          # React Native Cross-Platform Mobile Application
+│   ├── src/
+│   ├── assets/
+│   ├── package.json
+│   └── README.md
 │
-├── docs/
+├── backend/             # NestJS & TypeScript Modular Monolith
+│   ├── src/
+│   │   ├── modules/
+│   │   ├── shared/
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── test/
+│   ├── prisma/ or ormconfig/
+│   ├── package.json
+│   └── README.md
+│
+├── docs/                # Project Engineering Documentation
+│   ├── PRD.md
+│   ├── technical-guidelines.md
+│   ├── architecture.md
+│   ├── api-documentation.md
+│   ├── database.md
+│   └── er-diagram.md
 │
 └── README.md
 ```
 
-Each application must remain independently understandable, runnable, and maintainable.
-
-## 4.1 Admin Portal
-
-```text
-admin-portal/
-├── src/
-├── public/
-├── tests/
-├── package.json
-└── README.md
-```
-
-## 4.2 B2B Portal
-
-```text
-b2b-portal/
-├── src/
-├── public/
-├── tests/
-├── package.json
-└── README.md
-```
-
-## 4.3 Table QR Digital Menu (Customer Surface)
-
-```text
-table-qr-menu/
-├── src/
-├── public/
-├── tests/
-├── package.json
-└── README.md
-```
-
-## 4.4 Backend
-
-```text
-backend/
-├── src/
-├── tests/
-├── migrations/
-├── seed/
-├── package.json
-└── README.md
-```
+Each surface must be independently runnable, with its own dedicated scripts, linting, and environment configurations.
 
 ---
 
-# 5. Backend Architecture – Modular Monolith
+# 5. Backend Architecture – NestJS Modular Monolith
 
-## 5.1 Mandatory Architecture
+## 5.1 Architecture Standard
 
-The backend must follow a **Modular Monolithic Architecture**.
-
-A recommended structure is:
+The backend utilizes **NestJS**, leveraging TypeScript decorators, dependency injection, and modular encapsulation to enforce domain separation.
 
 ```text
-backend/
-└── src/
-    ├── modules/
-    │   ├── auth/
-    │   ├── users/
-    │   ├── restaurants/
-    │   ├── documents/
-    │   ├── tables/
-    │   ├── zones/
-    │   ├── menu/
-    │   ├── calendar/
-    │   ├── orders/
-    │   ├── rush-board/
-    │   ├── settlements/
-    │   └── reports/
-    │
-    ├── shared/
-    │   ├── database/
-    │   ├── middleware/
-    │   ├── errors/
-    │   ├── utils/
-    │   ├── constants/
-    │   └── types/
-    │
-    ├── config/
-    ├── routes/
-    └── app.*
+backend/src/
+├── modules/
+│   ├── auth/                    # Authentication, JWT, Passport, Guards
+│   │   ├── auth.module.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   ├── dto/
+│   │   └── strategies/
+│   │
+│   ├── users/                   # Super Admins & Restaurant Owner credentials
+│   │   ├── users.module.ts
+│   │   ├── users.controller.ts
+│   │   ├── users.service.ts
+│   │   └── dto/
+│   │
+│   ├── restaurants/             # Restaurant profiles, split setting, activation gate
+│   │   ├── restaurants.module.ts
+│   │   ├── restaurants.controller.ts
+│   │   ├── restaurants.service.ts
+│   │   └── dto/
+│   │
+│   ├── documents/               # Legal compliance docs (FSSAI, GST, Bank, KYC)
+│   │   ├── documents.module.ts
+│   │   ├── documents.controller.ts
+│   │   ├── documents.service.ts
+│   │   └── dto/
+│   │
+│   ├── tables/                  # Dining tables, seating capacity, QR codes
+│   │   ├── tables.module.ts
+│   │   ├── tables.controller.ts
+│   │   ├── tables.service.ts
+│   │   └── dto/
+│   │
+│   ├── zones/                   # Dining floor zones (Indoor, Rooftop, Patio)
+│   │   ├── zones.module.ts
+│   │   ├── zones.controller.ts
+│   │   ├── zones.service.ts
+│   │   └── dto/
+│   │
+│   ├── menu/                    # Categories, food items, 86'd sold-out toggle
+│   │   ├── menu.module.ts
+│   │   ├── menu.controller.ts
+│   │   ├── menu.service.ts
+│   │   └── dto/
+│   │
+│   ├── calendar/                # Operating hours, holiday overrides, half-day shifts
+│   │   ├── calendar.module.ts
+│   │   ├── calendar.controller.ts
+│   │   ├── calendar.service.ts
+│   │   └── dto/
+│   │
+│   ├── orders/                  # Table orders (QR scanned & restaurant staff punched)
+│   │   ├── orders.module.ts
+│   │   ├── orders.controller.ts
+│   │   ├── orders.service.ts
+│   │   └── dto/
+│   │
+│   ├── rush-board/              # Real-time WebSocket gateway & active order tracking
+│   │   ├── rush-board.module.ts
+│   │   ├── rush-board.gateway.ts
+│   │   └── rush-board.service.ts
+│   │
+│   ├── settlements/             # Monthly financial consolidation & payout reference records
+│   │   ├── settlements.module.ts
+│   │   ├── settlements.controller.ts
+│   │   ├── settlements.service.ts
+│   │   └── dto/
+│   │
+│   └── reports/                 # Administrative & restaurant operational analytics
+│       ├── reports.module.ts
+│       ├── reports.controller.ts
+│       └── reports.service.ts
+│
+├── shared/
+│   ├── database/                # Relational SQL ORM configuration & migrations
+│   ├── filters/                 # Global HTTP exception filters
+│   ├── interceptors/            # Transform response & logging interceptors
+│   ├── guards/                  # RolesGuard, JwtAuthGuard, QrSignatureGuard
+│   ├── decorators/              # Custom decorators (@CurrentUser, @Roles)
+│   ├── constants/               # Global enums, error codes
+│   └── utils/                   # Crypto HMAC utilities, math helpers
+│
+├── app.module.ts                # Root module assembling all domain modules
+└── main.ts                      # Bootstrap entry point (CORS, Pipes, Swagger)
 ```
 
-The exact module names may be adjusted based on the final implementation, but business domains must remain clearly separated.
+## 5.2 NestJS Request Pipeline
 
-## 5.2 Module Independence
-
-Each module should ideally contain its own:
+Every incoming API request passes through a strictly typed, standard NestJS lifecycle:
 
 ```text
-module/
-├── controller/
-├── service/
-├── repository/
-├── model/
-├── routes/
-├── validation/
-└── types/
-```
-
-Not every module must contain every directory. Only introduce layers that are actually required.
-
-## 5.3 Recommended Request Flow
-
-A typical API request should follow a predictable flow:
-
-```text
-Client
+HTTP Request (React / React Native / QR Web)
   ↓
-Route
+Global Middleware (CORS, Helmet, Rate Limiter)
   ↓
-Authentication / Authorization
+Guards (JwtAuthGuard, RolesGuard, QrSignatureGuard)
   ↓
-Validation (e.g. Zod / Joi)
+Interceptors (LoggingInterceptor, TimeoutInterceptor)
   ↓
-Controller
+Pipes (ValidationPipe via class-validator / Zod)
   ↓
-Service / Business Logic
+Controller (@Controller routes - receives validated DTO)
   ↓
-Repository / Data Access (ORM / Query Builder)
+Service (@Injectable - business logic, activation checks, stock validations)
+  ↓
+Repository / Data Access Layer (SQL queries via Prisma / TypeORM)
   ↓
 SQL Database (PostgreSQL)
+  ↓
+Response Transform Interceptor ({ success: true, data: ... })
+  ↓
+HTTP Response
 ```
 
-- Business rules should not be placed directly inside route handlers.
-- Controllers should remain thin and delegate business logic to services.
-- Database queries should not be scattered throughout controllers.
+- **Controllers** remain thin: they only extract request parameters/body, invoke services, and return responses.
+- **Services** encapsulate all domain rules (e.g., verifying compliance document status before allowing activation, checking item stock before placing orders).
+- Direct raw database queries must never be written inside controllers.
 
 ---
 
-# 6. Business Module Boundaries
+# 6. Business Domain Module Boundaries
 
-Based on the PRD, the following domains should be considered when designing the backend:
-
-| Module | Responsibility |
-|---|---|
-| **Auth** | Login, authentication, token/session handling, password hashing |
-| **Users / Admins** | Super admin accounts and restaurant owner user profiles |
-| **Restaurants** | Restaurant profile onboarding, address, settings, commercial split ratio configuration |
-| **Documents** | Compliance document uploads, metadata tracking, and admin approval/rejection |
-| **Tables & Zones** | Floor zones, physical tables, seating capacity, cryptographic QR token binding |
-| **Menu** | Categories, dish items, pricing, photos, dietary tags, live 86'd stock toggle |
-| **Calendar** | Operating hours, base full-day schedule, half-day shifts, and holiday overrides |
-| **Orders** | Table orders placed via QR scan or manually created/punched by restaurant staff |
-| **Rush Board** | Real-time active orders and reservation board, status transitions (`Confirmed` → `Preparing` → `Served` → `Completed`) |
-| **Settlements** | Month-end gross sales consolidation, billing statements, and admin payout reference tracking |
-| **Reports** | Admin platform analytics and restaurant owner operational reports |
-
-The final module boundaries must be documented in `docs/architecture.md`.
+| Module | Core Responsibility | Key Invariants |
+|---|---|---|
+| **Auth** | Login, JWT generation, password verification | Passwords hashed with bcrypt (salt factor $\ge 10$); tokens carry `userId`, `role`, `restaurantId`. |
+| **Users** | Account management for Admins and Restaurant Owners | Email uniqueness enforced by database constraint. |
+| **Restaurants** | Profile data, commercial split percentage configuration, status | Activation Gate: Status cannot change to `ACTIVE` unless all 4 mandatory docs are `APPROVED`. |
+| **Documents** | FSSAI, GST, Bank Proof, KYC ID uploads & approvals | Private file storage; approval/rejection logged with admin ID and timestamp. |
+| **Tables & Zones** | Floor layout, table capacities, QR token generation | Cryptographic HMAC binding each QR URL to a valid physical table. |
+| **Menu** | Categories, dishes, prices, photos, dietary tags, stock status | Instant 86'd sold-out toggle updates status; orders containing sold-out items are rejected. |
+| **Calendar** | Operating hours, half-day shift limits, holiday overrides | Holiday overrides completely block dining orders; half-day overrides clamp active hours. |
+| **Orders** | QR-placed and manual staff-punched dining orders | Atomic SQL transaction; gross order amount recorded; order items snapshot food name & unit price. |
+| **Rush Board** | Real-time Kanban board for kitchen and floor staff | WebSocket events broadcast status updates (`Confirmed` → `Preparing` → `Served` → `Completed`). |
+| **Settlements** | Monthly gross billing consolidation and UTR payout recording | Commercial split ratio used for reporting; bank payout reference tracked with admin audit log. |
+| **Reports** | Operational metrics, gross sales summaries, popular dishes | Read-only aggregation queries optimized with database indexes. |
 
 ---
 
 # 7. API Guidelines
 
-## 7.1 API Style
+## 7.1 Style and Versioning
 
-The backend should expose a consistent HTTP RESTful API.
-
-Example:
+The backend exposes a standardized RESTful HTTP API with version prefix `/api/v1/`:
 
 ```text
+POST   /api/v1/auth/login
 GET    /api/v1/restaurants
 POST   /api/v1/restaurants
+GET    /api/v1/restaurants/:id/documents
+PATCH  /api/v1/documents/:id/status
 GET    /api/v1/restaurants/:id/tables
 POST   /api/v1/restaurants/:id/tables
-GET    /api/v1/restaurants/:id/menu
+GET    /api/v1/menu/items
 PATCH  /api/v1/menu/items/:id/stock
 POST   /api/v1/orders
 GET    /api/v1/orders/live
@@ -317,467 +322,248 @@ PATCH  /api/v1/orders/:id/status
 POST   /api/v1/settlements/monthly
 ```
 
-## 7.2 API Versioning
+## 7.2 Standard Response Format
 
-Use API versioning across all endpoints:
-
-```text
-/api/v1/...
-```
-
-## 7.3 Consistent Response Format
-
-Successful responses should follow a consistent structure:
+Successful responses must be wrapped consistently (via a NestJS `TransformInterceptor`):
 
 ```json
 {
   "success": true,
-  "data": {},
-  "message": "Resource fetched successfully"
+  "data": {
+    "orderId": "ord_88291a",
+    "orderNumber": "QB-1042",
+    "tableNumber": "T-12",
+    "status": "CONFIRMED",
+    "totalAmount": 1250.00
+  },
+  "message": "Order placed successfully",
+  "timestamp": "2026-11-13T18:50:00.000Z"
 }
 ```
 
-Error responses should also be consistent:
+Error responses must be captured via a global `HttpExceptionFilter`:
 
 ```json
 {
   "success": false,
   "error": {
-    "code": "DOCUMENT_MANDATORY_MISSING",
-    "message": "Cannot activate restaurant: mandatory compliance documents are missing or rejected."
-  }
+    "code": "ACTIVATION_GATE_BLOCKED",
+    "message": "Restaurant cannot be activated: mandatory compliance documents are missing or pending approval.",
+    "details": {
+      "missingOrUnapproved": ["DOC_FSSAI", "DOC_BANK"]
+    }
+  },
+  "timestamp": "2026-11-13T18:50:00.000Z"
 }
 ```
 
-## 7.4 HTTP Status Codes
+## 7.3 HTTP Status Codes
 
-Use appropriate HTTP status codes:
-- `200` – Successful request
-- `201` – Resource created
-- `204` – Successful request with no response body
-- `400` – Bad / invalid request
-- `401` – Unauthenticated
-- `403` – Unauthorized
-- `404` – Resource not found
-- `409` – Conflict (e.g., table slot already booked)
-- `422` – Validation failure
-- `500` – Internal server error
-
-## 7.5 API Documentation
-
-All implemented APIs must be documented.
-
-The documentation should include:
-- Endpoint
-- HTTP method
-- Authentication requirement
-- Request parameters
-- Request body
-- Response body
-- Status codes
-- Validation rules
-- Example request & response
-
-Swagger / OpenAPI documentation is strongly recommended.
+- `200 OK` – Successful GET, PATCH, or PUT
+- `201 Created` – Successful resource creation (POST)
+- `204 No Content` – Successful request with empty response
+- `400 Bad Request` – Malformed payload or validation error
+- `401 Unauthorized` – Missing or invalid authentication token
+- `403 Forbidden` – Insufficient role permissions or cross-tenant access violation
+- `404 Not Found` – Resource does not exist
+- `409 Conflict` – Resource conflict (e.g. duplicate email, table overlap)
+- `422 Unprocessable Entity` – Business rule violation (e.g. activating without approved docs)
+- `500 Internal Server Error` – Unhandled server exception (sanitized in production)
 
 ---
 
-# 8. Database Guidelines
+# 8. Database & Data Modeling Guidelines
 
-## 8.1 Relational Design
+## 8.1 Primary Database Standards
 
-The database should be designed around the business entities defined in the PRD:
-- `companies_restaurants`
-- `compliance_documents`
-- `dining_zones`
-- `restaurant_tables`
-- `calendar_overrides`
-- `menu_categories`
-- `food_items`
-- `table_orders`
-- `order_items`
-- `monthly_settlements`
+The database **must be relational SQL** (PostgreSQL recommended).
 
-## 8.2 Primary Keys
+- **Primary Keys:** Use `UUIDv4` or `CUID` strings for distributed safety and unguessable IDs.
+- **Foreign Keys:** Enforce referential integrity at the database level with explicit `ON DELETE RESTRICT` or `ON DELETE CASCADE` rules.
+- **Financial Fields:** Store all prices, item rates, gross amounts, and split totals using `DECIMAL(10, 2)` or `NUMERIC(10, 2)`. **Never use floating-point types (`FLOAT`, `DOUBLE`) for currency.**
+- **Timestamps:** Every table must include `created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()` and `updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`.
 
-Every table should have a clearly defined primary key.
+## 8.2 Indexing Strategy
 
-Use one consistent ID strategy across the project:
-- Recommended: UUID (v4 / v7) or CUID or BIGINT auto-increment.
-- Document the selected strategy in `docs/database.md`.
-
-## 8.3 Foreign Keys
-
-Relationships between entities must use proper foreign-key constraints with appropriate cascading / restrict policies.
-
-Do not rely only on application-level assumptions for critical relationships.
-
-## 8.4 Indexing
-
-Indexes should be created for frequently queried columns:
-- `restaurant_id` on all child tables
-- `table_id` on orders
-- `order_status` on orders
-- `category_id` on food items
-- `is_available` on food items
-- `document_type` and `status` on compliance documents
-- `override_date` on calendar overrides
-- `billing_month` on monthly settlements
-
-Do not create indexes blindly. Document important indexing decisions.
-
-## 8.5 Data Integrity
-
-Use database constraints where appropriate:
-- `NOT NULL`
-- `UNIQUE` (e.g., table number per restaurant, unique slug)
-- `CHECK` constraints (e.g., `price >= 0`, `capacity > 0`)
-- Appropriate defaults
-
-Critical financial values (order amounts, food prices) must use suitable `NUMERIC` / `DECIMAL(10,2)` types rather than floating-point numbers.
+Ensure compound or single-column indexes on high-throughput query columns:
+- `restaurants(status)`
+- `compliance_documents(restaurant_id, document_type)`
+- `restaurant_tables(restaurant_id, zone_id)`
+- `menu_categories(restaurant_id, display_order)`
+- `food_items(restaurant_id, category_id, is_available)`
+- `table_orders(restaurant_id, status, created_at)`
+- `table_orders(table_id, status)`
+- `calendar_overrides(restaurant_id, override_date)`
+- `monthly_settlements(restaurant_id, billing_month)`
 
 ---
 
-# 9. Order Processing and Table Locking Rules
+# 9. Order Lifecycle & Real-Time Sync
 
-When diners submit an order via QR or staff punch an order manually, the operation must be treated with atomic integrity:
+## 9.1 Atomic Order Submission Pipeline
+
+When a diner submits an order via the React Table QR Web client or restaurant staff punches an order in the React B2B Portal, the backend executes an atomic SQL transaction:
 
 ```text
-Submit Table Order
+1. Validate Table ID & Cryptographic HMAC Signature
    ↓
-Validate Table ID & Cryptographic Signature
+2. Verify Restaurant is Open (Operating Hours & Calendar Holiday Check)
    ↓
-Verify Dishes Are In Stock (is_available = true)
+3. Validate Dishes:
+   - Verify every item exists and belongs to the restaurant
+   - Verify is_available = true (reject immediately if any dish is 86'd / sold out)
    ↓
-Verify Restaurant is Open (Operating Hours & Calendar Check)
+4. Calculate Totals (Gross Item Amounts, Taxes)
    ↓
-Create Order & Line Items (Inside DB Transaction)
+5. Insert table_orders record (Status: CONFIRMED)
    ↓
-Update Table Status: Available -> Seated / Active Order
+6. Insert order_items records (Snapshot item_name, unit_price, quantity)
    ↓
-Emit Real-Time Event to Restaurant Live Rush Board (WebSocket)
+7. Update Table State: Mark Table Occupied
+   ↓
+8. Commit SQL Transaction
+   ↓
+9. Emit WebSocket Event to RushBoardGateway
+   (Instantly alerts Restaurant B2B Portal & Mobile App)
 ```
 
-- If an item in the cart was marked `Sold Out` right before submission, the transaction must roll back and inform the diner.
-- Manual order creation from the B2B portal must follow the identical validation and status transition pipeline.
+## 9.2 Real-Time Rush Board Updates
+
+- **NestJS Gateway:** A dedicated `RushBoardGateway` using `@nestjs/websockets` (Socket.io) handles room-based pub/sub isolated by `restaurantId`.
+- **Status Transitions:** As kitchen or waitstaff move an order from `CONFIRMED` → `PREPARING` → `SERVED` → `COMPLETED`, events are pushed to connected clients in $\le 500\text{ms}$.
+- **Instant 86'd Stock Toggle:** When a dish is toggled sold-out on the B2B portal or staff mobile app, an event notifies all active Table QR diner menus to grey out the item immediately.
 
 ---
 
 # 10. Naming Conventions
 
-Every team must follow documented naming conventions throughout the project.
+### Files & Folders
+- Folders: `kebab-case` (e.g. `admin-portal`, `b2b-portal`, `table-qr-menu`, `mobile-app`, `rush-board`)
+- NestJS files: Standard NestJS naming:
+  - `[name].module.ts`
+  - `[name].controller.ts`
+  - `[name].service.ts`
+  - `[name].entity.ts` / `[name].model.ts`
+  - `[name].gateway.ts`
+  - `create-[name].dto.ts`
+  - `update-[name].dto.ts`
+- React / React Native components: `PascalCase` (e.g. `RushBoard.tsx`, `TableGrid.tsx`, `MenuCategoryCard.tsx`)
+- Hooks: `camelCase` with `use` prefix (e.g. `useTableOrders.ts`, `useLiveMenu.ts`)
 
-Create:
-```text
-docs/naming-conventions.md
-```
+### Code Conventions (TypeScript)
+- Variables & Functions: `camelCase` (e.g. `restaurantId`, `calculateTotalGross()`, `toggleItemAvailability()`)
+- Classes, Types & Interfaces: `PascalCase` (e.g. `RestaurantService`, `TableOrder`, `OrderStatus`)
+- Constants & Enums: `UPPER_SNAKE_CASE` (e.g. `MAX_FILE_SIZE_BYTES`, `ORDER_STATUS_CONFIRMED`)
 
-## 10.1 Standards
-
-### Folders
-Use `kebab-case`:
-```text
-admin-portal/
-b2b-portal/
-table-qr-menu/
-user-management/
-```
-
-### TypeScript Variables & Functions
-Use `camelCase`:
-```ts
-const restaurantId = "rest_01";
-const grossAmount = 450.00;
-
-function createTableOrder() {}
-function toggleItemStock() {}
-function verifyComplianceDocument() {}
-```
-
-### Classes & Types / Interfaces
-Use `PascalCase`:
-```ts
-class OrderService {}
-interface RestaurantTable {}
-type OrderStatus = 'CONFIRMED' | 'PREPARING' | 'SERVED' | 'COMPLETED' | 'CANCELLED';
-```
-
-### Database Tables & Columns
-Use `snake_case`:
-```sql
-CREATE TABLE restaurant_tables (
-    id VARCHAR(36) PRIMARY KEY,
-    restaurant_id VARCHAR(36) NOT NULL,
-    table_number VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-### API Routes
-Use `kebab-case`:
-```text
-/api/v1/compliance-documents
-/api/v1/calendar-overrides
-/api/v1/live-rush-board
-```
+### Database (SQL)
+- Tables: Plural `snake_case` (e.g. `companies_restaurants`, `compliance_documents`, `food_items`, `table_orders`)
+- Columns: `snake_case` (e.g. `restaurant_id`, `unit_price`, `is_available`, `created_at`)
 
 ---
 
-# 11. Function and Code Quality Guidelines
+# 11. Authentication & Security Guidelines
 
-## 11.1 Single Responsibility
+## 11.1 Authentication Surfaces
 
-Functions should perform one clear responsibility.
+1. **Super Admin (React Admin Portal):**
+   - Authenticated via secure email/password and JWT Bearer tokens.
+   - Authorized with `@Roles('SUPER_ADMIN')` Guard.
+2. **Restaurant Owner (React B2B Portal & React Native Mobile App):**
+   - Authenticated via email/password and JWT Bearer tokens containing `restaurantId`.
+   - Authorized with `@Roles('RESTAURANT_OWNER')` Guard.
+   - **Tenant Isolation:** Every service query strictly filters by `restaurantId` from the authenticated user context. An owner can never query or mutate another restaurant's data.
+3. **Table QR Diner (React Mobile Web):**
+   - Zero-login, frictionless ordering.
+   - Authenticated via signed URL parameters: `?table=:tableId&sig=:hmac`.
+   - `QrSignatureGuard` validates HMAC signature against a secret restaurant key to prevent URL tampering.
 
-Avoid:
-```text
-One controller function → parse request → validate compliance → run SQL query → generate QR code → send email
-```
+## 11.2 Security Standards
 
-Prefer separating responsibilities into appropriate services and utilities.
-
-## 11.2 Function Naming
-
-Function names should clearly communicate the action:
-- `activateRestaurantIfCompliant()`
-- `generateTableQrCodes()`
-- `consolidateMonthlySettlement()`
-- `toggleDishAvailability()`
-
-Avoid vague names like `process()`, `handleData()`, or `doAction()`.
-
-## 11.3 Avoid Overengineering
-
-The project should be maintainable without unnecessary abstractions.
-
-Do not introduce:
-- Premature microservices
-- Excessive enterprise patterns where a simple service suffices
-- Unused dependencies
-- Complex abstractions without a direct PRD requirement
+- **Password Hashing:** `bcrypt` with salt rounds $\ge 10$, or `argon2`.
+- **SQL Injection Prevention:** All queries use parameterized statements or a type-safe ORM (Prisma / TypeORM). No string concatenation in SQL queries.
+- **XSS & Headers:** NestJS `helmet` enabled for security headers; input validation pipes stripping unwhitelisted properties (`whitelist: true, forbidNonWhitelisted: true`).
+- **Secrets Management:** Environment variables managed via `@nestjs/config`. Never commit `.env` files. Always provide `.env.example`.
+- **CORS:** Restricted to verified origins (Admin web URL, B2B web URL, Table QR web URL).
+- **Document Storage:** Private cloud storage (AWS S3) with pre-signed URLs (valid for 15 minutes) generated exclusively for authenticated Admin document reviews.
 
 ---
 
-# 12. Authentication and Authorization
+# 12. Testing Guidelines
 
-Authentication must be implemented for all protected application areas.
+## 12.1 Backend Testing (NestJS)
+- **Unit Tests (`*.spec.ts`):** Test individual services using Jest with mocked repositories and external dependencies.
+- **Integration & E2E Tests (`test/*.e2e-spec.ts`):** Use Supertest against the NestJS testing module to test end-to-end API flows:
+  - Activation gate enforcement (blocking activation without approved documents).
+  - Instant stock 86'd check (order rejection on sold-out dishes).
+  - Table order placement and status progression.
+  - Multi-tenant data isolation.
 
-### Super Admin
-- Full platform management authority over all companies, documents, commercial split configurations, and settlements.
-
-### Restaurant Owner (B2B Partner)
-- Access strictly restricted to data belonging to the owner's assigned restaurant.
-- An owner must never be able to view, query, or mutate another restaurant's tables, orders, menus, or financial records.
-
-### Table QR Diner Session
-- Zero-login, frictionless access.
-- Authenticated via cryptographically signed URL parameter (`?table=:tableId&sig=:hmac`) validating that the request originates from an authentic physical table QR code.
-
----
-
-# 13. Security Guidelines
-
-Security must be considered throughout development:
-- Secure password hashing using `bcrypt` (work factor $\ge 10$) or `argon2`.
-- Strict input validation using schemas (e.g. Zod / Joi) on all API endpoints.
-- SQL injection prevention via parameterized queries or a recognized ORM / query builder (e.g., Prisma, Drizzle, TypeORM, Kysely).
-- JWT token expiration and secure HTTP-only cookies where applicable.
-- Rate limiting on authentication routes to prevent brute-force attacks.
-- Strict CORS policies restricting B2B and Admin APIs to authorized origins.
-
-## 13.1 Secrets Management
-
-Never commit:
-- `.env`
-- `.env.local`
-- API keys, database passwords, JWT secrets, cloud credentials
-
-Always provide:
-```text
-.env.example
-```
-with placeholder values in each application folder.
+## 12.2 Frontend Testing (React & React Native)
+- **Component Tests:** Test critical UI components (menu cart, order status badges, sold-out toggles) using React Testing Library.
+- **Key Journeys:**
+  - *Admin Flow:* Login → Approve Compliance Docs → Activate Restaurant.
+  - *Restaurant Owner Flow:* Login → Create Zones/Tables → Build Menu → Receive Live Rush Order → Change Status.
+  - *Diner Flow:* Scan Table QR → View Menu → Place Order → Live Confirmation.
 
 ---
 
-# 14. File Upload Security
+# 13. Documentation Requirements
 
-The Admin Portal handles legal compliance documents (FSSAI, GST, Bank Proof, Owner ID), and the B2B Portal handles food imagery.
-
-Security requirements:
-- Strict MIME-type inspection (allow only `application/pdf`, `image/jpeg`, `image/png`, `image/webp`).
-- Max file size limits enforced on server (e.g., 10MB for documents, 5MB for food images).
-- Stored in secure cloud object storage (AWS S3 / Cloudinary).
-- Private access control for legal/KYC compliance documents (accessed only via short-lived signed URLs generated for authenticated Admins).
-
----
-
-# 15. Error Handling & Logging
-
-## 15.1 Error Handling
-- Never return raw database stack traces or database relation names to the client.
-- Return structured error JSON with standard HTTP status codes and actionable error messages.
-
-## 15.2 Logging
-Implement structured application logging (e.g., Winston, Pino).
-
-Log:
-- Authentication failures
-- Order placement events and status transitions
-- Document approval and rejection actions
-- Unexpected server exceptions
-
-Do not log passwords, authentication tokens, or sensitive personal data.
-
----
-
-# 16. Audit Logging
-
-The PRD explicitly requires auditing for sensitive operations:
-- Restaurant profile modifications
-- Commercial split percentage changes
-- Document verification approvals and rejections (recording admin user, timestamp, decision, and rejection reason)
-- Restaurant activation gate events (`Draft` → `Active`, `Active` → `Suspended`)
-- Monthly settlement payout reference recordings (recording UTR number, admin ID, timestamp)
-
----
-
-# 17. Testing Guidelines
-
-## 17.1 Backend Testing
-At minimum, write unit/integration tests for critical business logic:
-- Authentication & authorization boundary tests
-- Mandatory document activation gate logic
-- Table reservation slot generation and overlap prevention
-- Instant 86'd stock toggle preventing order submission
-- Order placement and status progression
-- Monthly settlement aggregation calculations
-
-## 17.2 Frontend Testing
-Test core user journeys:
-- **Admin Journey:** Login → Onboard Restaurant → Upload 4 Mandatory Docs → Approve Docs → Activate Restaurant → View Settlement.
-- **B2B Owner Journey:** Login → Create Zones & Tables → Download QR Codes → Build Menu → Toggle Dish Stock → Receive Live QR Order → Progress Order Status.
-- **Diner Journey:** Open Table QR Menu URL → Browse Categories → Add Items → Place Order → Receive Table Order Confirmation.
-
----
-
-# 18. Documentation Structure
-
-The root `docs/` directory must contain the project's technical documentation:
+The root `docs/` folder contains the project's technical documentation:
 
 ```text
 docs/
-├── PRD.md
-├── technical-guidelines.md
-├── architecture.md
-├── api-documentation.md
-├── database.md
-├── er-diagram.md
-├── naming-conventions.md
-├── environment.md
-├── installation.md
-├── deployment.md
-├── technical-decisions.md
-├── security.md
-├── testing.md
-├── known-issues.md
-└── workflows.md
+├── PRD.md                     # Product Requirements Document
+├── technical-guidelines.md    # Technical standards, stack, and architecture
+├── architecture.md            # Modular Monolith design, NestJS modules & request flow
+├── api-documentation.md       # REST endpoints, schemas, and example payloads
+├── database.md                # Relational SQL schema, tables, types, and constraints
+├── er-diagram.md              # Entity-Relationship diagram (Mermaid)
+├── naming-conventions.md      # Code, database, and API naming rules
+├── environment.md             # Inventory of required environment variables
+├── installation.md            # Local setup, DB migrations, seed scripts, and run steps
+├── deployment.md              # Build instructions, production environment setup
+├── technical-decisions.md     # Architecture Decision Records (ADRs)
+├── security.md                # Auth, tenant isolation, and document protection
+├── testing.md                 # Test strategy, execution guides, and sample runs
+├── known-issues.md            # Transparent limitations and pending enhancements
+└── workflows.md               # End-to-end operational workflows
 ```
 
 ---
 
-# 19. Required Documentation Details
+# 14. PRD Compliance & Activation Gate Enforcement
 
-Every team must provide the following documentation files in `docs/`:
+The backend API and UI workflows must strictly enforce the following rules from the PRD:
 
-1. **`architecture.md`**: Overall system architecture, modular monolith breakdown, module communication, request flow, and deployment diagram.
-2. **`api-documentation.md`**: Complete REST API specifications with endpoints, methods, parameters, request/response bodies, and status codes.
-3. **`database.md`**: Schema breakdown, tables, columns, constraints, foreign keys, indexes, and normalization decisions.
-4. **`er-diagram.md`**: Complete ER diagram (Mermaid / image) reflecting the actual implemented SQL database.
-5. **`naming-conventions.md`**: Documented naming standards for folders, variables, functions, tables, and API routes.
-6. **`environment.md`**: Complete inventory of all environment variables across backend and frontend applications.
-7. **`installation.md`**: Step-by-step instructions for a new developer to clone, install dependencies, run migrations, seed data, and launch all services locally.
-8. **`deployment.md`**: Production build commands, cloud hosting instructions, database migrations in production, and health checks.
-9. **`technical-decisions.md`**: Architecture decision records (ADRs) explaining *Why PostgreSQL?*, *Why Modular Monolith?*, *Why Next.js?*, trade-offs, and alternatives considered.
-10. **`security.md`**: Documentation on authentication, tenant isolation, activation gate enforcement, file upload security, and secrets protection.
-11. **`testing.md`**: Test strategy, unit/integration test execution instructions, and manual test pass records.
-12. **`known-issues.md`**: Transparent documentation of known limitations, edge cases, or pending enhancements.
-13. **`workflows.md`**: Detailed step-by-step operational workflows matching the PRD.
-
----
-
-# 20. PRD Compliance & Activation Gate Enforcement
-
-The implementation must strictly respect the business rules defined in the PRD:
 1. **Activation Gate:** The backend API must reject any request to set a restaurant's status to `Active` unless all 4 mandatory compliance documents (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`) are in `Approved` state.
 2. **Split Ratio Scope:** The commercial split ratio is an Admin profile configuration setting only. It must **not** execute automated order deductions or alter customer bill totals in Phase 1 or Phase 2.
 3. **Instant Stock (86'd) Guard:** Dishes marked `is_available = false` must be immediately rejected if submitted in an order.
 4. **Calendar Override Hierarchy:** `Holiday` overrides block all bookings/orders for the date; `Half Day` overrides clamp active slots to the shift window; unmodified days inherit `Full Day` default operating hours.
+5. **Restaurant Order Punching:** B2B Portal and staff mobile app must allow restaurant staff to manually create and manage active table orders without requiring customer QR scanning.
 
 ---
 
-# 21. Final Technical Review Checklist
+# 15. Technical Review Checklist
 
-Before final submission, teams must verify:
+Before releasing each phase, verify:
 
-## Architecture
-- [ ] Backend follows Modular Monolithic Architecture with domain separation
-- [ ] Primary database is relational SQL (e.g. PostgreSQL)
-- [ ] Controllers are thin; business logic is encapsulated in services
-- [ ] Database access is isolated in repositories / ORM layers
+### Architecture & Backend
+- [ ] Backend is structured as a NestJS Modular Monolith with TypeScript.
+- [ ] Primary database is Relational SQL (PostgreSQL).
+- [ ] NestJS Controllers are thin; business logic is encapsulated in `@Injectable()` services.
+- [ ] Database queries are parameterized and handled via ORM / repositories.
 
-## Applications
-- [ ] Super Admin Portal operational
-- [ ] Restaurant Owner B2B Portal operational
-- [ ] Table QR Digital Menu loads instantly on mobile browsers without app download
-- [ ] Real-time Live Rush Board reflects new table orders and status changes
-- [ ] Consistent UI theme and official logo used across all portals
+### Frontend Applications
+- [ ] Admin Portal built with React.
+- [ ] Restaurant B2B Portal built with React.
+- [ ] Table QR Digital Menu built with React (lightweight mobile web).
+- [ ] Mobile Application built with React Native.
+- [ ] Live Rush Board reflects real-time order updates via WebSockets.
 
-## Business Rules & Security
-- [ ] Activation gate blocks unverified restaurants from activating
-- [ ] Tenant data isolation strictly enforced per restaurant
-- [ ] Passwords hashed with bcrypt / argon2
-- [ ] `.env.example` provided for every application; no secrets committed to Git
-- [ ] Compliance documents stored securely with private access controls
-
-## Documentation
-- [ ] Root `README.md` complete with setup and run instructions
-- [ ] All 13 technical documents in `docs/` complete and accurate
-- [ ] ER diagram matches the actual production database schema
-- [ ] API documentation complete with example requests and responses
-
----
-
-# 22. Core Principle
-
-The Buildathon should be approached as a real-world software engineering project.
-
-The expected engineering process is:
-
-```text
-Understand PRD
-      ↓
-Design Database (SQL)
-      ↓
-Define Architecture (Modular Monolith)
-      ↓
-Implement Backend APIs
-      ↓
-Implement Web Applications (Admin, B2B, Table QR)
-      ↓
-Integrate & Real-Time Sync
-      ↓
-Test & Secure
-      ↓
-Document
-      ↓
-Deploy & Demonstrate
-```
-
-The goal is not only to make the application work. Teams must be able to explain:
-- Why the architecture was chosen
-- How the database was normalized and indexed
-- How multi-tenancy and data isolation are secured
-- How the activation gate protects the platform
-- How the system handles peak dining rushes and instant stock updates
-- How the applications can be maintained, scaled, and deployed in production
+### Security & Compliance
+- [ ] Activation gate blocks unverified restaurants from activating.
+- [ ] Tenant data isolation strictly enforced per restaurant.
+- [ ] Passwords hashed with bcrypt / argon2.
+- [ ] `.env.example` provided for every project surface; no secrets committed to Git.
+- [ ] Compliance documents stored securely with private access controls.
