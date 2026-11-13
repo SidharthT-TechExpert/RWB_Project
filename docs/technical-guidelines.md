@@ -33,7 +33,7 @@ The tech stack is fixed across all development tracks:
 │ Server State & Caching         │ TanStack Query v5 (Data fetching, caching & sync)     │
 └────────────────────────────────┴───────────────────────────────────────────────────────┘
                                            │
-                                     HTTP / WS APIs
+                      REST APIs (HTTPS) & WebSockets (WSS)
                                            ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                              BACKEND & DATA LAYER                                      │

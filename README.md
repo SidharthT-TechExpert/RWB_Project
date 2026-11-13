@@ -41,7 +41,7 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 │ Server State & Data Caching    │ TanStack Query v5 (Data fetching, caching & sync)     │
 └────────────────────────────────┴───────────────────────────────────────────────────────┘
                                            │
-                                  HTTP REST / WebSockets
+                      REST APIs (HTTPS) & WebSockets (WSS)
                                            ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                              BACKEND & DATA LAYER                                      │
