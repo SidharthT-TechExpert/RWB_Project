@@ -421,12 +421,10 @@ project-root/
 │   └── README.md
 │
 ├── docs/                # Project Engineering Documentation
-│   ├── PRD.md
-│   ├── technical-guidelines.md
-│   ├── architecture.md
-│   ├── api-documentation.md
-│   ├── database.md
-│   └── er-diagram.md
+│   ├── PRD.md                     # Product Requirements Document
+│   ├── technical-guidelines.md    # Technical standards & architecture rules
+│   ├── database.md                # (Next) SQL schema & Mermaid ER diagram
+│   └── api-documentation.md       # (Next) REST endpoints & WebSocket contracts
 │
 └── README.md
 ```

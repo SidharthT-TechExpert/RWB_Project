@@ -1,4 +1,4 @@
-# QuickBite: Phase 1 MVP: Product Requirements Document
+# QuickBite – Phase 1 MVP Product Requirements Document
 
 | | |
 |---|---|
