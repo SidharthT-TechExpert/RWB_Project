@@ -151,28 +151,22 @@ Qickbite/
 
 ### Installation & Local Setup
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/SidharthT-TechExpert/Qickbite.git
-   cd Qickbite
-   ```
+#### Backend Setup
+```bash
+cd backend
+cp .env.example .env
+npm install
+npx prisma migrate dev
+npm run start:dev
+```
 
-2. **Backend Setup**:
-   ```bash
-   cd backend
-   cp .env.example .env
-   npm install
-   npx prisma migrate dev
-   npm run start:dev
-   ```
-
-3. **Frontend Setup**:
-   ```bash
-   # In separate terminal windows:
-   cd admin-portal && npm install && npm run dev
-   cd b2b-portal && npm install && npm run dev
-   cd table-qr-menu && npm install && npm run dev
-   ```
+#### Frontend Setup
+```bash
+# In separate terminal windows:
+cd admin-portal && npm install && npm run dev
+cd b2b-portal && npm install && npm run dev
+cd table-qr-menu && npm install && npm run dev
+```
 
 ---
 
