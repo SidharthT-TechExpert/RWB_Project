@@ -140,36 +140,6 @@ Qickbite/
 
 ---
 
-## ⚡ Getting Started
-
-### Prerequisites
-- **Runtime Environment**: Node.js (`v20.x` or higher)
-- **Backend Framework**: NestJS (`v10.x` / `@nestjs/cli`)
-- **Package Manager**: `npm` or `pnpm`
-- **Primary Database**: PostgreSQL (`v15+` or any standard SQL engine)
-- **In-Memory Store**: Redis (`v7+` for WebSockets pub/sub and rate limiting)
-
-### Installation & Local Setup
-
-#### Backend Setup
-```bash
-cd backend
-cp .env.example .env
-npm install
-npx prisma migrate dev
-npm run start:dev
-```
-
-#### Frontend Setup
-```bash
-# In separate terminal windows:
-cd admin-portal && npm install && npm run dev
-cd b2b-portal && npm install && npm run dev
-cd table-qr-menu && npm install && npm run dev
-```
-
----
-
 ## 📖 Documentation Index
 
 For in-depth architectural and functional specifications, refer to the `docs/` directory:
