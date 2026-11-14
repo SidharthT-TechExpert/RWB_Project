@@ -20,6 +20,7 @@
 
 - **Super Admin SaaS Operations**: Restaurant partner onboarding, 4-document legal compliance verification (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`), commercial split profile reference, and automated monthly gross sales billing consolidation.
 - **Restaurant B2B SaaS Operations**: Floor zones, table inventory setup, printable high-resolution table QR generation, slot availability engine, operating calendar overrides, live food menu builder with instant sold-out (86'd) toggle, staff manual order punching, walk-in reservations, and real-time Kitchen Live Rush Board.
+- **Customer Mobile App (Food & Table Pre-Booking)**: Cross-platform mobile application for diners to discover partner venues, reserve time slots, select party sizes, and pre-order meals in advance to eliminate all waiting upon arrival.
 - **Spot Food Booking (Table QR Menu)**: Frictionless on-table digital menu accessible via smartphone cameras with zero app downloads or logins, securely bound to the table ID, featuring instant kitchen ticket dispatch.
 
 ---
@@ -33,7 +34,8 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Web Portals (Admin & B2B)      │ React (TypeScript, Tailwind CSS)                      │
-│ On-Table Digital Menu (Diners) │ React (Lightweight Responsive Web, Zero App Download) │
+│ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
+│ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
 │ Form & Input Validation        │ Zod (Strict schema validation across all inputs)      │
 │ Client State Management        │ Zustand (Lightweight modular client UI stores)        │
 │ Server State & Data Caching    │ TanStack Query v5 (Data fetching, caching & sync)     │
@@ -88,6 +90,16 @@ Qickbite/
 │   │   ├── stores/      # Zustand cart & session store
 │   │   ├── hooks/       # TanStack Query menu fetching & order mutation
 │   │   └── schemas/     # Zod order submission schemas
+│   ├── package.json
+│   └── README.md
+│
+├── customer-app/        # React Native Mobile App (Food & Table Pre-Booking)
+│   ├── src/
+│   │   ├── screens/     # Venue discovery, slot booking, meal pre-order, booking passes
+│   │   ├── components/  # Time slot picker, party size selector, dish cards
+│   │   ├── stores/      # Zustand booking & pre-order store
+│   │   ├── hooks/       # TanStack Query hooks & booking mutations
+│   │   └── schemas/     # Zod reservation schemas
 │   ├── package.json
 │   └── README.md
 │

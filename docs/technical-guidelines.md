@@ -3,10 +3,10 @@
 **Document Type:** Technical Guidelines  
 **Project:** QuickBite – Restaurant Operations B2B SaaS Platform  
 **Stack Overview:**
-- **Frontend:** React (Web & Table QR Web), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
+- **Frontend:** React (Web & Table QR Web), React Native (Customer Mobile App), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
 - **Backend:** NestJS & TypeScript (Modular Monolith), DTO Validation (`class-validator` / `ValidationPipe`), Centralized Response & Exception Handling, Hardened Security Measurements
 - **Primary Database:** Relational SQL (PostgreSQL Recommended)  
-**Applies To:** Admin Portal, Restaurant B2B Portal, Table QR Digital Menu, Backend API & Database  
+**Applies To:** Admin Portal, Restaurant B2B Portal, Customer Mobile App, Table QR Digital Menu, Backend API & Database  
 
 ---
 
@@ -27,7 +27,8 @@ The tech stack is fixed across all development tracks:
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Web Portals (Admin & B2B)      │ React (TypeScript, Tailwind CSS)                      │
-│ On-Table Digital Menu (Diners) │ React (Lightweight Responsive Web, Zero App Download) │
+│ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
+│ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
 │ Form & Input Validation        │ Zod (Strict schema validation across forms)           │
 │ Client State Management        │ Zustand (Lightweight modular client stores)           │
 │ Server State & Caching         │ TanStack Query v5 (Data fetching, caching & sync)     │
@@ -51,11 +52,11 @@ The tech stack is fixed across all development tracks:
 
 ---
 
-# 3. Frontend Architecture Standards (React)
+# 3. Frontend Architecture Standards (React & React Native)
 
 ## 3.1 Form & Schema Validation (Zod)
 
-All form inputs, user mutations, and query parameters on React surfaces must be validated using **Zod** schemas:
+All form inputs, user mutations, and query parameters on React and React Native surfaces must be validated using **Zod** schemas:
 - **Schema Single Source of Truth:** Form validation schemas reside in dedicated `*.schema.ts` files (e.g. `restaurant.schema.ts`, `menu-item.schema.ts`, `table-order.schema.ts`).
 - **Hook Form Integration:** React forms must use `@hookform/resolvers/zod` with `react-hook-form` to ensure zero uncontrolled re-renders and client-side error feedback before sending HTTP payloads.
 - **Type Inference:** TypeScript types must be inferred directly from Zod schemas (`export type MenuItemFormData = z.infer<typeof MenuItemSchema>;`).
@@ -406,6 +407,16 @@ project-root/
 │   │   ├── hooks/       # TanStack Query menu fetching & order mutation
 │   │   ├── schemas/     # Zod order schemas
 │   │   └── api/
+│   ├── package.json
+│   └── README.md
+│
+├── customer-app/        # React Native Mobile App (Food & Table Pre-Booking)
+│   ├── src/
+│   │   ├── screens/     # Venue discovery, slot booking, meal pre-order, booking passes
+│   │   ├── components/  # Time slot picker, party size selector, dish cards
+│   │   ├── stores/      # Zustand booking & pre-order store
+│   │   ├── hooks/       # TanStack Query hooks & booking mutations
+│   │   └── schemas/     # Zod reservation schemas
 │   ├── package.json
 │   └── README.md
 │
