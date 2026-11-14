@@ -142,18 +142,7 @@ Activation Gate Unlocked → Status changed: Draft → Active.
 
 ---
 
-## 6. Document Checklist Matrix
-
-| Code | Document | Mandatory? | Tracked Info | Expiry Tracked? |
-|---|---|:---:|---|:---:|
-| `DOC_FSSAI` | **FSSAI Food License** | **Yes** | 14-digit License Number | **Yes** |
-| `DOC_GST` | **GST Registration** | **Yes** | 15-character GSTIN | No |
-| `DOC_BANK` | **Bank Proof** | **Yes** | Bank Name, Account No, IFSC, Holder Name | No |
-| `DOC_KYC_ID` | **Owner Government ID** | **Yes** | Aadhaar / PAN / Passport Number | Optional |
-
----
-
-## 7. Core Entities Summary
+## 6. Core Entities Summary
 
 - **Restaurant:** Venue profile, status (`Draft`, `Active`, `Suspended`), commercial split percentage.
 - **ComplianceDocument:** Legal files, status (`Pending Review`, `Approved`, `Rejected`), rejection reason.
@@ -169,7 +158,7 @@ Activation Gate Unlocked → Status changed: Draft → Active.
 
 ---
 
-## 8. Definition of Done (Release Checklist)
+## 7. Definition of Done (Release Checklist)
 
 The system is ready for launch when:
 - [ ] Admin can onboard a restaurant, upload/approve all 4 mandatory documents, and set split ratio.
