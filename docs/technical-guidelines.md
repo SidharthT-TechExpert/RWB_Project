@@ -1,7 +1,7 @@
 # QuickBite – Technical Guidelines
 
 **Document Type:** Technical Guidelines  
-**Project:** QuickBite – Phase 1 MVP  
+**Project:** QuickBite – Restaurant Operations B2B SaaS Platform  
 **Stack Overview:**
 - **Frontend:** React (Web & Table QR Web), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
 - **Backend:** NestJS & TypeScript (Modular Monolith), DTO Validation (`class-validator` / `ValidationPipe`), Centralized Response & Exception Handling, Hardened Security Measurements
@@ -436,7 +436,7 @@ project-root/
 The backend API and UI workflows must strictly enforce the core business rules from the PRD:
 
 1. **Activation Gate:** The backend API must reject any request to set a restaurant's status to `Active` unless all 4 mandatory compliance documents (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`) are in `Approved` state.
-2. **Split Ratio Scope:** The commercial split ratio is an Admin profile configuration setting only. It must **not** execute automated order deductions or alter customer bill totals in Phase 1 or Phase 2.
+2. **Split Ratio Scope:** The commercial split ratio is an Admin profile configuration setting only. It must **not** execute automated order deductions or alter customer bill totals. All table orders record gross dining totals.
 3. **Instant Stock (86'd) Guard:** Dishes marked `is_available = false` must be immediately rejected if submitted in an order.
 4. **Calendar Override Hierarchy:** `Holiday` overrides block all bookings/orders for the date; `Half Day` overrides clamp active slots to the shift window; unmodified days inherit `Full Day` default operating hours.
 5. **Restaurant Order Punching:** B2B Portal allows restaurant staff to manually create and manage active table orders without requiring customer QR scanning.
@@ -445,7 +445,7 @@ The backend API and UI workflows must strictly enforce the core business rules f
 
 # 11. Final Engineering Checklist
 
-Before releasing each phase, verify:
+Before production deployment, verify:
 
 ### Frontend (React)
 - [ ] All forms and user inputs validated with **Zod** schemas.

@@ -16,13 +16,11 @@
 
 ---
 
-## 🚀 Phased Roadmap
+## 🎯 Core Capabilities
 
-| Phase | Strategic Scope | Status |
-|---|---|---|
-| **Phase 1 (MVP)** | **B2B SaaS Core Operations & On-Table QR Ordering**<br>• Super Admin Portal (onboarding, 4-document legal compliance gate, commercial split profile setting, monthly sales consolidation).<br>• Restaurant B2B Portal (zones, tables, QR generation, instant 86'd menu toggle, calendar overrides, staff order punching, Live Rush Board).<br>• Table QR Digital Menu (responsive mobile web, HMAC security, zero app download). | **Active Development** |
-| **Phase 2** | **Role-Based Management System (RBMS)**<br>• Admin RBMS (`Super Admin`, `Support Agent`, `Finance Auditor`).<br>• Restaurant RBMS (`Owner`, `Branch Manager`, `Captain/Cashier`, `Kitchen/KDS Staff`). | Planned |
-| **Phase 3** | **Enterprise Scale & Hardware Integrations**<br>• Multi-branch consolidated operations, central commissary inventory management, thermal ESC/POS cloud printing, payment gateway webhooks. | Planned |
+- **Super Admin SaaS Operations**: Restaurant partner onboarding, 4-document legal compliance verification (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`), commercial split profile reference, and automated monthly gross sales billing consolidation.
+- **Restaurant B2B SaaS Operations**: Floor zones, table inventory setup, printable high-resolution table QR generation, slot availability engine, operating calendar overrides, live food menu builder with instant sold-out (86'd) toggle, staff manual order punching, walk-in reservations, and real-time Kitchen Live Rush Board.
+- **Spot Food Booking (Table QR Menu)**: Frictionless on-table digital menu accessible via smartphone cameras with zero app downloads or logins, securely bound to the table ID, featuring instant kitchen ticket dispatch.
 
 ---
 
@@ -119,7 +117,7 @@ Qickbite/
 1. **Compliance Activation Gate**:
    - A restaurant cannot transition to `ACTIVE` status until all 4 mandatory legal compliance documents (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`) are verified and approved by a Super Admin.
 2. **Commercial Split Ratio**:
-   - Configured by Super Admins as an administrative reference. It does **not** execute automated deductions or alter diner bill amounts in Phase 1 or 2. All orders record gross amounts.
+   - Configured by Super Admins as an administrative reference. It does **not** execute automated deductions or alter diner bill amounts. All orders record gross amounts.
 3. **Instant 86'd Stock Protection**:
    - Marking a dish unavailable updates the status in $\le 500\text{ms}$. The backend order submission pipeline immediately rejects any incoming cart containing an 86'd item.
 4. **Cryptographic QR Validation**:

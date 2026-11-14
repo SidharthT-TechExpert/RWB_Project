@@ -5,7 +5,7 @@
 | **Product Name** | QuickBite — Restaurant Operations B2B SaaS & Dining Platform |
 | **Document Type** | Product Requirements Document (PRD) |
 | **Document Purpose** | Defines **WHAT** the product does, **WHY** it exists, user personas, problem statements, and functional acceptance criteria (strictly non-technical). |
-| **Target Release** | Phase 1 MVP (Restaurant B2B SaaS + Admin Platform + Spot Table Ordering & Reservation Engine) |
+| **Target Release** | QuickBite Core Platform (Restaurant B2B SaaS + Admin Platform + Spot Table Ordering & Reservation Engine) |
 | **Status** | Approved Specification |
 
 ---
@@ -41,29 +41,29 @@ Once this SaaS engine is actively running the restaurant's daily operations, bot
 
 ---
 
-## 2. Product Vision & Phased Strategy
+## 2. Product Architecture & System Overview
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 QUICKBITE PRODUCT ROADMAP                              │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 1: B2B SAAS OPERATIONS & SPOT ORDERING FOUNDATION (CURRENT FOCUS)                 │
-│ • Super Admin Portal: Onboarding, legal KYC verification, commercial split setting,    │
-│   and monthly gross billing consolidation.                                             │
-│ • Restaurant B2B SaaS Portal: Floor zones, table setup, table QR generation, slot      │
-│   availability engine, calendar overrides, menu management with instant sold-out (86'd)│
-│   toggle, manual order punching, walk-in booking, and real-time Live Rush Board.       │
-│ • Spot Food Booking: Responsive On-Table QR digital menu (zero app download for diners)│
-│   with instant ticket dispatch to the kitchen rush board.                              │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 2: ROLE-BASED MANAGEMENT SYSTEM (RBMS)                                           │
-│ • Admin RBMS: Super Admin, Compliance Support Agent, Finance Auditor.                  │
-│ • Restaurant RBMS: Restaurant Owner, Branch Manager, Captain/Cashier, Kitchen Staff.  │
-│ • Advanced Pre-Booking Flow: Diner pre-ordering workflows tied to reservation slots.   │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 3: ENTERPRISE EXPANSION (FUTURE STRATEGY)                                        │
-│ • Multi-branch centralized management, commissary inventory sync, and hardware POS.   │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+│                                 QUICKBITE SYSTEM ECOSYSTEM                             │
+├────────────────────────────────┬───────────────────────────────────────────────────────┤
+│ SUPER ADMIN SAAS PORTAL        │ • Partner Onboarding & Account Provisioning           │
+│ (Platform Operations)          │ • 4-Document Compliance Verification & Activation Gate│
+│                                │ • Commercial Split Setting & Monthly Gross Billing    │
+├────────────────────────────────┼───────────────────────────────────────────────────────┤
+│ RESTAURANT B2B SAAS PORTAL     │ • Dining Floor Zones & Table Inventory Management     │
+│ (Venue Operations & Kitchen)   │ • High-Resolution Table QR Generation & Downloads     │
+│                                │ • Slot Availability Engine & Calendar Overrides       │
+│                                │ • Live Food Menu Builder with Instant 86'd Toggle     │
+│                                │ • Real-Time Kitchen Live Rush Board                   │
+│                                │ • Staff Manual Order Punching & Walk-in Reservations  │
+│                                │ • Daily Revenue Summaries & Monthly Settlement Archive│
+├────────────────────────────────┼───────────────────────────────────────────────────────┤
+│ SPOT FOOD BOOKING (TABLE QR)   │ • Frictionless Mobile Web Digital Menu (Zero App DL)  │
+│ (Customer In-Venue Surface)    │ • Automatic Table Session Binding                     │
+│                                │ • Real-Time Sold-Out (86'd) Item Protection           │
+│                                │ • Instant Kitchen Order Dispatch to Live Rush Board   │
+└────────────────────────────────┴───────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -85,9 +85,9 @@ Once this SaaS engine is actively running the restaurant's daily operations, bot
 
 ---
 
-## 4. Product Scope (Phase 1 MVP)
+## 4. Product Scope
 
-### 4.1 In Scope (Phase 1)
+### 4.1 In Scope
 - **Super Admin SaaS Operations Portal:**
   - Restaurant partner profile creation and account provisioning.
   - Legal compliance document repository with review, approval, and rejection tracking.
@@ -116,13 +116,13 @@ Once this SaaS engine is actively running the restaurant's daily operations, bot
   - Floating cart drawer with cooking instructions / notes.
   - Instant order dispatch to the restaurant's Live Rush Board upon submission.
 
-### 4.2 Out of Scope (Deferred to Future Phases)
-- Standalone consumer native mobile applications (iOS/Android App Store downloads) — deliberately excluded to guarantee zero diner friction in Phase 1.
+### 4.2 Out of Scope
+- Standalone consumer native mobile applications (iOS/Android App Store downloads) — deliberately excluded to guarantee zero diner friction.
 - Public consumer restaurant discovery marketplace / listing directory.
 - Consumer VIP loyalty points, customer subscription tiers, or discount voucher clubs.
-- Role-based sub-staff accounts with granular permission matrices (scheduled for Phase 2 RBMS).
-- Integrated consumer in-app digital payment gateway (food bills are settled in-venue via cash, card, or venue POS in Phase 1 and reconciled in monthly statements).
-- Physical thermal kitchen printer hardware integration (Phase 3).
+- Granular sub-staff role-based permission matrices.
+- Integrated consumer in-app digital payment gateway (food bills are settled in-venue via cash, card, or venue POS and reconciled in monthly statements).
+- Physical thermal kitchen printer hardware integration.
 
 ---
 
@@ -232,7 +232,7 @@ Restaurant Owner views and downloads verified Settlement Statement in B2B Portal
 | **ADM-05** | **Document Verification** | Admin reviews uploaded files and marks each document as `Approved` or `Rejected`. Rejections require a mandatory explanatory reason. | P0 |
 | **ADM-06** | **Activation Gate Enforcement** | The system strictly prevents transitioning any restaurant from `Draft` to `Active` unless all four mandatory documents (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`) are in `Approved` state. | P0 |
 | **ADM-07** | **Emergency Venue Toggle** | Admin can toggle an active restaurant between `Active` and `Suspended` to immediately halt live ordering in case of disputes, compliance lapses, or emergency maintenance. | P0 |
-| **ADM-08** | **Commercial Split Configuration** | Admin records the agreed commercial split percentage (e.g., Platform 15% / Partner 85%) on the restaurant profile for business reference. In Phase 1, this is an administrative profile setting only and does not perform automated deductions from customer bills. | P0 |
+| **ADM-08** | **Commercial Split Configuration** | Admin records the agreed commercial split percentage (e.g., Platform 15% / Partner 85%) on the restaurant profile for business reference. The split ratio is an administrative profile setting only and does not perform automated deductions from customer bills. | P0 |
 | **ADM-09** | **Global Audit Ledger** | Admin can view a consolidated, filterable ledger of all dining transactions and orders across all partner restaurants. | P1 |
 | **ADM-10** | **Monthly Settlement Processing** | On the 1st of each month, the system compiles previous month gross dining totals. Admin records the bank transfer UTR number and payment date to mark the statement as `Paid`. | P0 |
 | **ADM-11** | **Platform Reporting** | High-level operational metrics showing active restaurant count, total gross dining sales, and compliance verification pipeline. | P1 |
@@ -296,7 +296,7 @@ A restaurant cannot be activated until the following four compliance documents a
 
 ### 7.2 Commercial Split Setting Rule
 - The commercial split ratio (e.g., Platform 15% / Partner 85%) is recorded on the restaurant profile by the Super Admin during onboarding.
-- **Phase 1 Boundary:** The split ratio is an administrative reference setting only. It **does not execute automated deductions** or alter customer bill totals on live orders. All table orders record gross dining totals.
+- The split ratio is an administrative reference setting only. It **does not execute automated deductions** or alter customer bill totals on live orders. All table orders record gross dining totals.
 
 ### 7.3 Instant Sold-Out (86'd) Rule
 - When kitchen staff marks an item `Sold Out` on the B2B portal, customer QR screens immediately reflect the change.
@@ -341,7 +341,7 @@ A restaurant cannot be activated until the following four compliance documents a
 
 ## 10. Release Readiness Criteria (Definition of Done)
 
-Phase 1 MVP is certified ready for operational deployment when:
+The product is certified ready for operational deployment when:
 - [ ] Super Admin can onboard a new restaurant partner, upload all four mandatory compliance documents, verify them, and record the commercial split ratio.
 - [ ] **Activation Gate Verified:** The system actively blocks activating any restaurant if any mandatory document is missing or rejected.
 - [ ] Restaurant Owner can log into the B2B portal, create zones and tables, and generate printable high-resolution table QR codes.
