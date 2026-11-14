@@ -1,320 +1,355 @@
-# QuickBite – Phase 1 MVP Product Requirements Document
+# QuickBite – Product Requirements Document (PRD)
 
-| | |
+| Document Metadata | Details |
 |---|---|
-| **Project** | QuickBite — Restaurant Operations B2B SaaS Platform |
-| **Version** | 1.0 (Full Specification) |
-| **Status** | Verified & Approved for Implementation |
-| **Date** | 13 Nov 2026 |
-| **Scope** | Phase 1 MVP (Admin Portal + Restaurant B2B Portal + On-Table QR Menu) |
+| **Product Name** | QuickBite — Restaurant Operations B2B SaaS & Dining Platform |
+| **Document Type** | Product Requirements Document (PRD) |
+| **Document Purpose** | Defines **WHAT** the product does, **WHY** it exists, user personas, problem statements, and functional acceptance criteria (strictly non-technical). |
+| **Target Release** | Phase 1 MVP (Restaurant B2B SaaS + Admin Platform + Spot Table Ordering & Reservation Engine) |
+| **Status** | Approved Specification |
 
 ---
 
-## 1. Overview
+## 1. Executive Summary & Problem Statement
 
-### 1.1 Problem
-During peak lunch and dinner hours, traditional dine-in restaurant operations face severe friction:
-- **Long Waiter Wait Times:** Customers spend an average of 10 to 20 minutes waiting for waitstaff to notice them, hand over physical menus, take order notes, and manually punch them into legacy billing systems.
-- **Table Turnaround Bottlenecks:** Delayed order-taking stretches table occupancy times, reducing seatings per shift, driving away walk-in diners, and causing direct revenue loss.
-- **Kitchen Rush & Out-of-Stock Friction:** Waitstaff frequently take orders for dishes that are already sold out (86'd) in the kitchen during peak rushes, causing customer frustration and repeated visits to change orders.
-- **Fragmented Management:** Restaurant owners lack a single reliable SaaS platform to manage table inventory, live digital menus, shift schedules, and commission payouts in one place.
+### 1.1 The Core Problem
+When families plan dining out or corporate professionals schedule business lunch meetings, they face significant, frustrating delays across every stage of the dining experience:
 
-### 1.2 Product Vision
-QuickBite digitally empowers restaurants by moving table, menu, and order operations onto a unified B2B SaaS platform. Restaurant owners manage their tables, digital menus, rush orders, and settlements, while admins manage compliance, partner onboarding, and platform settings. Customers seated at tables simply scan a table QR code to view live digital menus and order food on the spot—eliminating waiter wait times without requiring any customer mobile app download.
+1. **Unpredictable Table & Seat Waiting:** Diners arrive at busy restaurants during peak lunch or dinner hours only to find all tables occupied, forcing them to wait 20 to 45+ minutes in waiting areas or queues.
+2. **Waiter & Menu Bottlenecks:** Once finally seated, diners often wait 10 to 15 minutes just for an overworked waiter to notice them, clean the table, and bring physical menus.
+3. **Repeated Order-Taking Delays:** Waiting for the waiter to return, explain unavailable items, note down orders by hand, and physically punch tickets creates avoidable downtime.
+4. **Kitchen Preparation Lag During Peak Rushes:** Food preparation starts only after this prolonged delay, resulting in meals arriving 45 to 60+ minutes after arrival. For a business lunch, this disrupts meeting schedules; for families with young children, it creates acute restlessness.
+5. **Restaurant Operational Bottlenecks:** Restaurant operators struggle during peak rushes because they lack an integrated digital operations system. Managing table occupancy with paper registers, taking manual orders, dealing with sold-out kitchen items mid-service, and coordinating between floor and kitchen leads to chaotic table turns and lost revenue.
 
-### 1.3 Goals
-1. Digitize the complete in-restaurant ordering flow: QR Scan → Instant Menu → On-the-Spot Order → Live Kitchen Rush Board.
-2. Enable restaurant owners to manage tables, digital menus, availability calendars, and monthly settlements from a single B2B portal.
-3. Streamline admin onboarding with formal document verification and a compliance activation gate.
-4. Provide transparent order and dining revenue tracking for restaurant owners and platform administrators.
+### 1.2 The Solution
+QuickBite eliminates dining delays through a unified dual-solution:
+1. **Food and Seats Pre-Booking:** Diners can reserve their table in advance and pre-select their food order, ensuring that when they arrive for a business meeting or family dinner, their table is waiting and their food is served promptly.
+2. **On-the-Spot Food Booking:** Walk-in and seated diners scan a physical table QR code with their mobile device to instantly browse the live digital menu and send orders directly to the kitchen without waiting for a waiter.
 
-### 1.4 Success Metrics
-| Metric | Target (Phase 1) |
-|---|---|
-| Time from seating to order placed | Reduced from 15 mins to < 3 mins via on-table QR |
-| Peak-hour table turnaround time | 20–30% faster table turnover |
-| Out-of-stock ordering complaints | 0 (eliminated via real-time 86'd stock toggle) |
-| Active restaurants with verified mandatory compliance documents | 100% |
-| Accurate order tracking and revenue reporting | 100% |
+### 1.3 Why a Proper Restaurant B2B SaaS is the Mandatory Foundation
+Food and seats pre-booking cannot work as a standalone consumer app without a **robust Restaurant Operations B2B SaaS product operating inside the restaurant**:
+- If a restaurant does not have a live, real-time internal SaaS managing its **floor zones, table capacities, operating calendar shifts, kitchen rush tickets, and instant out-of-stock items**, any external pre-booking or spot ordering system will cause double-booked tables, delayed food, and operational chaos.
+- **Therefore, QuickBite builds the restaurant's operational SaaS foundation first:**
+  - Complete restaurant floor and table management.
+  - Slot-based table availability engine and operating calendar overrides.
+  - Live digital menu with instantaneous sold-out (86'd) stock toggles.
+  - Real-time Kitchen Live Rush Board for active order tracking.
+  - Restaurant staff manual order punching and walk-in reservation creation.
+  - Super Admin operations with a 4-document legal compliance activation gate and monthly billing consolidation.
 
----
-
-## 2. Users and Roles
-
-| Role | Surface | Access |
-|---|---|---|
-| **Super Admin** | Web Admin Portal | Full visibility over all restaurants, partner onboarding, compliance document approval, split ratio setting, global sales audit, and monthly settlement execution. |
-| **Restaurant Owner (B2B Partner)** | Web B2B Portal | Own restaurant data only: table layout, table QR code download, live digital food menu, holiday/availability calendar, live rush order board, manual bookings, and monthly payout statements. |
-| **Diner (Customer)** | Mobile Browser (Table QR) | Read live menu and place on-the-spot food orders bound to table ID. Zero app download, zero customer account setup required. |
+Once this SaaS engine is actively running the restaurant's daily operations, both **Spot Food Ordering** and **Food & Seat Pre-Booking** operate seamlessly with 100% real-time data integrity.
 
 ---
 
-## 3. Scope
-
-### 3.1 In Scope (Phase 1 MVP)
-- **Super Admin Web Portal:** Partner onboarding, credentials provisioning, document compliance queue with approval/rejection, commercial split ratio configuration (profile setting), global order & booking audit log, monthly settlement statement generation and payout recording.
-- **Restaurant Owner B2B Portal:** Login, table & zone configuration, high-resolution table QR generation and download, slot-based availability engine, holiday/half-day availability calendar overrides, category & food menu management with instant stock (86'd) toggle, live rush order/reservation board, direct manual order creation & live order management, manual walk-in booking creation, revenue dashboard, and monthly settlement view.
-- **On-Table QR Digital Menu (Customer Surface):** Responsive mobile web interface accessed via physical table QR scan, category browsing, item search, dietary filters, instant cart, and direct on-the-spot order placement bound to the table ID.
-- **Automation:** Instant ticket dispatch to restaurant Live Rush Board upon QR order submission; automated monthly settlement statement generation on the 1st of each month.
-
-### 3.2 Out of Scope (Deferred to Future Phases)
-- Standalone consumer mobile applications (iOS/Android native apps) — deliberately excluded from Phase 1.
-- Public customer discovery marketplace / consumer restaurant directory.
-- VIP / Premium customer loyalty tiers and club memberships.
-- Role-based sub-accounts for restaurant staff (Branch Manager, Cashier, KDS Chef) — scheduled for Phase 2 RBMS.
-- In-app digital payment gateway for diners (orders are recorded in-restaurant and settled via standard in-person/cashier billing in Phase 1).
-- External POS hardware printer integration (scheduled for Phase 3).
-
----
-
-## 4. End-to-End Flow
+## 2. Product Vision & Phased Strategy
 
 ```
-Admin onboards Restaurant & provisions Owner login
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 QUICKBITE PRODUCT ROADMAP                              │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 1: B2B SAAS OPERATIONS & SPOT ORDERING FOUNDATION (CURRENT FOCUS)                 │
+│ • Super Admin Portal: Onboarding, legal KYC verification, commercial split setting,    │
+│   and monthly gross billing consolidation.                                             │
+│ • Restaurant B2B SaaS Portal: Floor zones, table setup, table QR generation, slot      │
+│   availability engine, calendar overrides, menu management with instant sold-out (86'd)│
+│   toggle, manual order punching, walk-in booking, and real-time Live Rush Board.       │
+│ • Spot Food Booking: Responsive On-Table QR digital menu (zero app download for diners)│
+│   with instant ticket dispatch to the kitchen rush board.                              │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 2: ROLE-BASED MANAGEMENT SYSTEM (RBMS)                                           │
+│ • Admin RBMS: Super Admin, Compliance Support Agent, Finance Auditor.                  │
+│ • Restaurant RBMS: Restaurant Owner, Branch Manager, Captain/Cashier, Kitchen Staff.  │
+│ • Advanced Pre-Booking Flow: Diner pre-ordering workflows tied to reservation slots.   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ PHASE 3: ENTERPRISE EXPANSION (FUTURE STRATEGY)                                        │
+│ • Multi-branch centralized management, commissary inventory sync, and hardware POS.   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. User Personas & Target Audiences
+
+### 3.1 Diners (Consumers)
+- **The Business Executive (Meeting Diners):** Needs guaranteed seating at a precise time, zero waiting for menus or waiters, and quick food turnaround to conduct productive meetings on schedule.
+- **The Family Planner (Group Diners):** Seeks a hassle-free dining experience where a large table is reserved in advance, dietary preferences are clear, and food arrives promptly so children and elders do not wait hungry.
+- **The Walk-in Spot Diner:** Arrives directly at the venue, sits at an open table, scans the table QR code on their phone, browses the menu, and places an order instantly without having to flag down a busy waiter.
+
+### 3.2 Restaurant Operators (B2B Partners)
+- **The Restaurant Owner / General Manager:** Wants full control over dining floor layout, table counts, shift calendars, live food menus, gross sales summaries, and monthly payouts.
+- **The Floor Captain / Waitstaff:** Needs a clear view of which tables are occupied, quick tools to punch manual phone orders or walk-in reservations, and the ability to append extra rounds of food to active tables.
+- **The Kitchen Chef / Line Cook:** Needs an organized, real-time board showing incoming order tickets, table numbers, item modifications, and preparation timers, with the ability to mark ingredients sold out with one click.
+
+### 3.3 Platform Operators (Super Admin)
+- **The Platform Operations Manager:** Onboards new restaurant brands, inspects legal compliance and food safety licenses, enforces the Activation Gate, configures commercial split terms, and processes monthly payouts.
+
+---
+
+## 4. Product Scope (Phase 1 MVP)
+
+### 4.1 In Scope (Phase 1)
+- **Super Admin SaaS Operations Portal:**
+  - Restaurant partner profile creation and account provisioning.
+  - Legal compliance document repository with review, approval, and rejection tracking.
+  - Strict Compliance Activation Gate (blocking unverified restaurants from going live).
+  - Commercial split ratio profile setting (administrative reference only).
+  - Global audit log of all orders and dining transactions.
+  - Monthly consolidated gross sales statements with bank payout reference tracking.
+- **Restaurant B2B Operations SaaS Portal:**
+  - Dining floor zone configuration (e.g., Main Dining, AC Hall, Rooftop Terrace).
+  - Table inventory management with seat capacity assignments.
+  - Printable high-resolution table QR code generator.
+  - Slot-based table availability engine (time-slot durations to prevent overbooking).
+  - Operating calendar with base full-day hours, half-day shift limits, and holiday closures.
+  - Live menu catalog with categories, dish details, pricing, photos, and dietary tags.
+  - Instant 86'd stock toggle (one-click sold-out disablement).
+  - Real-time Live Rush Board for active kitchen orders and seated tables.
+  - Manual order creation ("Punch Order") for walk-in and phone-in diners.
+  - Active order management (appending extra food rounds and updating progress).
+  - Walk-in table reservation creation.
+  - Daily and monthly dining revenue summaries and settlement statement archive.
+- **Spot Food Ordering (On-Table QR Menu):**
+  - Frictionless mobile web interface accessed by scanning table QR codes (no app download or customer sign-up required).
+  - Secure session automatically bound to the specific physical table ID.
+  - Category navigation, dietary filters (`Veg`, `Non-Veg`, `Vegan`, `Jain`), dish photos, and descriptions.
+  - Real-time sold-out indicator preventing ordering of unavailable dishes.
+  - Floating cart drawer with cooking instructions / notes.
+  - Instant order dispatch to the restaurant's Live Rush Board upon submission.
+
+### 4.2 Out of Scope (Deferred to Future Phases)
+- Standalone consumer native mobile applications (iOS/Android App Store downloads) — deliberately excluded to guarantee zero diner friction in Phase 1.
+- Public consumer restaurant discovery marketplace / listing directory.
+- Consumer VIP loyalty points, customer subscription tiers, or discount voucher clubs.
+- Role-based sub-staff accounts with granular permission matrices (scheduled for Phase 2 RBMS).
+- Integrated consumer in-app digital payment gateway (food bills are settled in-venue via cash, card, or venue POS in Phase 1 and reconciled in monthly statements).
+- Physical thermal kitchen printer hardware integration (Phase 3).
+
+---
+
+## 5. End-to-End Operational Workflows
+
+### 5.1 Restaurant Onboarding & Compliance Activation Workflow
+```
+Super Admin registers Restaurant profile & provisions Owner credentials
    ↓
-Admin uploads & verifies mandatory compliance documents (FSSAI, GST, Bank Proof, Owner ID)
+Super Admin uploads 4 Mandatory Compliance Documents (FSSAI, GST, Bank Proof, Owner ID)
    ↓
-All mandatory documents verified → Admin activates Restaurant (Draft → Active)
+Super Admin verifies license numbers, validity dates, and authenticity
    ↓
-Owner logs into B2B Portal: sets up tables & generates Table QR Codes
+System checks Activation Rule:
+   • Are all 4 mandatory compliance documents in "Approved" status?
+   ├── NO  → Activation blocked; Restaurant status locked to "Draft"
+   └── YES → Super Admin activates Restaurant ("Draft" → "Active")
    ↓
-Owner creates digital food menu (categories, dishes, prices, photos, dietary tags)
+Restaurant Owner logs into B2B SaaS Portal with provisioned credentials
+```
+
+### 5.2 Venue Setup & Operational Readiness Workflow
+```
+Owner defines Dining Zones (e.g., Indoor AC, Garden, Family Section)
    ↓
-Diner sits at physical table → scans Table QR Code via smartphone browser
+Owner adds Physical Tables with numbers and seating capacities (e.g., Table 1 - 4 seats)
    ↓
-Live Digital Menu opens instantly (displays in-stock items & active shift menu)
+System generates unique printable Table QR Codes bound to each physical table ID
    ↓
-Diner adds food items to cart & taps "Place Order"
+Owner downloads and places printed QR codes on physical dining tables
    ↓
-Order ticket pushes instantly to Restaurant's Live Rush Board with Table ID
+Owner builds Food Menu: creates categories, adds dishes, prices, photos, and dietary tags
    ↓
-Restaurant kitchen prepares food & floor staff serves order: Confirmed → Preparing → Served
+Owner confirms Operating Hours & Calendar Shifts (default: Full Day operating hours)
    ↓
-Table dining concludes: Owner marks order Completed & frees table slot
+Restaurant is open and ready for live dining operations!
+```
+
+### 5.3 On-the-Spot Dining & Table QR Ordering Workflow
+```
+Diner arrives and is seated at physical Table 04
    ↓
-Month-end: System consolidates closed orders into Monthly Settlement Statement
+Diner scans Table 04 QR code using smartphone camera
    ↓
-Admin reviews statement, executes bank payout, and records UTR Reference Number
+Digital Menu loads instantly in mobile browser displaying "Seated at Table 04"
+   ↓
+Diner browses categories, selects items, adds custom notes ("Extra spicy")
+   ↓
+Diner taps "Place Order"
+   ↓
+Order ticket pushes instantly to Restaurant's Live Rush Board labeled "Table 04"
+   ↓
+Kitchen accepts ticket and transitions order: "Confirmed" → "Preparing"
+   ↓
+Food is freshly prepared; floor staff serves dishes: "Preparing" → "Served"
+   ↓
+Diners finish meal and settle bill with in-venue cashier
+   ↓
+Staff marks order "Completed" on Live Rush Board → Table slot becomes available
+```
+
+### 5.4 Restaurant Staff Manual Order Punching Workflow
+```
+Walk-in diner or phone customer places order directly with restaurant staff
+   ↓
+Staff member opens "Punch Order" in Restaurant B2B Portal
+   ↓
+Staff selects target Table Number and chooses items from live menu
+   ↓
+Staff clicks "Create Order" → Order is immediately bound to table
+   ↓
+Ticket immediately appears on Live Rush Board alongside QR orders
+   ↓
+Staff can reopen the active order at any time to append additional rounds of food
+```
+
+### 5.5 Month-End Settlement & Reconciliation Workflow
+```
+System automatically closes the monthly billing cycle on the 1st of every month
+   ↓
+System aggregates all "Completed" dining orders from the previous month for each venue
+   ↓
+System generates formal Monthly Settlement Statement showing:
+   • Total completed order count
+   • Gross dining sales revenue
+   • Commercial split ratio reference
+   ↓
+Super Admin reviews statement and executes bank payout to partner bank account
+   ↓
+Super Admin inputs payment transaction reference (UTR Number) & marks statement "Paid"
    ↓
 Restaurant Owner views and downloads verified Settlement Statement in B2B Portal
 ```
 
-### 4.1 Entity Statuses
-| Entity | Statuses |
-|---|---|
-| Restaurant / Company | `Draft` → `Active` / `Suspended` |
-| Compliance Document | `Pending Review` → `Approved` / `Rejected` |
-| Restaurant Table | `Available` → `Reserved` → `Seated / Active Order` → `Needs Cleaning` |
-| Table Order | `Confirmed` → `Preparing` → `Served` → `Completed` / `Cancelled` |
-| Calendar Day | `Full Day` (Default) → `Half Day` / `Holiday (Closed)` |
-| Monthly Settlement | `Accruing` → `Generated` → `Paid` |
+---
+
+## 6. Functional Requirements
+
+### 6.1 Super Admin SaaS Operations Portal
+
+| Requirement ID | Feature | Functional Description | Priority |
+|---|---|---|:---:|
+| **ADM-01** | **Secure Access** | Super Admins log in securely with authenticated credentials and session timeout controls. | P0 |
+| **ADM-02** | **Restaurant Management** | Admin can create, view, update, and search restaurant partner profiles including legal business name, brand display name, owner contact details, address, cuisine types, and branding logos. | P0 |
+| **ADM-03** | **Account Provisioning** | When onboarding a restaurant, the system automatically provisions an owner account and temporary credentials. | P0 |
+| **ADM-04** | **Compliance Upload** | Admin uploads partner compliance documents across four mandatory categories: FSSAI Food License, GST Registration, Bank Account Proof, and Owner Government ID. | P0 |
+| **ADM-05** | **Document Verification** | Admin reviews uploaded files and marks each document as `Approved` or `Rejected`. Rejections require a mandatory explanatory reason. | P0 |
+| **ADM-06** | **Activation Gate Enforcement** | The system strictly prevents transitioning any restaurant from `Draft` to `Active` unless all four mandatory documents (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`) are in `Approved` state. | P0 |
+| **ADM-07** | **Emergency Venue Toggle** | Admin can toggle an active restaurant between `Active` and `Suspended` to immediately halt live ordering in case of disputes, compliance lapses, or emergency maintenance. | P0 |
+| **ADM-08** | **Commercial Split Configuration** | Admin records the agreed commercial split percentage (e.g., Platform 15% / Partner 85%) on the restaurant profile for business reference. In Phase 1, this is an administrative profile setting only and does not perform automated deductions from customer bills. | P0 |
+| **ADM-09** | **Global Audit Ledger** | Admin can view a consolidated, filterable ledger of all dining transactions and orders across all partner restaurants. | P1 |
+| **ADM-10** | **Monthly Settlement Processing** | On the 1st of each month, the system compiles previous month gross dining totals. Admin records the bank transfer UTR number and payment date to mark the statement as `Paid`. | P0 |
+| **ADM-11** | **Platform Reporting** | High-level operational metrics showing active restaurant count, total gross dining sales, and compliance verification pipeline. | P1 |
 
 ---
 
-## 5. Functional Requirements
+### 6.2 Restaurant B2B Operations SaaS Portal
 
-Priority: **P0** = Must-have for Phase 1 launch, **P1** = Important operational feature, **P2** = Nice-to-have optimization.
-
-### 5.1 Super Admin Web Portal
-
-| ID | Requirement | Priority |
-|---|---|---|
-| A-01 | Admin logs in via secure authenticated credentials with session management and rate limiting. | P0 |
-| A-02 | **Company Management:** Admin adds and edits restaurant partner profiles (legal entity name, brand display name, owner contact, phone, email, full address, cuisine tags, logo, banner). | P0 |
-| A-03 | **Credentials Provisioning:** System automatically creates restaurant owner account with secure temporary password upon restaurant profile creation. | P0 |
-| A-04 | **Document Compliance Upload:** Admin uploads partner legal documents (FSSAI license, GST registration, bank proof, owner ID) with document numbers and expiry dates. | P0 |
-| A-05 | **Document Verification:** Admin marks each document as `Approved` or `Rejected` (with mandatory rejection reason). | P0 |
-| A-06 | **Activation Gate:** System strictly prohibits changing restaurant status from `Draft` to `Active` unless all mandatory documents (FSSAI, GST, Bank Proof, Owner ID) are in `Approved` state. | P0 |
-| A-07 | **Visibility Toggle:** Admin can toggle active partner between `Active` and `Suspended` (instantly halts customer QR ordering during disputes/maintenance). | P0 |
-| A-08 | **Commercial Split Ratio Configuration:** Admin can configure and view the commercial split percentage on a restaurant's profile (e.g., Platform 15% / Partner 85%) for administrative record-keeping. (Note: Split ratio is a configuration setting only in Phase 1 and does not execute automatic order-level deductions). | P0 |
-| A-09 | **Global Audit Ledger:** Filterable log of all orders and bookings across all restaurants with status, table ID, amounts, and timestamps. | P1 |
-| A-10 | **Monthly Settlement Processing:** Auto-generated settlement statements on the 1st of each month summarizing monthly gross dining sales. Admin inputs payout UTR reference number and payment date to mark statement as `Paid`. | P0 |
-| A-11 | **Admin Reports Dashboard:** Platform-wide metrics: total GMV, gross sales volume, and active venue counts. | P1 |
-
-**Acceptance (A-06):** Given a restaurant in `Draft` status, when Admin attempts to activate it with any mandatory document missing or rejected, the system rejects the action with a clear error prompt and locks the status to `Draft`.
-
----
-
-### 5.2 Restaurant Owner B2B Web Portal
-
-| ID | Requirement | Priority |
-|---|---|---|
-| R-01 | Restaurant Owner logs in using Admin-provisioned credentials; accesses own venue data only. | P0 |
-| R-02 | **Dining Zones:** Owner creates and organizes dining areas (e.g., Main Hall, AC Lounge, Terrace, Private Booth). | P1 |
-| R-03 | **Table Management:** Owner adds tables with table numbers (e.g., T-01), guest capacity (2, 4, 6, 8+ pax), and assigned zone. | P0 |
-| R-04 | **Table QR Generation:** System generates unique, high-resolution, printable QR codes tied to each physical table ID. Owner can download single or bulk printable sheets. | P0 |
-| R-05 | **Slot-Based Availability Engine:** Owner configures daily operating hours and reservation slot duration blocks (e.g., 90 or 120 mins) to prevent overbooking. | P0 |
-| R-06 | **Holiday & Availability Calendar (Full Day Default):** All calendar days default to standard full-day operating hours without requiring manual daily setup. | P0 |
-| R-07 | **Half-Day Shift Override:** Owner can set specific dates to **Half Day** (Lunch shift only, Dinner shift only, or custom hours), automatically restricting available slots to that window. | P0 |
-| R-08 | **Holiday / Closed Override:** Owner can mark specific dates as **Holiday (Full-Day Closed)** to halt table bookings and QR ordering for the day, with one-click reset to Full Day. | P0 |
-| R-09 | **Menu Categories:** Owner creates, reorders, and edits food categories (e.g., Starters, Main Course, Chef Specials, Beverages, Desserts). | P0 |
-| R-10 | **Food Menu Items:** Owner configures dish name, description, price, food photo, dietary tag (`Veg`, `Non-Veg`, `Egg`, `Vegan`, `Jain`), preparation time, and spice level. | P0 |
-| R-11 | **Instant Stock Toggle (86'd Items):** One-click toggle (`In Stock` / `Sold Out`) instantly disables unavailable dishes on the on-table QR digital menu. | P0 |
-| R-12 | **Live Rush Operations Board:** Real-time dashboard showing active floor table orders and reservations categorized by table number. | P0 |
-| R-13 | **Manual Booking Entry ("Create Book Table"):** Owner can manually enter phone/walk-in reservations, instantly locking the selected table inventory slot. | P0 |
-| R-14 | **Manual Order Creation ("Create Order / Punch Order"):** Restaurant side can create orders directly in the B2B portal (for walk-in or phone diners) by selecting a table, choosing dishes from the live menu, and placing the order without requiring a customer QR scan. | P0 |
-| R-15 | **Active Order Management:** Restaurant side can manage all live orders: view item breakdown by table, append additional items/rounds of food to an active seated table, and track live order subtotals. | P0 |
-| R-16 | **Order Status Actions:** Owner updates order progression with one click: `Confirmed` → `Preparing` → `Served` → `Completed` / `Cancelled`. | P0 |
-| R-17 | **Revenue Dashboard:** Live view of daily and monthly gross sales, total order counts, and net dining revenue. | P0 |
-| R-18 | **Monthly Settlement Statements:** View and download monthly statements showing complete transaction breakdown, settlement status, and Admin payment UTR references. | P0 |
-
-**Acceptance (R-14):** Given an occupied table, when the restaurant staff opens "Create Order", selects the table and items from the menu, and clicks submit, the order is immediately created, displayed on the Live Rush Board, and bound to that table.
-
-**Acceptance (R-11):** Given a dish marked `In Stock`, when the owner toggles it to `Sold Out` on the B2B portal, any customer viewing or scanning the table QR code sees the item as disabled with a "Sold Out" badge within 1 second.
+| Requirement ID | Feature | Functional Description | Priority |
+|---|---|---|:---:|
+| **B2B-01** | **Venue Login & Isolation** | Restaurant owners log in with provisioned credentials. Operators can only view and manage their own venue data; cross-venue data visibility is prohibited. | P0 |
+| **B2B-02** | **Dining Floor Zones** | Owners can define and name physical dining areas (e.g., Main Dining Hall, AC Family Lounge, Outdoor Patio, Private Dining Room). | P1 |
+| **B2B-03** | **Table Inventory** | Owners add tables with table identifiers (e.g., T-01, Table 12), guest capacity (2, 4, 6, 8+ seats), and assigned dining zone. | P0 |
+| **B2B-04** | **Table QR Generation** | System generates unique, high-resolution, printable QR codes tied to each physical table. Owners can download individual table QR codes or a bulk printable sheet. | P0 |
+| **B2B-05** | **Availability Slot Engine** | Owners configure operating hours and reservation slot blocks (e.g., 60, 90, or 120 minutes) to manage table turns and prevent overbooking. | P0 |
+| **B2B-06** | **Default Full-Day Calendar** | All calendar dates automatically default to standard full-day operating hours without requiring repetitive daily setup. | P0 |
+| **B2B-07** | **Half-Day Shift Overrides** | Owners can mark specific dates as **Half Day** (e.g., lunch-only or dinner-only shifts), automatically clamping table availability to the designated shift window. | P0 |
+| **B2B-08** | **Holiday Closure Overrides** | Owners can mark specific dates as **Holiday (Closed)**, which halts all table bookings and ordering for that date, with a single-click reset to Full Day. | P0 |
+| **B2B-09** | **Menu Categories** | Owners organize their digital menu into custom categories (e.g., Soups & Starters, Chef's Specials, Main Course, Beverages, Desserts). | P0 |
+| **B2B-10** | **Food Menu Items** | Owners configure dish name, description, price, food image, dietary classifications (`Veg`, `Non-Veg`, `Egg`, `Vegan`, `Jain`), preparation time estimate, and spice level. | P0 |
+| **B2B-11** | **Instant Sold-Out (86'd) Toggle** | A single-click toggle on each dish (`In Stock` / `Sold Out`) instantly updates the item status on customer-facing digital menus to prevent orders for unavailable items. | P0 |
+| **B2B-12** | **Live Rush Board** | Real-time Kanban-style operational dashboard displaying all active seated tables, pending tickets, in-preparation dishes, and completed orders categorized by table number. | P0 |
+| **B2B-13** | **Walk-in Table Booking** | Staff can manually enter walk-in or phone reservations directly on the portal, reserving the table slot. | P0 |
+| **B2B-14** | **Manual Order Punching ("Create Order")** | Staff can create orders directly in the portal for phone/walk-in diners by selecting a table, choosing dishes from the menu, and sending the order to the kitchen without requiring customer QR scanning. | P0 |
+| **B2B-15** | **Active Order Management** | Staff can open any active seated table to view items, append additional rounds of dishes, add custom kitchen instructions, and monitor running order totals. | P0 |
+| **B2B-16** | **Order Status Progression** | Staff updates kitchen and floor progress with one click: `Confirmed` → `Preparing` → `Served` → `Completed` (or `Cancelled`). | P0 |
+| **B2B-17** | **Daily Revenue Dashboard** | Real-time visibility into daily gross sales, completed orders count, peak dining hours, and active table turnaround rate. | P0 |
+| **B2B-18** | **Monthly Settlement Statements** | Owners view and download month-end statements detailing total completed orders, gross revenue, settlement status, and the admin bank transfer reference number. | P0 |
 
 ---
 
-### 5.3 On-Table QR Digital Menu (Customer Surface)
+### 6.3 Spot Food Booking (On-Table QR Menu)
 
-| ID | Requirement | Priority |
-|---|---|---|
-| T-01 | Diner scans physical table QR code on their smartphone camera; loads mobile web digital menu instantly with zero app download or login required. | P0 |
-| T-02 | URL cryptographically binds the session to the specific restaurant and physical table ID (`/menu/:slug?table=:tableId&sig=:signature`). | P0 |
-| T-03 | Displays restaurant branding, table number badge (e.g., "Table #04"), and operational shift status. | P0 |
-| T-04 | Category navigation bar allows rapid jumping between food sections. | P0 |
-| T-05 | Dish cards show photo, name, description, price, dietary tags, prep time, and `+ Add` button. | P0 |
-| T-06 | Sold-out dishes display disabled with a prominent "Sold Out for Today" indicator and cannot be added to cart. | P0 |
-| T-07 | Interactive floating order drawer shows live items count, subtotal, and allows adding special cooking instructions (e.g., "Less spicy"). | P0 |
-| T-08 | Tapping "Place Order" generates an instant digital order receipt on the phone screen and pushes the order ticket directly to the restaurant's Live Rush Board under that table ID. | P0 |
-
-**Acceptance (T-08):** Given a diner seated at Table 5, when they submit an order via QR web menu, an audible/visual order alert appears on the Restaurant B2B Live Rush Board labeled "Table 5" with the exact ordered items and timestamps.
+| Requirement ID | Feature | Functional Description | Priority |
+|---|---|---|:---:|
+| **SPO-01** | **Zero-Friction Access** | Diner scans physical table QR code using their smartphone camera. The digital menu opens immediately in their mobile web browser without requiring an app download or account creation. | P0 |
+| **SPO-02** | **Table Binding Verification** | The session securely binds the diner's browser to the specific restaurant and physical table number, prominently displaying the venue name and table identifier (e.g., "Seated at Table 06"). | P0 |
+| **SPO-03** | **Category Navigation & Search** | Fast category navigation allows diners to quickly jump between menu sections and filter by dietary tags (`Veg`, `Non-Veg`, `Vegan`, `Jain`). | P0 |
+| **SPO-04** | **Dish Presentation** | Visual cards display food photography, dish name, description, exact price, dietary tags, estimated preparation time, and an `+ Add` button. | P0 |
+| **SPO-05** | **Instant Sold-Out Guard** | Dishes marked `Sold Out` by the kitchen are prominently displayed as unavailable and disabled from being added to the diner's cart. | P0 |
+| **SPO-06** | **Cart & Cooking Notes** | Floating cart drawer tracks selected items, quantities, running subtotal, and allows diners to enter special cooking instructions (e.g., "Make mild, no onion"). | P0 |
+| **SPO-07** | **Instant Order Submission** | Tapping "Place Order" generates an instant digital order receipt on the diner's screen and immediately dispatches the order ticket to the restaurant's Live Rush Board under their table number. | P0 |
 
 ---
 
-### 5.4 Document Verification & Compliance Rules
+## 7. Business Rules & Compliance Invariants
 
-```
-Admin uploads Restaurant Documents (FSSAI, GST, Bank Proof, Owner ID)
-   ↓
-Admin verifies Document Number, Expiry Date, and Legibility
-   ↓
-Admin sets status: Approved or Rejected (with mandatory reason)
-   ↓
-System checks Mandatory Document Rule:
-   • FSSAI License: Approved?
-   • GST Certificate: Approved?
-   • Bank Proof: Approved?
-   • Owner KYC ID: Approved?
-   ↓
-All 4 Approved → Restaurant unlocked for Activation (Draft → Active)
-Any Missing/Rejected → Activation locked; Admin notified of deficiency
-```
+### 7.1 Mandatory Document Compliance & Activation Gate
+A restaurant cannot be activated until the following four compliance documents are uploaded and approved:
 
-#### Document Checklist Matrix
-| Document Type | Code | Mandatory? | Required Metadata | Expiry Date Tracked? |
+| Document Code | Document Name | Mandatory? | Required Information | Expiry Date Tracked? |
 |---|---|:---:|---|:---:|
-| **FSSAI / Food License** | `DOC_FSSAI` | **Yes** | 14-digit License Number | **Yes** |
-| **GST Registration** | `DOC_GST` | **Yes** | 15-character GSTIN | No |
-| **Bank Account Proof** | `DOC_BANK` | **Yes** | Bank Name, Account Number, IFSC, Account Holder Name | No |
-| **Owner Government ID** | `DOC_KYC_ID` | **Yes** | ID Type (Aadhaar/Passport/PAN), ID Number | Optional |
-| **Trade License** | `DOC_TRADE` | Optional | Permit / License Number | **Yes** |
-| **Signed Partner Contract** | `DOC_AGREEMENT`| Optional | Agreement Signing Date, Version | Optional |
+| `DOC_FSSAI` | **FSSAI Food Safety License** | **Yes** | 14-digit Food Safety License Number | **Yes** |
+| `DOC_GST` | **GST Registration Certificate** | **Yes** | 15-character GSTIN | No |
+| `DOC_BANK` | **Bank Account Proof (Cheque/Passbook)** | **Yes** | Bank Name, Account Number, IFSC Code, Account Name | No |
+| `DOC_KYC_ID` | **Owner Government KYC ID** | **Yes** | ID Type (Aadhaar, Passport, PAN), ID Number | Optional |
+| `DOC_TRADE` | **Municipal Trade License** | Optional | Municipal Permit Number | **Yes** |
+| `DOC_AGREEMENT`| **Signed Partner Contract** | Optional | Agreement Version, Execution Date | Optional |
+
+**Enforcement Rule:** If an Admin attempts to change a restaurant's status from `Draft` to `Active` while any of the four mandatory documents are missing or in `Rejected` / `Pending Review` status, the system rejects the activation request with a clear explanatory notice.
+
+### 7.2 Commercial Split Setting Rule
+- The commercial split ratio (e.g., Platform 15% / Partner 85%) is recorded on the restaurant profile by the Super Admin during onboarding.
+- **Phase 1 Boundary:** The split ratio is an administrative reference setting only. It **does not execute automated deductions** or alter customer bill totals on live orders. All table orders record gross dining totals.
+
+### 7.3 Instant Sold-Out (86'd) Rule
+- When kitchen staff marks an item `Sold Out` on the B2B portal, customer QR screens immediately reflect the change.
+- Any order in progress that contains a sold-out item cannot be submitted, preventing customer disappointment and kitchen confusion.
+
+### 7.4 Calendar Override Precedence
+1. **Holiday Override:** Highest priority. Marks the restaurant fully closed for the selected date; halts all bookings and table orders.
+2. **Half-Day Override:** Second priority. Restricts active table slots to the specified shift window (e.g., lunch-only 11:30 AM – 3:30 PM).
+3. **Default Full Day:** Base operational schedule applied automatically to all standard calendar dates.
 
 ---
 
-### 5.5 Commercial Split Setting & Monthly Settlement Rules
+## 8. High-Level Domain Entities
 
-**Commercial Split Ratio (Configuration Only)**
-- The commercial split percentage is recorded on the restaurant profile by the Super Admin during onboarding (e.g., Platform 15% / Partner 85%) as an agreed commercial reference.
-- **Phase 1 & Phase 2 Scope Boundary:** In Phase 1 and Phase 2, the split ratio is an administrative configuration setting only. It is **not applied anywhere** in live order calculations, table ordering, customer totals, or automated revenue deductions. All orders record actual dining amounts.
-
-**Monthly Settlement Lifecycle**
-- On the 1st of every calendar month, the system consolidates all completed orders from the prior month for each restaurant.
-- **Statement Data:** Restaurant legal details, billing period (`YYYY-MM`), total completed orders count, and total gross dining revenue.
-- **Payout Settlement:** Admin executes the bank wire/NEFT transfer to the restaurant's verified bank account and inputs the payment UTR number and transfer date into the statement record.
-- Once marked `Paid`, the statement is permanently locked and available for download by both Admin and Restaurant Owner.
-
----
-
-### 5.6 Reports & Operational Analytics
-
-| Report | Surface | Description |
+| Entity Name | Business Purpose | Key Business Attributes |
 |---|---|---|
-| **Platform Revenue Report** | Admin | Monthly GMV, total commission revenue, and pending payout liabilities. |
-| **Compliance Audit Report** | Admin | Onboarding pipeline, document approval statuses, and upcoming license expiry alerts. |
-| **Partner Sales & Order Volume** | Admin | Gross sales volume, order counts, and cancellation rates per restaurant. |
-| **Peak-Hour Rush Report** | Owner | Hourly order density and table turnover velocity to optimize floor staffing. |
-| **Menu Item Velocity Report** | Owner | Top-selling dishes by volume and revenue contribution; frequency of out-of-stock toggles. |
-| **Monthly Settlement Statement** | Owner & Admin | Formal tax-compliant statement with order-level itemization and bank UTR payment receipt. |
+| **Restaurant** | The dining business tenant operating on the platform. | Legal business name, brand display name, contact phone, email, full physical address, status (`Draft`, `Active`, `Suspended`), commercial split percentage. |
+| **ComplianceDocument** | Official legal records verified by the platform. | Document type, registration number, document file reference, validity expiry date, status (`Pending Review`, `Approved`, `Rejected`), rejection remarks. |
+| **DiningZone** | Physical layout section within the venue. | Zone name (e.g., Indoor AC, Terrace), description. |
+| **RestaurantTable** | Physical seating unit on the dining floor. | Table identifier (e.g., Table 12), seating capacity, assigned zone, current operational status (`Available`, `Occupied`, `Reserved`). |
+| **CalendarOverride** | Date-specific operational schedule adjustments. | Date, override type (`Full Day`, `Half Day`, `Holiday Closed`), active shift start and end times. |
+| **MenuCategory** | Organization structure for dishes. | Category name (e.g., Starters, Main Course), display order, active status. |
+| **FoodItem** | Individual menu offering. | Dish name, description, price, food image reference, dietary tags, estimated prep time, live stock availability status (`In Stock`, `Sold Out`). |
+| **TableOrder** | Complete dining order transaction tied to a table. | Unique order reference, table reference, gross order total, live order status (`Confirmed`, `Preparing`, `Served`, `Completed`, `Cancelled`), creation timestamp. |
+| **OrderItem** | Specific dish line item within a dining order. | Food item reference, dish name snapshot, unit price snapshot, quantity, diner cooking instructions. |
+| **MonthlySettlement** | Consolidated calendar-month billing statement. | Billing period (YYYY-MM), total completed order count, gross sales total, settlement status (`Accruing`, `Generated`, `Paid`), bank transfer reference (UTR). |
 
 ---
 
-## 6. Data Model (High Level)
+## 9. Non-Functional Product Standards
 
-| Entity | Key Fields | Description |
-|---|---|---|
-| **CompanyRestaurant** | `id`, `legalName`, `displayName`, `slug`, `email`, `phone`, `address`, `platformSplitPct`, `status` (`DRAFT`/`ACTIVE`/`SUSPENDED`), `createdAt` | Core tenant entity representing a partner restaurant business. |
-| **ComplianceDocument** | `id`, `restaurantId`, `documentType`, `documentNumber`, `fileUrl`, `expiryDate`, `status` (`PENDING`/`APPROVED`/`REJECTED`), `rejectionReason`, `verifiedAt` | Legal compliance and KYC documents uploaded and verified by Admin. |
-| **DiningZone** | `id`, `restaurantId`, `name`, `description` | Physical dining section within the restaurant (e.g., Main Hall, Terrace). |
-| **RestaurantTable** | `id`, `restaurantId`, `zoneId`, `tableNumber`, `capacity`, `qrCodeUrl`, `qrSecurityToken`, `currentStatus` | Physical table entity with bound seating capacity and cryptographic QR token. |
-| **CalendarOverride** | `id`, `restaurantId`, `overrideDate`, `overrideType` (`FULL_DAY`/`HALF_DAY`/`HOLIDAY`), `activeStartTime`, `activeEndTime` | Date-specific shift and holiday overrides modifying base operating hours. |
-| **MenuCategory** | `id`, `restaurantId`, `name`, `sortOrder`, `isActive` | Organizational menu categories. |
-| **FoodItem** | `id`, `restaurantId`, `categoryId`, `name`, `description`, `price`, `photoUrl`, `dietaryTag`, `prepTimeMinutes`, `isAvailable` | Dish master record with live 86'd stock toggle (`isAvailable`). |
-| **TableOrder** | `id`, `restaurantId`, `tableId`, `orderNumber`, `grossAmount`, `orderStatus`, `createdAt` | Dine-in order transaction record with table binding. |
-| **OrderItem** | `id`, `orderId`, `foodItemId`, `itemName`, `unitPrice`, `quantity`, `specialInstructions` | Line items included in a specific table order. |
-| **MonthlySettlement** | `id`, `restaurantId`, `billingMonth`, `totalGrossSales`, `completedOrdersCount`, `status` (`ACCRUING`/`GENERATED`/`PAID`), `payoutReferenceId`, `paidAt` | Consolidated month-end dining sales billing statement. |
-
-### 6.1 Glossary
-
-| Term | Meaning |
-|---|---|
-| **Company / Restaurant** | The B2B partner operating one or more dining establishments on the QuickBite platform. |
-| **Platform** | QuickBite, the SaaS operating company providing the restaurant operations platform. |
-| **On-Table QR** | Unique cryptographic QR code affixed to a dining table that loads the table's digital menu on diners' mobile web browsers. |
-| **86 / Sold Out** | Industry term for an item that is temporarily out of stock in the kitchen; toggled on the portal to prevent customer orders. |
-| **Activation Gate** | Strict business rule preventing a restaurant from being set to `Active` until all mandatory compliance documents are approved. |
-| **Live Rush Board** | Real-time operational Kanban/board in the B2B portal displaying active table orders and reservation slots. |
+- **Zero-Friction Customer Experience:** Table QR digital menus must load in under `1.5 seconds` on standard mobile data connections without requiring customer application downloads, registrations, or passwords.
+- **Real-Time Operational Response:** Order placement, status updates, and sold-out (86'd) toggles must reflect across restaurant kitchen boards and customer menus in $\le 500\text{ milliseconds}$.
+- **Strict Tenant Privacy & Data Isolation:** Complete isolation between restaurants. No restaurant operator or staff member can view, query, or mutate another venue's orders, menus, tables, or financial reports.
+- **Operational Reliability:** Table ordering and kitchen rush boards must handle peak dinner rush concurrency smoothly without dropped tickets or double-booked table slots.
+- **Audit Traceability:** All administrative actions—including restaurant profile edits, document approvals or rejections, status changes, and monthly payout records—must be immutably logged with user, action, and timestamp.
+- **Responsive Multi-Surface Usability:**
+  - Super Admin and Restaurant B2B Portals are optimized for desktop and tablet displays (including restaurant POS tablets).
+  - Spot On-Table QR digital menus are mobile-first, thumb-friendly, and optimized for smartphone screens of all sizes.
 
 ---
 
-## 7. Non-Functional Requirements
+## 10. Release Readiness Criteria (Definition of Done)
 
-- **Security & Multi-Tenancy:** Strict tenant boundary enforcement at the database and API middleware layer. Restaurant owners and staff can never view or modify another venue's data.
-- **Audit Logging:** Immutably log all modifications to restaurant profiles, document verification approvals/rejections, and monthly payout records (recording who, what, when, and IP).
-- **Sub-Second Performance:** Table QR digital menu initial load time must be under `1.2 seconds` on 4G connections. Instant stock (86'd) toggles must propagate to customer screens in $\le 500\text{ ms}$.
-- **Tamper-Resistant QR Codes:** Table URLs include an HMAC security token to prevent diners from manipulating table numbers in the URL bar.
-- **Reliability:** Idempotent order processing ensuring no duplicate ticket creation; atomic reservation locking preventing overlapping table seatings.
-- **Storage:** Secure cloud object storage (AWS S3 / Cloudinary) with signed, time-limited URLs for compliance documents and compressed WebP delivery for food imagery.
-- **Responsive Design:** Super Admin and Restaurant B2B portals optimized for desktop and tablet screens; on-table QR digital menu fully responsive and thumb-friendly on mobile browsers.
-
----
-
-## 8. Assumptions, Risks and Open Questions
-
-### 8.1 Decisions and Assumptions
-**Confirmed Decisions**
-1. Phase 1 focuses exclusively on B2B SaaS (Super Admin Portal, Restaurant B2B Portal, and On-Table QR Menu). No consumer mobile app.
-2. Restaurant activation is blocked until all 4 mandatory documents (FSSAI, GST, Bank Proof, Owner ID) are approved by Admin.
-3. The commercial split ratio is an Admin profile configuration only; it does not calculate or execute automatic order deductions in Phase 1 or Phase 2.
-4. Unmodified calendar days default to Full Day operating hours; owners override only when needed (Half Day or Holiday Closed).
-5. In Phase 1, customer food payments are settled in-restaurant (cash, card, or venue UPI at the counter/table) and reconciled against platform monthly statements.
-
-**Assumed (To be validated during implementation)**
-1. Diners have access to basic 4G/5G mobile connectivity or restaurant guest Wi-Fi to load web menus.
-2. Platform settlements are executed on the 1st of every month for the preceding calendar month.
-3. Cashier/waitstaff review the digital order receipt on the diner's screen before completing the physical billing.
-
-### 8.2 Risks and Mitigations
-| Risk | Likelihood | Impact | Mitigation Strategy |
-|---|:---:|:---:|---|
-| **Weak Mobile Signal Inside Restaurant** | Medium | High | Lightweight mobile web bundle ($< 200\text{ KB}$ initial payload), aggressive local asset caching, and compact WebP images. |
-| **Customer Scans Wrong Table QR Code** | Low | Medium | Prominent table identifier displayed in header (e.g., "You are ordering at Table 04"); diner can verify before placing order. |
-| **Kitchen Overwhelmed During Rush** | Medium | Medium | Prominent one-click 86 stock toggle allows owner to immediately pause orders for high-prep dishes. |
-| **Order Total Discrepancies** | Low | High | Line-item calculation and immutable order gross amounts logged at creation time. |
-
----
-
-## 9. Release Readiness (Definition of Done)
-
-Phase 1 MVP is ready for production deployment and partner onboarding when:
-- [ ] Super Admin can onboard a restaurant, upload and approve all 4 mandatory compliance documents, and set the commercial split percentage.
-- [ ] Activation gate verified: System strictly prevents changing restaurant status to `Active` when any mandatory document is missing or rejected.
-- [ ] Restaurant Owner can log into the B2B portal, configure tables, generate and download high-resolution table QR codes.
-- [ ] Restaurant Owner can create categories, add food items with photos and dietary tags, and toggle dishes between `In Stock` and `Sold Out`.
-- [ ] Scanning a generated physical table QR code with a smartphone camera instantly opens the digital menu bound to that exact table ID without requiring app installation or login.
-- [ ] Placing an order from the on-table QR menu pushes a ticket immediately to the restaurant's Live Rush Board displaying the correct table number and ordered items.
-- [ ] Restaurant side can manually create orders from the B2B portal ("Create Order") and manage live orders (append items, update status).
-- [ ] Owner can transition orders on the Live Rush Board through `Confirmed` → `Preparing` → `Served` → `Completed`.
-- [ ] System accurately aggregates gross dining revenue on every order and generates an itemized month-end settlement statement.
-- [ ] Admin can input payment UTR references and mark monthly settlement statements as `Paid`.
-- [ ] All P0 functional requirements pass end-to-end acceptance tests.
+Phase 1 MVP is certified ready for operational deployment when:
+- [ ] Super Admin can onboard a new restaurant partner, upload all four mandatory compliance documents, verify them, and record the commercial split ratio.
+- [ ] **Activation Gate Verified:** The system actively blocks activating any restaurant if any mandatory document is missing or rejected.
+- [ ] Restaurant Owner can log into the B2B portal, create zones and tables, and generate printable high-resolution table QR codes.
+- [ ] Restaurant Owner can configure categories, add menu items with photos and dietary tags, and toggle dishes between `In Stock` and `Sold Out`.
+- [ ] Scanning a physical table QR code instantly opens the digital menu bound to that exact table number without requiring app downloads or logins.
+- [ ] Submitting a table QR order immediately pushes an order ticket to the restaurant's Live Rush Board displaying table number, items, notes, and timestamps.
+- [ ] Restaurant staff can manually punch orders in the B2B portal ("Create Order") and append items to active seated tables.
+- [ ] Restaurant staff can transition orders across the Live Rush Board (`Confirmed` → `Preparing` → `Served` → `Completed`).
+- [ ] System accurately records gross sales on all orders and automatically compiles monthly settlement statements on the 1st of each month.
+- [ ] Super Admin can record bank transfer UTR references and mark monthly settlement statements as `Paid`.
+- [ ] All P0 functional requirements pass end-to-end user acceptance testing.
