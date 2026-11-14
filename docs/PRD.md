@@ -24,10 +24,10 @@ Diners (families and business meetings) waste **45–60 minutes** dining out dur
 
 | Surface | Platform | Target User | Key Purpose |
 |---|---|---|---|
-| **Admin Portal** | React (Web) | Super Admin | Partner onboarding, 4-document verification gate, commercial split setting, monthly payouts. |
-| **B2B Portal** | React (Web) | Restaurant Owner & Staff | Floor zones, tables, printable QR codes, live menu, 86'd stock toggle, manual order punching, Live Rush Board. |
-| **Customer App** | React Native (Mobile) | Diners (Families & Meetings) | Find restaurants, select date & time slot, book tables, pre-order meals ahead of arrival. |
-| **Table QR Menu** | React (Mobile Web) | In-Venue Diners | Instant on-table ordering via QR scan. Zero app download, zero login. |
+| **Admin Portal** | Web Application | Super Admin | Partner onboarding, 4-document verification gate, commercial split setting, monthly payouts. |
+| **B2B Portal** | Web Application | Restaurant Owner & Staff | Floor zones, tables, printable QR codes, live menu, 86'd stock toggle, manual order punching, Live Rush Board. |
+| **Customer App** | Mobile Application | Diners (Families & Meetings) | Find restaurants, select date & time slot, book tables, pre-order meals ahead of arrival. |
+| **Table QR Menu** | Responsive Mobile Web | In-Venue Diners | Instant on-table ordering via QR scan. Zero app download, zero login. |
 
 ---
 
