@@ -26,7 +26,7 @@ The tech stack is fixed across all development tracks:
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
-│ Web Portals (Admin & B2B)      │ React (TypeScript, Tailwind CSS)                      │
+│ Portals (Admin & B2B PWA)      │ React PWA (Vite, vite-plugin-pwa, Standalone Mode)    │
 │ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
 │ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
 │ Form & Input Validation        │ Zod (Strict schema validation across forms)           │
@@ -94,6 +94,19 @@ All server interactions, caching, background synchronization, and mutations must
   - High-frequency data (Live Rush Board active orders): `staleTime: 0` (always revalidate on focus, backed by WebSocket push).
 - **Optimistic Updates:** Immediate UI reflection for instant 86'd stock toggles and status progression (`CONFIRMED` → `PREPARING` → `SERVED`), with rollback on network failure.
 - **WebSocket Synchronization:** When WebSocket events arrive from the NestJS `RushBoardGateway`, TanStack Query keys are automatically invalidated (`queryClient.invalidateQueries({ queryKey: orderKeys.live(restaurantId) })`).
+
+## 3.4 Progressive Web App (PWA) Standards (Admin & B2B Portals)
+
+Both the **Super Admin Portal** (`admin-portal/`) and **Restaurant B2B Portal** (`b2b-portal/`) are built as installable **Progressive Web Apps (PWAs)** powered by `vite-plugin-pwa`:
+- **Installation & Display Configuration:**
+  - `display: 'standalone'` ensures fullscreen execution on touch POS terminals, iPads, Android tablets, and desktop workstations without browser address bars.
+  - Manifest definitions: Custom app icons (`192x192`, `512x512`, `maskable`), application title, and brand theme colors.
+- **Service Worker & Workbox Caching:**
+  - Pre-caches application bundles, CSS stylesheets, fonts, and static assets for instant load times even under spotty restaurant kitchen Wi-Fi.
+  - Background asset updates with clean prompt triggers (`autoUpdate` / prompt update).
+- **Kitchen & Hardware Integrations:**
+  - **Web Push API & Audio Alerts:** Receives background order notifications and triggers instant audible chimes on the Kitchen Live Rush Board whenever a pre-booking or on-table QR order arrives.
+  - **Screen Wake Lock API:** Prevents kitchen tablet screens from dimming or sleeping during active dining service shifts.
 
 ---
 

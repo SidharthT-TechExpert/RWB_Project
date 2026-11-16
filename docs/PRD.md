@@ -67,7 +67,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ## 6. Functional Requirements
 
-### 6.1 Super Admin Portal (Web)
+### 6.1 Super Admin Portal (PWA)
 - **ADM-01 Partner Onboarding:** Admin creates restaurant profiles (legal name, brand name, contact, address, cuisine, logos).
 - **ADM-02 Account Provisioning & Email Delivery:** System automatically generates owner login credentials upon restaurant onboarding and securely sends the temporary password to the partner's registered email address. The generated password must be strong (combining uppercase, lowercase, numbers, and special characters) using the sanitized restaurant name as the starter prefix (e.g. `BrandName@9xK#4vL2!`).
 - **ADM-03 Document Compliance Upload:** Admin uploads partner legal documents (FSSAI License, GST Certificate, Bank Proof, Owner ID).
@@ -78,7 +78,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-08 Global Audit Ledger:** Filterable log of all orders, pre-bookings, and transactions across all venues.
 - **ADM-09 Delayed Food Payout Engine (T+X Days):** System tracks pre-booked food order revenue and upfront pre-booking fees collected from customers in Indian Rupees (₹). Following dining completion, the system enforces a configurable holding period (X days after order completion, e.g. T+2 or T+3 days) for dispute clearance and accounting reconciliation. Once the X-day delay window matures, the pre-booked food amount (along with partner's pre-booking fee share) moves to the Disbursable Queue; Admin executes bank transfer in INR (₹) to the restaurant's registered bank account and logs the Bank UTR reference.
 
-### 6.2 Restaurant B2B Operations SaaS Portal (Web)
+### 6.2 Restaurant B2B Operations SaaS Portal (PWA)
 - **B2B-01 Secure Multi-Tenant Login:** Isolated access to own restaurant data only.
 - **B2B-02 Floor Zones:** Create and manage dining sections (Main Hall, AC Lounge, Terrace).
 - **B2B-03 Table Inventory:** Add tables with table numbers, seat capacity (2, 4, 6, 8+ pax), and assigned zone.
@@ -126,6 +126,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **Reliability & Concurrency:** System supports high concurrent dining rushes without dropped tickets or double-booked tables.
 - **Multi-Tenant Data Isolation:** Complete data separation between restaurant venues. No venue can view or alter another venue's records.
 - **Audit Logging:** Immutable audit logs for all administrative actions (document approvals/rejections, restaurant status changes, payout records).
+- **Progressive Web App (PWA) Architecture:** Both the Super Admin Portal and Restaurant B2B Operations Portal are installable Progressive Web Apps (PWAs). They feature standalone full-screen display modes (eliminating browser URL bars on POS tablets and iPads), service worker asset caching for instant launch, and Web Push notifications for incoming orders and kitchen chimes.
 - **Responsive Multi-Surface Support:** Portals optimized for desktop/tablet; Customer App optimized for iOS/Android; Table QR menu optimized for mobile browsers.
 
 ---
@@ -186,6 +187,7 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
   - `Served` = Violet
   - `Completed` = Emerald Green
 - **Menu Clarity:** High-visibility dietary badges (`Veg`, `Non-Veg`, `Vegan`, `Jain`) and prominent "Sold Out" overlays for unavailable dishes.
+- **PWA Full-Screen Display Mode:** Borderless standalone execution optimized for counter POS touchscreens, kitchen wall-mounted displays, and mobile devices without browser interface distractions.
 
 ### 9.2 Key Screens & Views Needed
 1. **Super Admin Portal:**

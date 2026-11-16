@@ -33,7 +33,7 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
-│ Web Portals (Admin & B2B)      │ React (TypeScript, Tailwind CSS)                      │
+│ Portals (Admin & B2B PWA)      │ React PWA (Vite, vite-plugin-pwa, Standalone Mode)    │
 │ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
 │ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
 │ Form & Input Validation        │ Zod (Strict schema validation across all inputs)      │
@@ -64,7 +64,7 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 ```text
 Qickbite/
 │
-├── admin-portal/        # React Web Application (Super Admin Operations)
+├── admin-portal/        # React PWA (Super Admin Platform Operations)
 │   ├── src/
 │   │   ├── components/  # Shared layouts, data tables, modal dialogs
 │   │   ├── features/    # Restaurant onboarding, KYC verification, settlements
@@ -74,7 +74,7 @@ Qickbite/
 │   ├── package.json
 │   └── README.md
 │
-├── b2b-portal/          # React Web Application (Restaurant Management)
+├── b2b-portal/          # React PWA (Restaurant Operations & Kitchen Rush Board)
 │   ├── src/
 │   │   ├── components/  # Layouts, table grids, menu cards
 │   │   ├── features/    # Zones, tables, menu builder, rush board, order punching
