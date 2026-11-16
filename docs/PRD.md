@@ -87,7 +87,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-06 Operating Calendar:** Base Full Day hours apply automatically to all dates.
 - **B2B-07 Half-Day Shift Override:** Restrict availability to specific shift windows (e.g. lunch only or dinner only).
 - **B2B-08 Holiday Closure Override:** Mark specific dates closed; halts all bookings and orders with one-click reset.
-- **B2B-09 Menu Categories:** Create, reorder, and edit food categories (Starters, Mains, Drinks, Desserts).
+- **B2B-09 Menu Categories & Printer Assignment:** Create, reorder, and edit food categories (Starters, Mains, Drinks, Desserts). When creating or editing any category, managers can easily choose its designated station printer from a simple dropdown (e.g., Shawarma Station, Beverage Bar, Main Kitchen) with 1-click editing anytime.
 - **B2B-10 Food Menu Items:** Manage dish name, description, price, photo, dietary tags (`Veg`, `Non-Veg`, `Vegan`, `Jain`), and prep time.
 - **B2B-11 Instant 86'd Stock Toggle:** One-click toggle (`In Stock` / `Sold Out`) instantly disables unavailable dishes across customer menus.
 - **B2B-12 Kitchen Live Rush Board:** Real-time operational dashboard displaying active tables, incoming orders, and pre-booked arrivals.
@@ -97,7 +97,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-16 Order Status Progression:** One-click order lifecycle updates: `Confirmed` → `Preparing` → `Served` → `Completed`.
 - **B2B-17 Daily Revenue Dashboard:** View daily gross sales, order volume, peak hours, and table turnover rates.
 - **B2B-18 Delayed Payout & Settlement Ledger:** Real-time visibility into payout status: Upcoming Payouts (under X-day holding window), Disbursable Funds, and Completed Payouts in INR (₹) with bank UTR transaction references.
-- **B2B-19 Automated Kitchen Station Printing (Category Routing):** Configure multiple thermal printers mapped to specific dish categories (e.g., Shawarma Station, Grill Counter, Beverage Bar, Main Kitchen). When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
+- **B2B-19 Manager KOT System & Station Routing:** Managers have an intuitive KOT dashboard to register thermal printers (IP, Bluetooth, USB) and manage station routing. When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
 
 ### 6.3 Customer Mobile App (Food & Table Pre-Booking)
 - **PRE-01 Account Management:** User registration, profile, and booking history.
@@ -198,10 +198,10 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
 2. **Restaurant B2B SaaS Portal:**
    - Floor & Table Layout Manager (with printable QR generator)
    - Operating Hours & Shift Calendar Overrides
-   - Digital Menu & Category Manager (with instant 86'd stock toggle)
+   - Digital Menu & Category Manager (Category Create/Edit with Station Printer Selector, instant 86'd toggle)
    - Kitchen Live Rush Board (real-time order tickets & status progression)
    - Manual Order Punching Modal
-   - Kitchen Thermal Printers & Category Routing Setup
+   - Kitchen Thermal Printers & KOT System Management (Register printers, test print, category routing)
    - Payout Ledger & Statements (Holding vs Disbursed)
 3. **Customer Mobile App:**
    - Venue Discovery & Search
@@ -245,6 +245,8 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
 - Kitchen thermal printers assigned to specific categories automatically print station KOTs without manual staff intervention.
 - Station ticket prints with Table / Pre-Booking reference, Order #, Timestamp, Dish Name, Quantity, and Special Cooking Notes for that station's dishes only (e.g., Shawarma printer prints Shawarma items only; Beverage printer prints drinks only).
 - If no dedicated station printer is configured for a category, items route automatically to the Main Kitchen master printer.
+- Managers can select and reassign a category's printing tool directly within the Category creation/editing modal via a simple dropdown.
+- Category printer assignment updates take effect immediately for all future incoming orders without restarting printers.
 
 ### Instant Sold-Out Toggle
 - Toggling an item to `Sold Out` in the B2B portal reflects on customer screens within $\le 1\text{ second}$.

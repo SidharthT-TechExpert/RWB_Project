@@ -123,6 +123,10 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
 - **Thermal Protocol & Network Connectivity:**
   - Supports standard 80mm / 58mm thermal receipt printers using ESC/POS protocol.
   - Connectivity via Network TCP Socket (`IP:9100` LAN printers) or PWA Web Print / Bluetooth API.
+- **Manager Category-to-Printer Assignment UI:**
+  - Managers manage KOT routing directly from the B2B SaaS portal:
+    - **Category Modal:** The `CategoryForm` includes an intuitive `printer_id` dropdown populated dynamically from configured active printers.
+    - **Instant Live Update:** Selecting a new printer on a category mutates `menu_categories.assigned_printer_id` and takes effect immediately on subsequent orders without requiring server or hardware reboots.
 - **Standardized KOT Ticket Layout:**
   - **Header:** Table Number (or Pre-Booking Ref), Order Number, Server/Source, Timestamp.
   - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
@@ -364,6 +368,7 @@ The primary database **must be SQL-based (PostgreSQL recommended)**:
 companies_restaurants ──< compliance_documents
 companies_restaurants ──< dining_zones ──< restaurant_tables
 companies_restaurants ──< menu_categories ──< food_items
+menu_categories       >── kitchen_printers (Direct category printer mapping)
 companies_restaurants ──< calendar_overrides
 companies_restaurants ──< table_reservations (Pre-bookings with fee split snapshot)
 companies_restaurants ──< restaurant_payouts (T+X delayed food & fee disbursement ledger)
