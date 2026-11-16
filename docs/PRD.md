@@ -60,7 +60,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ### Platform Operators
 - *As a Super Admin,* I want to review uploaded compliance documents and approve/reject them, so only verified restaurants can activate.
-- *As a Super Admin,* I want monthly gross sales statements generated automatically, so I can record bank payout UTR references.
+- *As a Super Admin,* I want delayed payout statements generated automatically (X days after order completion), so I can transfer pre-booked food amounts to restaurant accounts with bank UTR references.
 
 ---
 
@@ -75,7 +75,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-06 Emergency Toggle:** Admin can switch restaurant status between `Active` and `Suspended` to immediately halt live ordering.
 - **ADM-07 Pre-Booking Commercial Split Ratio:** Admin records the agreed split percentage on the restaurant profile during onboarding. This split ratio applies **strictly and exclusively to customer Pre-Booking charges** (food or table pre-booking amount collected upfront). It does **not** apply to spot QR orders, walk-ins, or general dining bills. Admin can update the split ratio at any time; changes apply only to future pre-bookings and never alter past pre-booking split records.
 - **ADM-08 Global Audit Ledger:** Filterable log of all orders, pre-bookings, and transactions across all venues.
-- **ADM-09 Monthly Pre-Booking Settlement Processing:** System aggregates monthly completed pre-booking fee collections and splits (platform share vs partner share) on the 1st of each month; Admin records the bank payout UTR reference for the partner's accrued pre-booking earnings and marks statement as `Paid`.
+- **ADM-09 Delayed Food Payout Engine (T+X Days):** System tracks pre-booked food order revenue and upfront pre-booking fees collected from customers. Following dining completion, the system enforces a configurable holding period ($X$ days after order completion, e.g. $T+2$ or $T+3$ days) for dispute clearance and accounting reconciliation. Once the $X$-day delay window matures, the pre-booked food amount (along with partner's pre-booking fee share) moves to the Disbursable Queue; Admin executes bank transfer to the restaurant's registered bank account and logs the Bank UTR reference.
 
 ### 6.2 Restaurant B2B Operations SaaS Portal (Web)
 - **B2B-01 Secure Multi-Tenant Login:** Isolated access to own restaurant data only.
@@ -95,7 +95,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-15 Active Order Management:** Open active seated tables, append extra food rounds, and track running totals.
 - **B2B-16 Order Status Progression:** One-click order lifecycle updates: `Confirmed` → `Preparing` → `Served` → `Completed`.
 - **B2B-17 Daily Revenue Dashboard:** View daily gross sales, order volume, peak hours, and table turnover rates.
-- **B2B-18 Monthly Settlement Statements:** View and download monthly pre-booking settlement statements with admin payout UTR references.
+- **B2B-18 Delayed Payout & Settlement Ledger:** Real-time visibility into payout status: Upcoming Payouts (under $X$-day holding window), Disbursable Funds, and Completed Payouts with bank UTR transaction references.
 
 ### 6.3 Customer Mobile App (Food & Table Pre-Booking)
 - **PRE-01 Account Management:** User registration, profile, and booking history.
@@ -104,7 +104,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **PRE-04 Advance Meal Pre-Ordering:** Browse live menu catalog and pre-select dishes attached to the reservation.
 - **PRE-05 Sold-Out Protection:** Real-time stock validation prevents adding sold-out dishes to pre-bookings.
 - **PRE-06 Special Instructions:** Add arrival notes (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp").
-- **PRE-07 Pre-Booking Checkout & Pass:** Customer pays the pre-booking charge; system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
+- **PRE-07 Pre-Booking Checkout & Pass:** Customer pays the pre-booked food order amount and pre-booking fee upfront; system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
 - **PRE-08 Live Status Tracking:** Track booking progression (`Confirmed` → `Preparing` → `Ready for Seating` → `Completed`).
 
 ### 6.4 Spot Food Booking (On-Table QR Menu)
@@ -163,6 +163,15 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 (If any doc is missing/rejected, status remains locked in "Draft").
 ```
 
+### Flow 5: Delayed Restaurant Food Payout (T+X Days)
+```text
+Customer Pre-Pays Food & Booking Online → Diners Arrive & Enjoy Meal →
+Staff Marks Order "Completed" → Delayed Holding Period Starts (X Days for Reconciliation/Disputes) →
+Delay Window Matures (X Days Elapsed) → Funds Move to Disbursable Queue →
+Admin Transfers Pre-Booked Food Amount to Restaurant Bank Account → Admin Logs Bank UTR →
+Partner Receives Automated Settlement Notification & Payout Marked Completed.
+```
+
 ---
 
 ## 9. UI/UX Requirements
@@ -181,13 +190,14 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 1. **Super Admin Portal:**
    - Restaurant Onboarding & Partner List
    - Document Verification Modal (Approve / Reject with reason notes)
-   - Monthly Settlement Ledger & UTR Entry
+   - Delayed Payout Ledger (T+X Matured Orders & UTR Entry)
 2. **Restaurant B2B SaaS Portal:**
    - Floor & Table Layout Manager (with printable QR generator)
    - Operating Hours & Shift Calendar Overrides
    - Digital Menu & Category Manager (with instant 86'd stock toggle)
    - Kitchen Live Rush Board (real-time order tickets & status progression)
    - Manual Order Punching Modal
+   - Payout Ledger & Statements (Holding vs Disbursed)
 3. **Customer Mobile App:**
    - Venue Discovery & Search
    - Table Reservation & Slot Selector
@@ -245,6 +255,13 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 - When a customer confirms a pre-booking, the system permanently snapshots the active split ratio and calculated share amounts (platform fee vs partner fee) onto the reservation record.
 - Modifying a restaurant's split ratio in the Admin Portal applies only to subsequent pre-bookings and never retroactively modifies past pre-bookings or historical accounting statements.
 
+### Delayed Pre-Booked Food Payouts (T+X Days)
+- Pre-booked ordered food amounts collected upfront are held in `Holding (Delayed)` status for a configurable $X$ days post dining completion.
+- Payout funds cannot be disbursed before the designated $X$-day maturity window elapses.
+- Once $X$ days elapse, the system automatically transitions funds from `Holding` to `Disbursable`.
+- Super Admin transfers the matured food amount (plus partner fee share) to the restaurant's registered bank account and logs the bank UTR transaction reference.
+- System automatically sends a payout notification email to the partner with the itemized order breakdown and UTR details.
+
 ---
 
 ## 11. Constraints & Dependencies
@@ -263,4 +280,4 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 | **Peak-Hour Table Turnover** | 25–35% faster table turnaround |
 | **Out-of-Stock Ordering Complaints** | Reduced to 0 (via instant 86'd stock toggle) |
 | **Active Compliant Restaurants** | 100% verified with mandatory compliance documents |
-| **Monthly Settlement Accuracy** | 100% accurate gross sales reporting and UTR recording |
+| **Payout Disbursement Timeliness** | 100% of pre-booked food payouts disbursed within designated T+X day cycle with logged UTR |
