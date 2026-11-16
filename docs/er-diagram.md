@@ -149,6 +149,7 @@ erDiagram
         decimal gross_food_amount
         decimal tax_amount
         decimal total_bill_amount
+        timestamp completed_at
     }
 
     ORDER_ITEMS {
@@ -223,7 +224,7 @@ flowchart TD
     RawSocket --> Stamp["Update order_items.kot_printed_at"]
 ```
 
-### 2.3 Delayed Daily Settlement (T+X Days) & Partner Invoice Lifecycle
+### 2.3 Delayed Daily Settlement (T+X Days Post-Dining), FIFO Queue & Partner Invoice Lifecycle
 
 ```mermaid
 sequenceDiagram
@@ -236,11 +237,15 @@ sequenceDiagram
 
     Customer->>Platform: Pre-book Table & Meal (Transacted in ₹)
     Platform->>Platform: Snapshot Split Ratio & Calculate Platform Fee
-    Note over Platform: Order Fulfilled & Marked COMPLETED
-    Platform->>Batch: Add to Daily Batch (Status: HOLDING_DELAY)
-    Note over Batch: Holding for X days (e.g. T+2 dispute window)
+    Customer->>Platform: Diners Arrive, Eat & Finish Meal
+    Platform->>Platform: Staff Marks Order COMPLETED (completed_at recorded)
+    Note over Platform,Batch: Holding clock starts strictly from completed_at: holding_matures_at = completed_at + X days
+    Platform->>Batch: Add Order to Daily Batch (Status: HOLDING_DELAY)
+    Note over Batch: Holding for X days (Dispute clearance window)
     Platform->>Batch: Maturity Worker: Status -> DISBURSABLE
-    Admin->>Batch: Review Daily Batch (Created vs Completed Metrics & ₹ Net)
+    Admin->>Batch: Opens Daily Settlement Window (Prioritized by FIFO: Oldest Matured First)
+    Admin->>Batch: Applies Multi-Criteria Filters (Restaurant, Status, Date Range, ₹ Amount)
+    Admin->>Batch: Reviews Volume Metrics (Created vs Completed Bookings & Net ₹ Payout)
     Admin->>Partner: Transfer Funds via Bank NEFT/RTGS
     Admin->>Batch: Submit Bank UTR Number
     Batch->>Batch: Status -> SETTLED

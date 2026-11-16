@@ -244,6 +244,7 @@ Active dining orders originating from Pre-Bookings, Table QR web, or manual staf
 | `tax_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Calculated GST in INR (₹) |
 | `total_bill_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Final payable total in INR (₹) |
 | `customer_notes` | `TEXT` | `NULLABLE` | Guest dietary or preparation instructions |
+| `completed_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when dining finished & order marked COMPLETED (anchors T+X delay clock) |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Order placement timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Rush board status update timestamp |
 
@@ -276,7 +277,7 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 | `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique batch identifier |
 | `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE RESTRICT` | Destination restaurant |
 | `batch_date` | `DATE` | `NOT NULL` | Calendar date of dining orders settled |
-| `holding_matures_at` | `TIMESTAMPTZ` | `NOT NULL` | Maturity timestamp ($T+X$ days post dining) |
+| `holding_matures_at` | `TIMESTAMPTZ` | `NOT NULL` | Maturity timestamp (strictly completed_at + X days post dining) |
 | `prebookings_created_count` | `INT` | `NOT NULL DEFAULT 0` | Total pre-bookings initiated for this batch date |
 | `prebookings_completed_count`| `INT` | `NOT NULL DEFAULT 0` | Total pre-bookings fulfilled and completed |
 | `gross_food_sales` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Total pre-booked food revenue in INR (₹) |
@@ -327,8 +328,8 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 | `idx_orders_rest_status_created`| `table_orders` | `(restaurant_id, status, created_at DESC)` | Real-time Kitchen Rush Board queries |
 | `idx_orders_table_status` | `table_orders` | `(table_id, status)` | Active table order retrieval |
 | `idx_order_items_order_printer` | `order_items` | `(order_id, assigned_printer_id_snapshot)` | Automated category KOT dispatch |
-| `idx_daily_settlements_maturity`| `daily_settlement_batches` | `(status, holding_matures_at)` | Maturity cron worker execution |
-| `idx_daily_settlements_rest_date`| `daily_settlement_batches` | `(restaurant_id, batch_date DESC)` | Partner Settlements tab listing |
+| `idx_daily_settlements_fifo` | `daily_settlement_batches` | `(status, holding_matures_at ASC)` | Admin Daily Settlement window FIFO sorting queue |
+| `idx_daily_settlements_rest_date`| `daily_settlement_batches` | `(restaurant_id, status, batch_date DESC)` | Multi-criteria filtering & partner Settlements tab |
 | `idx_monthly_settlements_lookup`| `monthly_settlements` | `(restaurant_id, period_month)` | Monthly partner statement tab |
 
 ---

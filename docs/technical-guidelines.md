@@ -399,19 +399,36 @@ Mandatory compound and single-column indexes:
 - **Zero Retroactive Mutation:** Any subsequent change by Super Admin to `restaurants.prebooking_split_percentage` applies exclusively to future reservations. Existing records in `table_reservations` are permanently immutable.
 - **Exclusion of Spot Orders:** `table_orders` (placed via table QR or punched by staff) have zero platform commission cuts. Diners pay the venue directly.
 
-## 7.5 Delayed Payout Engine Architecture (T+X Days)
-- **Holding Period Window:** Each restaurant profile includes configurable `payout_delay_days INT DEFAULT 2` (or platform default X days).
+## 7.5 Delayed Payout Engine Architecture (T+X Days Post-Dining)
+- **Holding Period Window Anchor (`completed_at`):**
+  The holding delay countdown starts strictly when the customer finishes dining and the order status is updated to `COMPLETED` (`completed_at`). Each restaurant profile defines `payout_delay_days INT DEFAULT 2` (or platform default X days).
 - **Maturity Calculation:**
   When a pre-booked dining order transitions to `COMPLETED`:
-  - `payout_mature_at = completed_at + INTERVAL 'X days'`.
-  - Payout record created with status `HOLDING_DELAY`.
+  - `holding_matures_at = completed_at + INTERVAL 'X days'`.
+  - Batch / Payout record created with status `HOLDING_DELAY`.
   - Total disbursable amount = `prebooked_food_amount` + `partner_fee_share`.
 - **Maturity Worker (NestJS Scheduler):**
-  A scheduled cron job automatically promotes mature records: `UPDATE restaurant_payouts SET status = 'DISBURSABLE' WHERE status = 'HOLDING_DELAY' AND payout_mature_at <= NOW()`.
+  A scheduled cron job running every 10 minutes automatically promotes mature records:
+  ```sql
+  UPDATE daily_settlement_batches 
+  SET status = 'DISBURSABLE' 
+  WHERE status = 'HOLDING_DELAY' AND holding_matures_at <= NOW();
+  ```
+- **Admin Settlement Window Queue & FIFO Sorting Algorithm:**
+  When Super Admin views the Daily Settlement window, records are sorted strictly by a **First-In, First-Out (FIFO)** queue (`ORDER BY holding_matures_at ASC, completed_at ASC`), guaranteeing that older dining events whose dispute clearance window has matured are prioritized and settled first.
+- **Multi-Criteria Filter Parameters:**
+  The settlement query endpoint (`GET /api/v1/settlements/daily`) supports comprehensive filtering:
+  - `restaurantId?: UUID` - Scope to specific partner venue.
+  - `status?: 'HOLDING_DELAY' | 'DISBURSABLE' | 'SETTLED'` - Filter by batch state.
+  - `startDate?: string` / `endDate?: string` - Date range on batch date or completion date.
+  - `minAmount?: number` / `maxAmount?: number` - Net payout threshold in Indian Rupees (₹).
+  - `search?: string` - Case-insensitive text search matching restaurant name, UTR number, or invoice number.
+  - `sortBy?: 'FIFO' | 'LIFO' | 'AMOUNT_DESC' | 'AMOUNT_ASC'` - Sorting algorithm (defaults to `FIFO`).
+  - `page?: number`, `limit?: number` - Standard paginated retrieval.
 - **Disbursement, UTR Logging & Automated Invoice Generation:**
-  Super Admin executes bank transfer and calls `POST /api/v1/payouts/:id/disburse` with `{ utrNumber }`.
+  Super Admin executes bank transfer and calls `POST /api/v1/settlements/daily/:id/disburse` with `{ utrNumber }`.
   - Sets batch status to `SETTLED`, records `disbursed_at = NOW()`, logs `utr_number`.
-  - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
+  - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_pdf_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
   - Emits `PayoutDisbursedEvent` notifying partner owners and managers via email and populating their B2B portal Invoices section for immediate download.
 
 ---
