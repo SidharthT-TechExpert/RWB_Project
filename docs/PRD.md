@@ -70,7 +70,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-01 Partner Onboarding:** Admin creates restaurant profiles (legal name, brand name, contact, address, cuisine, logos).
 - **ADM-02 Account Provisioning & Email Delivery:** System automatically generates owner login credentials upon restaurant onboarding and securely sends the temporary password to the partner's registered email address. The generated password must be strong (combining uppercase, lowercase, numbers, and special characters) using the sanitized restaurant name as the starter prefix (e.g. `BrandName@9xK#4vL2!`).
 - **ADM-03 Document Compliance Upload:** Admin uploads partner legal documents (FSSAI License, GST Certificate, Bank Proof, Owner ID).
-- **ADM-04 Document Verification:** Admin reviews and marks documents as `Approved` or `Rejected` (with mandatory rejection reason).
+- **ADM-04 Document Verification & Email Notification:** Admin reviews and marks uploaded documents as `Approved` or `Rejected` (with mandatory rejection reason). The system automatically dispatches an email notification to the partner's registered email address detailing the verification outcome (including specific rejection reasons and correction steps if rejected).
 - **ADM-05 Activation Gate:** System strictly prohibits setting restaurant status to `Active` unless all 4 mandatory documents are `Approved`.
 - **ADM-06 Emergency Toggle:** Admin can switch restaurant status between `Active` and `Suspended` to immediately halt live ordering.
 - **ADM-07 Commercial Split Ratio:** Admin records agreed split percentage on restaurant profile (reference setting only; no automated bill deductions).
@@ -158,8 +158,8 @@ Ticket Dispatches to Kitchen Rush Board → Staff Appends Extra Rounds Anytime.
 ```text
 Admin Creates Restaurant Profile → System Automatically Generates & Emails Owner Login Password →
 Admin Uploads 4 Mandatory Documents (FSSAI, GST, Bank Proof, Owner ID) →
-Admin Reviews & Approves All 4 Documents →
-Activation Gate Unlocked → Status Changed from "Draft" to "Active".
+Admin Reviews Documents → System Emails Partner Approval/Rejection Notice (with Rejection Reason) →
+When All 4 Documents Are Approved → Activation Gate Unlocked → Status Changed from "Draft" to "Active".
 (If any doc is missing/rejected, status remains locked in "Draft").
 ```
 
@@ -232,7 +232,9 @@ Activation Gate Unlocked → Status Changed from "Draft" to "Active".
 ### Table Slot Locking
 - Reserving a table slot locks capacity for that time window, preventing duplicate bookings.
 
-### Activation Gate
+### Document Verification & Activation Gate
+- Admin can review and mark each uploaded document as `Approved` or `Rejected` (with mandatory rejection reason).
+- System immediately sends an automated verification email to the partner's registered email address upon approval or rejection (including rejection reasons and re-upload instructions).
 - System strictly blocks setting a restaurant status to `Active` if any mandatory document (FSSAI, GST, Bank Proof, Owner ID) is missing or `Rejected`.
 - Status can only transition to `Active` when all 4 documents are `Approved`.
 

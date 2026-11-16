@@ -293,10 +293,11 @@ Security measurements must be implemented across all layers:
   `https://order.quickbite.com/menu?table=table_uuid&sig=HMAC_SHA256(table_uuid, SECRET)`
 - A `QrSignatureGuard` validates the signature before allowing any customer menu access or order placement, preventing URL manipulation.
 
-### 6.7 Compliance Document Security
+### 6.7 Compliance Document Security & Verification Notifications
 - Legal KYC documents (FSSAI, GST, Bank Proof, Owner ID) must be stored in a **private cloud storage bucket** (AWS S3).
 - Direct public access is disabled.
 - Authenticated Super Admins receive short-lived (15-minute) pre-signed download URLs generated on-demand during verification workflows.
+- **Verification Notification Events:** Marking any document `Approved` or `Rejected` emits a domain event handled by `MailService`, sending transactional HTML emails to the partner's registered email with verification status and mandatory rejection feedback.
 
 ### 6.8 SQL Injection Immunity
 - Direct string concatenation in SQL queries is strictly prohibited. All queries must utilize parameterized statements or type-safe ORM query builders (Prisma / TypeORM).
