@@ -20,8 +20,7 @@
 
 - **Super Admin SaaS Operations**: Restaurant partner onboarding, 4-document legal compliance verification (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`), pre-booking split configuration, Daily Settlement Tab (T+X day food payouts, created vs completed pre-booking counts, bank UTR recording), and automated invoice generation.
 - **Restaurant B2B SaaS Operations**: Floor zones, table inventory setup, printable table QR generation, slot availability engine, operating calendar overrides, live food menu builder with instant sold-out (86'd) toggle, staff order punching, walk-in reservations, Daily Settlements tab, Invoices section with downloadable receipts, automated category-routed kitchen thermal printing (KOT), and Kitchen Live Rush Board.
-- **Customer Mobile App (Food & Table Pre-Booking)**: Cross-platform mobile application for diners to discover partner venues, reserve time slots, select party sizes, and pre-order meals in advance (transacted in INR / ₹) to eliminate all waiting upon arrival.
-- **Spot Food Booking (Table QR Menu)**: Frictionless on-table digital menu accessible via smartphone cameras with zero app downloads or logins, securely bound to the table ID, featuring instant kitchen ticket dispatch and direct in-venue INR (₹) bill settlement.
+- **Unified Customer Application (Pre-Booking & In-Venue Spot QR Ordering)**: Single customer-facing application combining advance venue discovery, table/slot reservations, and pre-ordered meals (transacted in INR / ₹), alongside an integrated in-venue table QR camera scanner for instant spot food ordering, anti-fraud identification, and live kitchen progression tracking.
 
 ---
 
@@ -34,8 +33,7 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Portals (Admin & B2B PWA)      │ React PWA (Vite, vite-plugin-pwa, Standalone Mode)    │
-│ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
-│ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
+│ Unified Customer App (Diners)  │ React Native / Web (Cross-Platform Mobile & Web PWA)   │
 │ Form & Input Validation        │ Zod (Strict schema validation across all inputs)      │
 │ Client State Management        │ Zustand (Lightweight modular client UI stores)        │
 │ Server State & Data Caching    │ TanStack Query v5 (Data fetching, caching & sync)     │
@@ -77,29 +75,21 @@ Qickbite/
 ├── b2b-portal/          # React PWA (Restaurant Operations & Kitchen Rush Board)
 │   ├── src/
 │   │   ├── components/  # Layouts, table grids, menu cards
-│   │   ├── features/    # Zones, tables, menu builder, rush board, order punching
+│   │   ├── features/    # Zones, tables, menu builder, rush board, order punching, printers
 │   │   ├── stores/      # Zustand client stores
 │   │   ├── hooks/       # TanStack Query hooks & WebSocket listeners
 │   │   └── schemas/     # Zod validation schemas
 │   ├── package.json
 │   └── README.md
 │
-├── table-qr-menu/       # React Mobile Web (In-Venue On-Table Digital Menu)
+├── customer-app/        # Unified Customer App (Food & Table Pre-Booking + In-Venue QR Ordering)
 │   ├── src/
-│   │   ├── components/  # Sticky category nav, dish cards, cart bottom drawer
-│   │   ├── stores/      # Zustand cart & session store
-│   │   ├── hooks/       # TanStack Query menu fetching & order mutation
-│   │   └── schemas/     # Zod order submission schemas
-│   ├── package.json
-│   └── README.md
-│
-├── customer-app/        # React Native Mobile App (Food & Table Pre-Booking)
-│   ├── src/
-│   │   ├── screens/     # Venue discovery, slot booking, meal pre-order, booking passes
-│   │   ├── components/  # Time slot picker, party size selector, dish cards
-│   │   ├── stores/      # Zustand booking & pre-order store
-│   │   ├── hooks/       # TanStack Query hooks & booking mutations
-│   │   └── schemas/     # Zod reservation schemas
+│   │   ├── screens/     # Discovery, pre-booking slots, advance pre-order, passes, table menu
+│   │   ├── components/  # QR camera scanner, sticky category nav, dish cards, cart drawer
+│   │   ├── features/    # auth (OTP), discovery, pre-booking, spot-ordering, history
+│   │   ├── stores/      # Zustand unified cart, table session & booking store
+│   │   ├── hooks/       # TanStack Query hooks & order mutations
+│   │   └── schemas/     # Zod validation schemas
 │   ├── package.json
 │   └── README.md
 │

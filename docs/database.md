@@ -17,7 +17,7 @@ This document specifies the relational database schema, data dictionaries, integ
 ## 2. Entity Relationship Summary
 
 ```text
-users (Super Admins, Owners, Managers, Staff)
+users (Super Admins, Owners, Managers, Staff, Customers)
   │
 restaurants
   ├── compliance_documents (FSSAI, GST, Bank Proof, KYC ID)
@@ -229,7 +229,7 @@ Pre-bookings created via Customer App capturing party size, advance fees, and im
 ---
 
 ### 3.11 `table_orders`
-Active dining orders originating from Pre-Bookings, Table QR web, or manual staff punching. Spot orders have zero platform commission.
+Active dining orders originating from Unified Customer App Pre-Bookings, In-Venue Table QR, or manual staff punching. Spot orders have zero platform commission.
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|

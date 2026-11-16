@@ -319,7 +319,7 @@ Security measurements must be implemented across all layers:
 - Explicit origin whitelisting:
   - Admin Portal origin (`https://admin.quickbite.com` or local dev)
   - B2B Portal origin (`https://partner.quickbite.com` or local dev)
-  - Table QR Web origin (`https://order.quickbite.com` or local dev)
+  - Unified Customer App origin (`https://app.quickbite.com` or local dev)
   - Wildcards (`*`) are prohibited in production.
 
 ### 6.5 Tenant Data Isolation
@@ -328,7 +328,7 @@ Security measurements must be implemented across all layers:
 
 ### 6.6 Cryptographic QR Table Binding (HMAC)
 - Table QR URLs must be signed with a cryptographic HMAC token:
-  `https://order.quickbite.com/menu?table=table_uuid&sig=HMAC_SHA256(table_uuid, SECRET)`
+  `https://app.quickbite.com/table?id=table_uuid&sig=HMAC_SHA256(table_uuid, SECRET)`
 - A `QrSignatureGuard` validates the signature before allowing any customer menu access or order placement, preventing URL manipulation.
 
 ### 6.7 Compliance Document Security & Verification Notifications
@@ -492,7 +492,7 @@ Whether placed via diner QR or punched manually by restaurant staff, orders must
 ```text
 project-root/
 │
-├── admin-portal/        # React Web Application (Super Admin)
+├── admin-portal/        # React PWA (Super Admin Platform Operations)
 │   ├── src/
 │   │   ├── components/  # Reusable UI components
 │   │   ├── features/    # Domain features (restaurants, documents, settlements)
@@ -503,10 +503,10 @@ project-root/
 │   ├── package.json
 │   └── README.md
 │
-├── b2b-portal/          # React Web Application (Restaurant Management)
+├── b2b-portal/          # React PWA (Restaurant Operations & Kitchen Rush Board)
 │   ├── src/
 │   │   ├── components/  # Layouts, data tables, modals
-│   │   ├── features/    # Zones, tables, menu, rush-board, calendar, orders
+│   │   ├── features/    # Zones, tables, menu, rush-board, calendar, orders, printers
 │   │   ├── stores/      # Zustand client stores
 │   │   ├── hooks/       # TanStack Query hooks & WebSocket listeners
 │   │   ├── schemas/     # Zod validation schemas
@@ -514,23 +514,15 @@ project-root/
 │   ├── package.json
 │   └── README.md
 │
-├── table-qr-menu/       # React Mobile Web (On-Table Digital Menu & Ordering)
+├── customer-app/        # Unified Customer Application (Pre-Booking & In-Venue QR Ordering)
 │   ├── src/
-│   │   ├── components/  # Category navigation, dish cards, cart drawer
-│   │   ├── stores/      # Zustand cart & table session store
-│   │   ├── hooks/       # TanStack Query menu fetching & order mutation
-│   │   ├── schemas/     # Zod order schemas
+│   │   ├── screens/     # Discovery, pre-booking slots, advance pre-order, passes, on-table menu
+│   │   ├── components/  # QR camera scanner, sticky category nav, dish cards, cart drawer
+│   │   ├── features/    # auth (OTP), discovery, pre-booking, spot-ordering, history
+│   │   ├── stores/      # Zustand unified cart, table session & booking store
+│   │   ├── hooks/       # TanStack Query hooks & order mutations
+│   │   ├── schemas/     # Zod validation schemas
 │   │   └── api/
-│   ├── package.json
-│   └── README.md
-│
-├── customer-app/        # React Native Mobile App (Food & Table Pre-Booking)
-│   ├── src/
-│   │   ├── screens/     # Venue discovery, slot booking, meal pre-order, booking passes
-│   │   ├── components/  # Time slot picker, party size selector, dish cards
-│   │   ├── stores/      # Zustand booking & pre-order store
-│   │   ├── hooks/       # TanStack Query hooks & booking mutations
-│   │   └── schemas/     # Zod reservation schemas
 │   ├── package.json
 │   └── README.md
 │
@@ -548,8 +540,8 @@ project-root/
 ├── docs/                # Project Engineering Documentation
 │   ├── PRD.md                     # Product Requirements Document
 │   ├── technical-guidelines.md    # Technical standards & architecture rules
-│   ├── database.md                # (Next) SQL schema & Mermaid ER diagram
-│   └── api-documentation.md       # (Next) REST endpoints & WebSocket contracts
+│   ├── database.md                # SQL schema & data dictionary
+│   └── er-diagram.md              # Visual Mermaid ER architecture
 │
 └── README.md
 ```

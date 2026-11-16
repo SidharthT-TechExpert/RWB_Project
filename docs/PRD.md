@@ -7,7 +7,7 @@
 - **Product Name:** QuickBite
 - **Product Type:** Restaurant Operations B2B SaaS & Dining Platform
 - **Base Currency:** Indian Rupee (INR / ₹). All menu dish prices, customer pre-booking fees, in-venue dining bills, and partner bank payouts are strictly transacted and displayed in Indian Rupees (₹).
-- **Summary:** QuickBite is a dual-sided dining platform. For restaurants, it provides an all-in-one B2B SaaS operating system to manage tables, operating calendars, live menus, staff order punching, and kitchen rush operations. For diners, it provides **Food and Table Pre-Booking** (via mobile app) and **Spot Food Booking** (via on-table QR scan) to eliminate waiting times for tables, menus, waiters, and food preparation.
+- **Summary:** QuickBite is a dual-sided dining platform. For restaurants, it provides an all-in-one B2B SaaS operating system to manage tables, operating calendars, live menus, staff order punching, and kitchen rush operations. For diners, it provides a **Single Unified Customer Application** seamlessly combining both **Food and Table Pre-Booking** (advance reservations from home/office) and **In-Venue Spot QR Ordering** (scanning physical table QR codes while seated) to eliminate waiting times for tables, menus, waiters, and food preparation.
 
 ---
 
@@ -106,27 +106,26 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
   - **Monthly Settlement Tab:** View and download monthly pre-booking fee split statements.
 - **B2B-19 Manager KOT System & Station Routing:** Managers have an intuitive KOT dashboard to register thermal printers (IP, Bluetooth, USB) and manage station routing. When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
 
-### 6.3 Customer Mobile App (Food & Table Pre-Booking)
-- **PRE-01 Account Management:** User registration, profile, and booking history.
-- **PRE-02 Venue Discovery:** Search and browse partner restaurants, cuisines, ambiance photos, and live operating hours.
-- **PRE-03 Table & Slot Reservation:** Select date, party size, preferred dining zone, and available time slot.
-- **PRE-04 Advance Meal Pre-Ordering:** Browse live menu catalog and pre-select dishes attached to the reservation with INR (₹) pricing.
-- **PRE-05 Sold-Out Protection:** Real-time stock validation prevents adding sold-out dishes to pre-bookings.
-- **PRE-06 Special Instructions:** Add arrival notes (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp").
-- **PRE-07 Pre-Booking Checkout & Pass:** Customer pays the pre-booked food order amount and pre-booking fee upfront in Indian Rupees (₹); system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
-- **PRE-08 Live Status Tracking:** Track booking progression (`Confirmed` → `Preparing` → `Ready for Seating` → `Completed`).
-
-### 6.4 Spot Food Booking (On-Table QR Menu)
-- **SPO-01 Mobile Web Menu & Customer Authentication:** Scans table QR code; opens instantly in mobile web browser with zero app download required. Incorporates a fast, proper customer authentication system (Sign Up / Login with Name and Mobile Phone Number OTP verification) required prior to order submission to prevent prank or fraudulent table orders.
-- **SPO-02 Table Binding & Customer Identification:** Securely bound to physical table ID (displays "Seated at Table 04"). Upon spot order creation, the system captures and stores the customer's verified Name, Mobile Phone Number, Table Number, and Order details to hold diners accountable and prevent fraudulent bookings.
-- **SPO-03 Category Navigation & Filters:** Rapid category jumping and dietary filtering (`Veg`, `Non-Veg`, `Vegan`, `Jain`).
-- **SPO-04 Dish Display:** Photo, dish name, description, price, dietary tags, and `+ Add` button.
-- **SPO-05 Real-Time Sold-Out Guard:** Sold-out items disabled from cart addition.
-- **SPO-06 Floating Cart Drawer:** Item counts, running subtotal, and special cooking instructions.
-- **SPO-07 Instant Order Placement:** One-tap authenticated submission pushes ticket directly to the restaurant's Kitchen Live Rush Board.
-- **SPO-08 Anti-Fraud IP Auditing & Role-Based Privacy Isolation:** At the time of order creation, the system automatically records the customer's client IP address and device footprint.
+### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
+- **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
+- **CUST-02 Venue Discovery & Search:** Search and browse partner restaurants, cuisines, ambiance photos, live operating hours, dietary filters, and ratings.
+- **CUST-03 Table & Slot Reservation (Advance Pre-Booking):** Select future dining date, guest party size (2, 4, 6, 8+ pax), preferred dining zone, and available time slot.
+- **CUST-04 Advance Meal Pre-Ordering:** Browse live menu catalog and pre-select dishes attached to the reservation with INR (₹) pricing to ensure meals are served promptly upon arrival.
+- **CUST-05 Built-in QR Scanner & On-Table Binding (In-Venue Spot Mode):** Seated diners can scan physical table QR codes using the app's integrated camera scanner (or open the table link directly). Securely binds to the physical table ID (displays "Seated at Table 04 at [Restaurant Name]").
+- **CUST-06 In-Venue Digital Menu & Category Navigation:** Rapid category jumping, dietary filtering (`Veg`, `Non-Veg`, `Vegan`, `Jain`), dish photos, descriptions, and `+ Add` button.
+- **CUST-07 Real-Time Sold-Out (86'd) Guard:** Real-time stock validation prevents adding sold-out dishes across advance pre-bookings and spot orders.
+- **CUST-08 Special Cooking & Arrival Instructions:** Add arrival notes for pre-bookings (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp") and dish-level cooking notes for spot orders.
+- **CUST-09 Floating Cart Drawer:** Item counts, running subtotal in INR (₹), cooking instructions, and one-tap checkout.
+- **CUST-10 Pre-Booking Checkout & Pass:** Customer pays the pre-booked food order amount and pre-booking fee upfront in Indian Rupees (₹); system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
+- **CUST-11 Instant Spot Order Submission:** One-tap authenticated submission pushes ticket directly to the restaurant's Kitchen Live Rush Board and triggers category-routed KOT thermal printing.
+- **CUST-12 Anti-Fraud Verification & Identification:** Every spot order placed permanently records the customer's verified Name, Mobile Phone Number, physical Table Number, and complete Order details to hold diners accountable and prevent fraudulent or prank bookings.
+- **CUST-13 Anti-Fraud Client IP Auditing & Role Privacy Isolation:** At the time of order creation, the system automatically records the customer's client IP address and device footprint.
   - **Super Admin Only:** The client IP address is visible exclusively to Super Admin in the Super Admin Portal (Audit Ledger / Order Details) for fraud investigations and abuse prevention.
   - **Restaurant Privacy Protection:** The client IP address is strictly hidden and omitted from the Restaurant B2B Portal (restaurant staff see the customer name, phone number, table number, order items, and cooking notes only).
+- **CUST-14 Dual-Mode Live Status Tracking & History:**
+  - For Pre-Bookings: `Confirmed` → `Preparing` → `Ready for Seating` → `Completed`.
+  - For Spot Table Orders: `Confirmed` → `Preparing` → `Served` → `Completed`.
+  - Consolidated dining history displaying all past reservations, digital passes, and in-venue dining receipts.
 
 ---
 
@@ -138,7 +137,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **Multi-Tenant Data Isolation & Privacy:** Complete data separation between restaurant venues. Furthermore, sensitive audit metadata like customer IP addresses are isolated strictly to Super Admin and never leaked to restaurant tenants.
 - **Audit Logging:** Immutable audit logs for all administrative actions (document approvals/rejections, restaurant status changes, payout records).
 - **Progressive Web App (PWA) Architecture:** Both the Super Admin Portal and Restaurant B2B Operations Portal are installable Progressive Web Apps (PWAs). They feature standalone full-screen display modes (eliminating browser URL bars on POS tablets and iPads), service worker asset caching for instant launch, and Web Push notifications for incoming orders and kitchen chimes.
-- **Responsive Multi-Surface Support:** Portals optimized for desktop/tablet; Customer App optimized for iOS/Android; Table QR menu optimized for mobile browsers.
+- **Responsive Multi-Surface Support:** Portals optimized for desktop/tablet; Unified Customer Application optimized for smartphones and mobile web browsers (supporting pre-booking discovery and seamless on-table QR camera scanning).
 
 ---
 
@@ -223,16 +222,17 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
    - Daily Settlements Tab (T+X Payout Tracker, Created vs Completed Booking Volume Stats)
    - Invoices & Statements Section (View & Download Official Invoices with UTR references)
    - Monthly Settlements Tab (Pre-Booking Split Statements)
-3. **Customer Mobile App:**
-   - Venue Discovery & Search
-   - Table Reservation & Slot Selector
-   - Advance Menu Pre-Ordering View
-   - Digital Reservation Pass & Live Status Tracker
-4. **Spot Food Booking (Table QR Menu):**
-   - Responsive Mobile Web Menu (Category bar, dish cards, dietary filters)
-   - Dish Details Modal with special cooking notes
-   - Floating Cart Drawer with running subtotal
-   - Order Confirmation & Live Rush Ticket Status
+3. **Unified Customer Application:**
+   - Auth & Profile Screen (Name & Phone Number OTP verification)
+   - Venue Discovery & Search (Filter by cuisines, dietary tags, ratings, opening hours)
+   - Table Reservation & Slot Selector (Party size, zones, calendar dates, time blocks)
+   - Advance Menu Pre-Ordering View (Browse dishes, add to reservation, dietary badges)
+   - Integrated QR Scanner & Table Binding Screen ("Seated at Table 04 at [Venue]")
+   - In-Venue Live Category Menu & Dietary Filters (`Veg`, `Non-Veg`, `Vegan`, `Jain`)
+   - Dish Details Modal with custom cooking notes
+   - Floating Cart Drawer with running subtotal in INR (₹)
+   - Digital Reservation Pass & Live Status Tracker (`Confirmed` → `Preparing` → `Served/Seated` → `Completed`)
+   - Consolidated Dining History (Past pre-bookings and spot dining receipts)
 
 ---
 
@@ -243,24 +243,25 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - The temporary password is automatically generated starting with the sanitized restaurant name prefix followed by secure random alphanumeric and special characters, strictly meeting strong password standards (uppercase, lowercase, numbers, and symbols).
 - The system automatically sends the temporary login password and portal login link to the partner's registered email address.
 
-### Pre-Booking (Food & Table)
-- User can select an available date, time slot, and guest party size.
-- User can add in-stock dishes to the pre-order.
-- Booking cannot be placed for closed dates or slots that exceed available table capacity.
-- Confirmation generates a digital reservation pass with booking reference and order items.
-
-### Spot Ordering (Table QR Menu) & Anti-Fraud Authentication
-- Scanning a physical table QR opens the live menu bound to that specific table without requiring app installation.
-- Customers must complete quick registration/login using their Name and Mobile Phone Number (OTP verification) prior to order submission.
-- When an order is placed, the system permanently records the customer's verified Name, Mobile Phone Number, physical Table Number, and complete Order details to prevent fake or fraudulent bookings.
-- The order creation service automatically captures the customer's client IP address and device footprint.
-- **Role-Based Privacy Enforcement:**
-  - The customer's client IP address is visible exclusively to Super Admin in the Super Admin Portal's Global Audit Ledger.
-  - The client IP address is strictly excluded and hidden from the Restaurant B2B Portal (restaurant staff see the customer name, phone number, table number, order items, and cooking notes only).
-- User can add in-stock dishes and update quantities.
-- Items marked `Sold Out` cannot be added to the cart.
-- Cart subtotal updates dynamically.
-- Submitting an order dispatches the ticket directly to the Kitchen Live Rush Board and station thermal printers.
+### Unified Customer Application (Advance Pre-Booking & On-Table Spot QR Ordering)
+- Customer can register and log in quickly with verified Full Name and Mobile Phone Number (SMS OTP verification).
+- Customer can browse partner venues, cuisines, live operating hours, and search restaurants.
+- **Advance Pre-Booking Mode:**
+  - User can select an available date, time slot, and guest party size.
+  - User can add in-stock dishes to the pre-order with special arrival notes.
+  - Booking cannot be placed for closed dates or slots that exceed available table capacity.
+  - Pre-booking confirmation locks slot, snapshots active split ratio, and generates digital reservation pass.
+- **In-Venue Spot QR Ordering Mode:**
+  - Scanning a physical table QR opens the app bound directly to that physical table.
+  - User must be authenticated with Name and Phone Number prior to order submission.
+  - When an order is placed, the system permanently records the customer's verified Name, Mobile Phone Number, physical Table Number, and complete Order details to prevent fake or fraudulent bookings.
+  - Order creation service automatically captures customer client IP address and device footprint.
+  - **Role-Based Privacy Enforcement:** Customer client IP is visible exclusively to Super Admin in the Global Audit Ledger; it is strictly excluded from restaurant staff view.
+  - Sold-out dishes cannot be added to cart.
+  - Submitting an order dispatches the ticket directly to the Kitchen Live Rush Board and station thermal printers.
+- **Order Tracking & Unified History:**
+  - Live progression tracker for both advance bookings and seated dining tickets.
+  - Consolidated dining history displaying past reservations, digital passes, and in-venue spot dining receipts.
 
 ### Kitchen Live Rush Board
 - Newly placed orders (pre-booking, QR spot, or staff punch) appear on the board within $\le 1\text{ second}$.
