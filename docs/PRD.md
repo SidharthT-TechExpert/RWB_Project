@@ -73,9 +73,9 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-04 Document Verification & Email Notification:** Admin reviews and marks uploaded documents as `Approved` or `Rejected` (with mandatory rejection reason). The system automatically dispatches an email notification to the partner's registered email address detailing the verification outcome (including specific rejection reasons and correction steps if rejected).
 - **ADM-05 Activation Gate:** System strictly prohibits setting restaurant status to `Active` unless all 4 mandatory documents are `Approved`.
 - **ADM-06 Emergency Toggle:** Admin can switch restaurant status between `Active` and `Suspended` to immediately halt live ordering.
-- **ADM-07 Commercial Split Ratio:** Admin records agreed split percentage on restaurant profile (reference setting only; no automated bill deductions).
+- **ADM-07 Pre-Booking Commercial Split Ratio:** Admin records the agreed split percentage on the restaurant profile during onboarding. This split ratio applies **strictly and exclusively to customer Pre-Booking charges** (food or table pre-booking amount collected upfront). It does **not** apply to spot QR orders, walk-ins, or general dining bills. Admin can update the split ratio at any time; changes apply only to future pre-bookings and never alter past pre-booking split records.
 - **ADM-08 Global Audit Ledger:** Filterable log of all orders, pre-bookings, and transactions across all venues.
-- **ADM-09 Monthly Settlement Processing:** System aggregates monthly completed orders and gross revenue on the 1st of each month; Admin records bank payment UTR number and marks statement as `Paid`.
+- **ADM-09 Monthly Pre-Booking Settlement Processing:** System aggregates monthly completed pre-booking fee collections and splits (platform share vs partner share) on the 1st of each month; Admin records the bank payout UTR reference for the partner's accrued pre-booking earnings and marks statement as `Paid`.
 
 ### 6.2 Restaurant B2B Operations SaaS Portal (Web)
 - **B2B-01 Secure Multi-Tenant Login:** Isolated access to own restaurant data only.
@@ -95,7 +95,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-15 Active Order Management:** Open active seated tables, append extra food rounds, and track running totals.
 - **B2B-16 Order Status Progression:** One-click order lifecycle updates: `Confirmed` → `Preparing` → `Served` → `Completed`.
 - **B2B-17 Daily Revenue Dashboard:** View daily gross sales, order volume, peak hours, and table turnover rates.
-- **B2B-18 Monthly Settlement Statements:** View and download monthly statements with admin payment UTR references.
+- **B2B-18 Monthly Settlement Statements:** View and download monthly pre-booking settlement statements with admin payout UTR references.
 
 ### 6.3 Customer Mobile App (Food & Table Pre-Booking)
 - **PRE-01 Account Management:** User registration, profile, and booking history.
@@ -104,7 +104,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **PRE-04 Advance Meal Pre-Ordering:** Browse live menu catalog and pre-select dishes attached to the reservation.
 - **PRE-05 Sold-Out Protection:** Real-time stock validation prevents adding sold-out dishes to pre-bookings.
 - **PRE-06 Special Instructions:** Add arrival notes (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp").
-- **PRE-07 Digital Reservation Pass:** Generates confirmation pass with booking reference, table zone, pre-order summary, and arrival time.
+- **PRE-07 Pre-Booking Checkout & Pass:** Customer pays the pre-booking charge; system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
 - **PRE-08 Live Status Tracking:** Track booking progression (`Confirmed` → `Preparing` → `Ready for Seating` → `Completed`).
 
 ### 6.4 Spot Food Booking (On-Table QR Menu)
@@ -135,7 +135,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 ```text
 Open App → Select Restaurant → Choose Date, Time Slot & Party Size →
 Pre-Select Food from Live Menu → Add Special Notes →
-Confirm Pre-Booking → Digital Pass Generated →
+Pay Pre-Booking Charge (Platform/Partner Split Snapshot Captured) → Digital Pass Generated →
 Arrive at Restaurant → Seated at Reserved Table → Food Served Fresh with Zero Wait!
 ```
 
@@ -238,11 +238,18 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 - System strictly blocks setting a restaurant status to `Active` if any mandatory document (FSSAI, GST, Bank Proof, Owner ID) is missing or `Rejected`.
 - Status can only transition to `Active` when all 4 documents are `Approved`.
 
+### Pre-Booking Commercial Split Ratio & Immutability
+- Admin sets the commercial split ratio during restaurant onboarding and can update it at any time.
+- Split ratio applies strictly and exclusively to customer Pre-Booking charges (food or table pre-booking amount collected upfront).
+- In-venue spot QR orders, walk-in orders, and seated dining bills are 100% exempt from split deductions.
+- When a customer confirms a pre-booking, the system permanently snapshots the active split ratio and calculated share amounts (platform fee vs partner fee) onto the reservation record.
+- Modifying a restaurant's split ratio in the Admin Portal applies only to subsequent pre-bookings and never retroactively modifies past pre-bookings or historical accounting statements.
+
 ---
 
 ## 11. Constraints & Dependencies
 
-- **In-Venue Payment Settlement:** Dining bills are settled in-venue (cash, card, or venue POS) and reconciled against platform monthly statements.
+- **Pre-Booking Fee Split vs In-Venue Settlement:** Platform commercial split applies strictly to upfront pre-booking charges collected via the customer app. In-venue dining bills (QR orders and extra rounds) are settled directly with the venue (cash, card, or POS) with zero platform fee deductions.
 - **Connectivity:** Diners require active mobile data or venue Wi-Fi to load digital QR menus.
 - **Compliance Validity:** Restaurant activation depends on valid partner legal licenses (FSSAI, GST).
 

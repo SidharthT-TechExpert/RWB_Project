@@ -331,8 +331,9 @@ companies_restaurants ──< compliance_documents
 companies_restaurants ──< dining_zones ──< restaurant_tables
 companies_restaurants ──< menu_categories ──< food_items
 companies_restaurants ──< calendar_overrides
-companies_restaurants ──< monthly_settlements
-restaurant_tables      ──< table_orders ──< order_items
+companies_restaurants ──< table_reservations (Pre-bookings with fee split snapshot)
+companies_restaurants ──< monthly_settlements (Reconciling pre-booking partner payouts)
+restaurant_tables      ──< table_orders ──< order_items (In-venue spot orders, zero split)
 ```
 
 ## 7.3 Performance Indexing Rules
@@ -344,8 +345,19 @@ Mandatory compound and single-column indexes:
 - `food_items(restaurant_id, category_id, is_available)`
 - `table_orders(restaurant_id, status, created_at DESC)`
 - `table_orders(table_id, status)`
+- `table_reservations(restaurant_id, reservation_date, status)`
 - `calendar_overrides(restaurant_id, override_date)`
 - `monthly_settlements(restaurant_id, billing_month)`
+
+## 7.4 Pre-Booking Split Immutability Standards
+- **Contract Split Ratio:** Stored in `restaurants.prebooking_split_percentage` (e.g., `20.00` representing 20% platform share).
+- **Snapshot Requirement:** When an advance reservation is confirmed via the Customer App:
+  - The system records `prebooking_amount` (e.g., $X$ amount paid).
+  - Snapshots `applied_split_ratio = restaurants.prebooking_split_percentage`.
+  - Snapshots `platform_fee_amount = prebooking_amount * (applied_split_ratio / 100)`.
+  - Snapshots `partner_payout_amount = prebooking_amount - platform_fee_amount`.
+- **Zero Retroactive Mutation:** Any subsequent change by Super Admin to `restaurants.prebooking_split_percentage` applies exclusively to future reservations. Existing records in `table_reservations` are permanently immutable.
+- **Exclusion of Spot Orders:** `table_orders` (placed via table QR or punched by staff) have zero platform commission cuts. Diners pay the venue directly.
 
 ---
 
