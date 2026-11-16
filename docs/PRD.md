@@ -76,7 +76,10 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-06 Emergency Toggle:** Admin can switch restaurant status between `Active` and `Suspended` to immediately halt live ordering.
 - **ADM-07 Pre-Booking Commercial Split Ratio:** Admin records the agreed split percentage on the restaurant profile during onboarding. This split ratio applies **strictly and exclusively to customer Pre-Booking charges** (food or table pre-booking amount collected upfront). It does **not** apply to spot QR orders, walk-ins, or general dining bills. Admin can update the split ratio at any time; changes apply only to future pre-bookings and never alter past pre-booking split records.
 - **ADM-08 Global Audit Ledger:** Filterable log of all orders, pre-bookings, and transactions across all venues.
-- **ADM-09 Delayed Food Payout Engine (T+X Days):** System tracks pre-booked food order revenue and upfront pre-booking fees collected from customers in Indian Rupees (₹). Following dining completion, the system enforces a configurable holding period (X days after order completion, e.g. T+2 or T+3 days) for dispute clearance and accounting reconciliation. Once the X-day delay window matures, the pre-booked food amount (along with partner's pre-booking fee share) moves to the Disbursable Queue; Admin executes bank transfer in INR (₹) to the restaurant's registered bank account and logs the Bank UTR reference.
+- **ADM-09 Dual Settlement Engine & Invoice Generation:** 
+  - **Daily Settlement Tab (T+X Days):** Dedicated dashboard tab tracking daily rolling batches of pre-booked food orders settled X days post-dining. Displays volume metrics for each batch (pre-bookings created vs completed, gross food total, and net payout in ₹). Admin executes bank transfer to partner account and logs the Bank UTR reference.
+  - **Monthly Settlement Tab:** Monthly consolidation of platform fee shares from pre-booking charges.
+  - **Automated Partner Invoice Generation:** Upon Admin recording the bank payment UTR number, the system automatically generates an official downloadable Tax Invoice / Settlement Receipt and pushes it to the partner's portal.
 
 ### 6.2 Restaurant B2B Operations SaaS Portal (PWA)
 - **B2B-01 Secure Multi-Tenant Login:** Isolated access to own restaurant data only.
@@ -96,7 +99,11 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-15 Active Order Management:** Open active seated tables, append extra food rounds, and track running totals.
 - **B2B-16 Order Status Progression:** One-click order lifecycle updates: `Confirmed` → `Preparing` → `Served` → `Completed`.
 - **B2B-17 Daily Revenue Dashboard:** View daily gross sales, order volume, peak hours, and table turnover rates.
-- **B2B-18 Delayed Payout & Settlement Ledger:** Real-time visibility into payout status: Upcoming Payouts (under X-day holding window), Disbursable Funds, and Completed Payouts in INR (₹) with bank UTR transaction references.
+- **B2B-18 Settlements, Invoices & Pre-Booking Dashboard:**
+  - **Daily Settlement Tab (T+X Days):** Partner owners and managers can track daily rolling food payouts across states: *Holding (X-day delay)*, *Disbursable*, and *Settled*.
+  - **Pre-Booking Volume Statistics:** Displays total pre-bookings created vs completed for every daily settlement cycle.
+  - **Invoices Section:** Once Admin marks a payout completed with UTR, partners can view and download official payment invoices showing itemized order breakdown, gross food sales, and bank UTR transaction references.
+  - **Monthly Settlement Tab:** View and download monthly pre-booking fee split statements.
 - **B2B-19 Manager KOT System & Station Routing:** Managers have an intuitive KOT dashboard to register thermal printers (IP, Bluetooth, USB) and manage station routing. When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
 
 ### 6.3 Customer Mobile App (Food & Table Pre-Booking)
@@ -166,13 +173,14 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 (If any doc is missing/rejected, status remains locked in "Draft").
 ```
 
-### Flow 5: Delayed Restaurant Food Payout (T+X Days)
+### Flow 5: Daily Delayed Food Payout & Partner Invoice Generation (T+X Days)
 ```text
 Customer Pre-Pays Food & Booking Online → Diners Arrive & Enjoy Meal →
-Staff Marks Order "Completed" → Delayed Holding Period Starts (X Days for Reconciliation/Disputes) →
-Delay Window Matures (X Days Elapsed) → Funds Move to Disbursable Queue →
-Admin Transfers Pre-Booked Food Amount to Restaurant Bank Account → Admin Logs Bank UTR →
-Partner Receives Automated Settlement Notification & Payout Marked Completed.
+Staff Marks Order "Completed" → Delayed Holding Period Starts (X Days for Dispute Clearance) →
+Delay Window Matures (X Days Elapsed) → Funds Shift to Daily Settlement Tab in Admin Portal →
+Admin Reviews Daily Batch (Created vs Completed Bookings) & Transfers Food Total to Partner Account →
+Admin Logs Bank UTR Reference → System Generates Official PDF Tax Invoice / Settlement Receipt →
+Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoices Section.
 ```
 
 ---
@@ -194,7 +202,8 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
 1. **Super Admin Portal:**
    - Restaurant Onboarding & Partner List
    - Document Verification Modal (Approve / Reject with reason notes)
-   - Delayed Payout Ledger (T+X Matured Orders & UTR Entry)
+   - Daily Settlement Tab (T+X Daily Batches, Created vs Completed Bookings, UTR Entry & Invoice Trigger)
+   - Monthly Settlement Tab (Platform Pre-Booking Split Fees)
 2. **Restaurant B2B SaaS Portal:**
    - Floor & Table Layout Manager (with printable QR generator)
    - Operating Hours & Shift Calendar Overrides
@@ -202,7 +211,9 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
    - Kitchen Live Rush Board (real-time order tickets & status progression)
    - Manual Order Punching Modal
    - Kitchen Thermal Printers & KOT System Management (Register printers, test print, category routing)
-   - Payout Ledger & Statements (Holding vs Disbursed)
+   - Daily Settlements Tab (T+X Payout Tracker, Created vs Completed Booking Volume Stats)
+   - Invoices & Statements Section (View & Download Official Invoices with UTR references)
+   - Monthly Settlements Tab (Pre-Booking Split Statements)
 3. **Customer Mobile App:**
    - Venue Discovery & Search
    - Table Reservation & Slot Selector
@@ -268,12 +279,15 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
 - When a customer confirms a pre-booking, the system permanently snapshots the active split ratio and calculated share amounts (platform fee vs partner fee) onto the reservation record.
 - Modifying a restaurant's split ratio in the Admin Portal applies only to subsequent pre-bookings and never retroactively modifies past pre-bookings or historical accounting statements.
 
-### Delayed Pre-Booked Food Payouts (T+X Days)
+### Daily Delayed Food Payouts (T+X Days) & Partner Invoices
 - Pre-booked ordered food amounts collected upfront in INR (₹) are held in `Holding (Delayed)` status for a configurable X days post dining completion.
-- Payout funds cannot be disbursed before the designated X-day maturity window elapses.
+- Admin Portal features a dedicated Daily Settlement Tab tracking daily batches, displaying total pre-bookings created vs completed, gross food total, and net payout.
+- B2B Partner owners and managers have full visibility in their Daily Settlements tab into batch progress, booking metrics (created vs completed), and payout statuses.
+- Payout funds cannot be marked for disbursement before the designated X-day maturity window elapses.
 - Once X days elapse, the system automatically transitions funds from `Holding` to `Disbursable`.
-- Super Admin transfers the matured food amount (plus partner fee share) in Indian Rupees (₹) to the restaurant's registered bank account and logs the bank UTR transaction reference.
-- System automatically sends a payout notification email to the partner with the itemized order breakdown and UTR details.
+- Super Admin transfers the matured food amount in Indian Rupees (₹) to the restaurant's registered bank account and logs the bank UTR transaction reference.
+- Immediately upon Admin submitting the bank UTR, the system marks the batch `Settled` and automatically generates an official downloadable Tax Invoice / Settlement Receipt in the partner's Invoices section.
+- Partner owners and managers can view and download official invoices with full order breakdown, gross food sales, fee deductions, and bank UTR references.
 
 ---
 

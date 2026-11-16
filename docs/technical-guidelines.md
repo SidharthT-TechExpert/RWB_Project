@@ -408,10 +408,11 @@ Mandatory compound and single-column indexes:
   - Total disbursable amount = `prebooked_food_amount` + `partner_fee_share`.
 - **Maturity Worker (NestJS Scheduler):**
   A scheduled cron job automatically promotes mature records: `UPDATE restaurant_payouts SET status = 'DISBURSABLE' WHERE status = 'HOLDING_DELAY' AND payout_mature_at <= NOW()`.
-- **Disbursement & UTR Logging:**
+- **Disbursement, UTR Logging & Automated Invoice Generation:**
   Super Admin executes bank transfer and calls `POST /api/v1/payouts/:id/disburse` with `{ utrNumber }`.
-  - Sets status to `PAID`, sets `disbursed_at = NOW()`, logs `utr_number`.
-  - Emits `PayoutDisbursedEvent` triggering `MailService` to email the partner with transaction details and UTR.
+  - Sets batch status to `SETTLED`, records `disbursed_at = NOW()`, logs `utr_number`.
+  - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
+  - Emits `PayoutDisbursedEvent` notifying partner owners and managers via email and populating their B2B portal Invoices section for immediate download.
 
 ---
 
