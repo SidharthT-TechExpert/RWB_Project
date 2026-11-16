@@ -321,7 +321,7 @@ Security measurements must be implemented across all layers:
 The primary database **must be SQL-based (PostgreSQL recommended)**:
 - **Primary Keys:** `UUIDv4` or `CUID` across all entities.
 - **Foreign Keys:** Enforced at database level with referential constraints.
-- **Monetary Precision:** All currency amounts (`unit_price`, `gross_amount`, `split_percentage`, `settlement_amount`) must use `DECIMAL(10, 2)` or `NUMERIC(10, 2)`. Floating point (`FLOAT`/`DOUBLE`) is forbidden.
+- **Currency & Monetary Precision (INR / ₹):** All financial values (`unit_price`, `gross_amount`, `prebooking_amount`, `platform_fee_amount`, `partner_payout_amount`, `disbursed_amount`) are strictly denominated in **Indian Rupees (INR / ₹)** using `DECIMAL(10, 2)` or `NUMERIC(10, 2)`. The two decimal digits represent Paise (e.g. `350.50` = ₹350 and 50 paise). Floating point (`FLOAT`/`DOUBLE`) is strictly forbidden. Foreign currencies (USD / $) are not permitted.
 - **Audit Columns:** Every table includes `created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()` and `updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`.
 
 ## 7.2 Core Entities Summary
@@ -352,7 +352,7 @@ Mandatory compound and single-column indexes:
 ## 7.4 Pre-Booking Split Immutability Standards
 - **Contract Split Ratio:** Stored in `restaurants.prebooking_split_percentage` (e.g., `20.00` representing 20% platform share).
 - **Snapshot Requirement:** When an advance reservation is confirmed via the Customer App:
-  - The system records `prebooking_amount` (e.g., $X$ amount paid).
+  - The system records `prebooking_amount` in INR (₹) (e.g., ₹500.00).
   - Snapshots `applied_split_ratio = restaurants.prebooking_split_percentage`.
   - Snapshots `platform_fee_amount = prebooking_amount * (applied_split_ratio / 100)`.
   - Snapshots `partner_payout_amount = prebooking_amount - platform_fee_amount`.
@@ -360,7 +360,7 @@ Mandatory compound and single-column indexes:
 - **Exclusion of Spot Orders:** `table_orders` (placed via table QR or punched by staff) have zero platform commission cuts. Diners pay the venue directly.
 
 ## 7.5 Delayed Payout Engine Architecture (T+X Days)
-- **Holding Period Window:** Each restaurant profile includes configurable `payout_delay_days INT DEFAULT 2` (or platform default $X$ days).
+- **Holding Period Window:** Each restaurant profile includes configurable `payout_delay_days INT DEFAULT 2` (or platform default X days).
 - **Maturity Calculation:**
   When a pre-booked dining order transitions to `COMPLETED`:
   - `payout_mature_at = completed_at + INTERVAL 'X days'`.
