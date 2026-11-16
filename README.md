@@ -19,7 +19,7 @@
 ## 🎯 Core Capabilities
 
 - **Super Admin SaaS Operations**: Restaurant partner onboarding, 4-document legal compliance verification (`DOC_FSSAI`, `DOC_GST`, `DOC_BANK`, `DOC_KYC_ID`), pre-booking commercial split configuration, and delayed T+X day partner bank payout disbursement with UTR recording in Indian Rupees (₹).
-- **Restaurant B2B SaaS Operations**: Floor zones, table inventory setup, printable high-resolution table QR generation, slot availability engine, operating calendar overrides, live food menu builder with instant sold-out (86'd) toggle, staff manual order punching, walk-in reservations, payout ledgers, and real-time Kitchen Live Rush Board.
+- **Restaurant B2B SaaS Operations**: Floor zones, table inventory setup, printable high-resolution table QR generation, slot availability engine, operating calendar overrides, live food menu builder with instant sold-out (86'd) toggle, staff manual order punching, walk-in reservations, payout ledgers, automated category-routed kitchen thermal printing (KOT), and real-time Kitchen Live Rush Board.
 - **Customer Mobile App (Food & Table Pre-Booking)**: Cross-platform mobile application for diners to discover partner venues, reserve time slots, select party sizes, and pre-order meals in advance (transacted in INR / ₹) to eliminate all waiting upon arrival.
 - **Spot Food Booking (Table QR Menu)**: Frictionless on-table digital menu accessible via smartphone cameras with zero app downloads or logins, securely bound to the table ID, featuring instant kitchen ticket dispatch and direct in-venue INR (₹) bill settlement.
 

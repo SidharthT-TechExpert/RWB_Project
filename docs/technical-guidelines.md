@@ -108,6 +108,26 @@ Both the **Super Admin Portal** (`admin-portal/`) and **Restaurant B2B Portal** 
   - **Web Push API & Audio Alerts:** Receives background order notifications and triggers instant audible chimes on the Kitchen Live Rush Board whenever a pre-booking or on-table QR order arrives.
   - **Screen Wake Lock API:** Prevents kitchen tablet screens from dimming or sleeping during active dining service shifts.
 
+## 3.5 Automated Kitchen Thermal Printing & Station KOT Routing (ESC/POS)
+
+To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill counter, Beverage bar, Main kitchen), the platform incorporates an automated **Category-Based Thermal Printing Engine**:
+- **Automatic Print Trigger:** Order placement (`CONFIRMED` via QR menu, mobile app pre-booking, or staff order punch) immediately triggers automated printing without requiring manual button clicks.
+- **Category Decomposition & Station Routing:**
+  - The system inspects each dish's `category_id` and maps it to assigned station printers.
+  - Decomposes multi-category orders and dispatches distinct Kitchen Order Tickets (KOTs) directly to the relevant printer:
+    - *Example:* An order with 2 Shawarmas, 1 Tandoori Roti, and 2 Mint Lime Juices splits automatically:
+      1. **Shawarma Station Printer:** Prints only the 2 Shawarmas with cooking notes.
+      2. **Tandoor Station Printer:** Prints only the 1 Tandoori Roti.
+      3. **Beverage Bar Printer:** Prints only the 2 Mint Lime Juices.
+      4. **Master Printer (Optional):** Prints the complete consolidated order at cashier/pass.
+- **Thermal Protocol & Network Connectivity:**
+  - Supports standard 80mm / 58mm thermal receipt printers using ESC/POS protocol.
+  - Connectivity via Network TCP Socket (`IP:9100` LAN printers) or PWA Web Print / Bluetooth API.
+- **Standardized KOT Ticket Layout:**
+  - **Header:** Table Number (or Pre-Booking Ref), Order Number, Server/Source, Timestamp.
+  - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
+  - **Cooking Notes:** Bold, high-contrast instructions (e.g. `*** NOTE: Extra Garlic Paste, Less Spicy ***`).
+
 ---
 
 # 4. Backend Architecture – NestJS Modular Monolith
@@ -129,6 +149,7 @@ backend/src/
 │   ├── calendar/                # Operating hours, holiday overrides, half-day shifts
 │   ├── orders/                  # Dining orders (QR-placed & manual staff punched)
 │   ├── rush-board/              # Real-time WebSocket Gateway & active orders
+│   ├── printing/                # Kitchen thermal printer manager & category KOT routing
 │   ├── settlements/             # Monthly billing consolidation & UTR payout logs
 │   ├── mail/                    # Transactional email dispatches (owner credentials, notifications)
 │   └── reports/                 # Administrative & restaurant analytics
@@ -346,6 +367,7 @@ companies_restaurants ──< menu_categories ──< food_items
 companies_restaurants ──< calendar_overrides
 companies_restaurants ──< table_reservations (Pre-bookings with fee split snapshot)
 companies_restaurants ──< restaurant_payouts (T+X delayed food & fee disbursement ledger)
+companies_restaurants ──< kitchen_printers ──< printer_categories (Category KOT routing)
 restaurant_tables      ──< table_orders ──< order_items (In-venue spot orders, zero split)
 ```
 

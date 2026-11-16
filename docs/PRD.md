@@ -97,6 +97,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-16 Order Status Progression:** One-click order lifecycle updates: `Confirmed` → `Preparing` → `Served` → `Completed`.
 - **B2B-17 Daily Revenue Dashboard:** View daily gross sales, order volume, peak hours, and table turnover rates.
 - **B2B-18 Delayed Payout & Settlement Ledger:** Real-time visibility into payout status: Upcoming Payouts (under X-day holding window), Disbursable Funds, and Completed Payouts in INR (₹) with bank UTR transaction references.
+- **B2B-19 Automated Kitchen Station Printing (Category Routing):** Configure multiple thermal printers mapped to specific dish categories (e.g., Shawarma Station, Grill Counter, Beverage Bar, Main Kitchen). When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
 
 ### 6.3 Customer Mobile App (Food & Table Pre-Booking)
 - **PRE-01 Account Management:** User registration, profile, and booking history.
@@ -145,7 +146,7 @@ Arrive at Restaurant → Seated at Reserved Table → Food Served Fresh with Zer
 ```text
 Diner Seated at Table → Scans Table QR Code → Live Menu Opens on Phone →
 Selects Dishes & Adds Notes → Taps "Place Order" →
-Ticket Pushes Instantly to Kitchen Live Rush Board →
+Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (e.g. Shawarma Station prints Shawarmas, Drinks Bar prints Drinks) →
 Kitchen Prepares → Waiter Serves → Settle Bill with Cashier → Table Slot Freed.
 ```
 
@@ -153,7 +154,7 @@ Kitchen Prepares → Waiter Serves → Settle Bill with Cashier → Table Slot F
 ```text
 Customer Orders via Phone or Walk-in → Staff Opens "Punch Order" in B2B Portal →
 Selects Table & Menu Dishes → Submits Order →
-Ticket Dispatches to Kitchen Rush Board → Staff Appends Extra Rounds Anytime.
+Ticket Dispatches to Kitchen Rush Board & Category Station Printers Auto-Print → Staff Appends Extra Rounds Anytime.
 ```
 
 ### Flow 4: Restaurant Onboarding & Activation Gate
@@ -200,6 +201,7 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
    - Digital Menu & Category Manager (with instant 86'd stock toggle)
    - Kitchen Live Rush Board (real-time order tickets & status progression)
    - Manual Order Punching Modal
+   - Kitchen Thermal Printers & Category Routing Setup
    - Payout Ledger & Statements (Holding vs Disbursed)
 3. **Customer Mobile App:**
    - Venue Discovery & Search
@@ -237,6 +239,12 @@ Partner Receives Automated Settlement Notification & Payout Marked Completed.
 ### Kitchen Live Rush Board
 - Newly placed orders (pre-booking, QR spot, or staff punch) appear on the board within $\le 1\text{ second}$.
 - Staff can update order status: `Confirmed` → `Preparing` → `Served` → `Completed`.
+
+### Automated Category-Based Kitchen Printing (KOT Routing)
+- Multi-category orders are automatically decomposed by menu category upon order placement.
+- Kitchen thermal printers assigned to specific categories automatically print station KOTs without manual staff intervention.
+- Station ticket prints with Table / Pre-Booking reference, Order #, Timestamp, Dish Name, Quantity, and Special Cooking Notes for that station's dishes only (e.g., Shawarma printer prints Shawarma items only; Beverage printer prints drinks only).
+- If no dedicated station printer is configured for a category, items route automatically to the Main Kitchen master printer.
 
 ### Instant Sold-Out Toggle
 - Toggling an item to `Sold Out` in the B2B portal reflects on customer screens within $\le 1\text{ second}$.
