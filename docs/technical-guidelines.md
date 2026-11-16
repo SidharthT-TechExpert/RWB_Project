@@ -301,6 +301,16 @@ Security measurements must be implemented across all layers:
 ### 6.8 SQL Injection Immunity
 - Direct string concatenation in SQL queries is strictly prohibited. All queries must utilize parameterized statements or type-safe ORM query builders (Prisma / TypeORM).
 
+### 6.9 Temporary Password Generation (Restaurant Name Starter)
+- When Super Admin onboards a new restaurant, the backend generates a cryptographically secure temporary password.
+- **Starter Pattern:** Takes the sanitized alphanumeric brand name as prefix (e.g. `SpicyGrill`), appended with `@`, followed by cryptographically random characters via `crypto.randomBytes`:
+  - **Format:** `[SanitizedBrandName]@[RandomSecureString]` (e.g., `SpicyGrill@9mK#4vL2!`).
+  - **Complexity Standard:** Guaranteed $\ge 14$ characters, containing uppercase, lowercase, digits, and special symbols.
+- **Security Lifecycle:**
+  - Password is sent via TLS email directly to the partner's verified email.
+  - Stored in the database only as a `bcrypt` hash ($\ge 10$ rounds).
+  - Flags account with `must_reset_password = true`, requiring the partner to change credentials upon first login.
+
 ---
 
 # 7. Database & Data Modeling Guidelines (Relational SQL)

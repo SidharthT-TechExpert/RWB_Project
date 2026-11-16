@@ -68,7 +68,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ### 6.1 Super Admin Portal (Web)
 - **ADM-01 Partner Onboarding:** Admin creates restaurant profiles (legal name, brand name, contact, address, cuisine, logos).
-- **ADM-02 Account Provisioning & Email Delivery:** System automatically creates owner login credentials upon restaurant onboarding and securely sends the temporary password to the partner's registered email address.
+- **ADM-02 Account Provisioning & Email Delivery:** System automatically generates owner login credentials upon restaurant onboarding and securely sends the temporary password to the partner's registered email address. The generated password must be strong (combining uppercase, lowercase, numbers, and special characters) using the sanitized restaurant name as the starter prefix (e.g. `BrandName@9xK#4vL2!`).
 - **ADM-03 Document Compliance Upload:** Admin uploads partner legal documents (FSSAI License, GST Certificate, Bank Proof, Owner ID).
 - **ADM-04 Document Verification:** Admin reviews and marks documents as `Approved` or `Rejected` (with mandatory rejection reason).
 - **ADM-05 Activation Gate:** System strictly prohibits setting restaurant status to `Active` unless all 4 mandatory documents are `Approved`.
@@ -205,6 +205,7 @@ Activation Gate Unlocked → Status Changed from "Draft" to "Active".
 
 ### Partner Onboarding & Account Provisioning
 - When a restaurant profile is created by Super Admin, the system automatically provisions owner account credentials.
+- The temporary password is automatically generated starting with the sanitized restaurant name prefix followed by secure random alphanumeric and special characters, strictly meeting strong password standards (uppercase, lowercase, numbers, and symbols).
 - The system automatically sends the temporary login password and portal login link to the partner's registered email address.
 
 ### Pre-Booking (Food & Table)
