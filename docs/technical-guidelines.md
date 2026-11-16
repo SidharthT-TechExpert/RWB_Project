@@ -117,6 +117,7 @@ backend/src/
 │   ├── orders/                  # Dining orders (QR-placed & manual staff punched)
 │   ├── rush-board/              # Real-time WebSocket Gateway & active orders
 │   ├── settlements/             # Monthly billing consolidation & UTR payout logs
+│   ├── mail/                    # Transactional email dispatches (owner credentials, notifications)
 │   └── reports/                 # Administrative & restaurant analytics
 │
 ├── shared/

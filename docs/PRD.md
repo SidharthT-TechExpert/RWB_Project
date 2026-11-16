@@ -68,7 +68,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ### 6.1 Super Admin Portal (Web)
 - **ADM-01 Partner Onboarding:** Admin creates restaurant profiles (legal name, brand name, contact, address, cuisine, logos).
-- **ADM-02 Account Provisioning:** System automatically creates owner login credentials upon restaurant onboarding.
+- **ADM-02 Account Provisioning & Email Delivery:** System automatically creates owner login credentials upon restaurant onboarding and securely sends the temporary password to the partner's registered email address.
 - **ADM-03 Document Compliance Upload:** Admin uploads partner legal documents (FSSAI License, GST Certificate, Bank Proof, Owner ID).
 - **ADM-04 Document Verification:** Admin reviews and marks documents as `Approved` or `Rejected` (with mandatory rejection reason).
 - **ADM-05 Activation Gate:** System strictly prohibits setting restaurant status to `Active` unless all 4 mandatory documents are `Approved`.
@@ -156,7 +156,7 @@ Ticket Dispatches to Kitchen Rush Board → Staff Appends Extra Rounds Anytime.
 
 ### Flow 4: Restaurant Onboarding & Activation Gate
 ```text
-Admin Creates Restaurant Profile → Provisions Owner Credentials →
+Admin Creates Restaurant Profile → System Automatically Generates & Emails Owner Login Password →
 Admin Uploads 4 Mandatory Documents (FSSAI, GST, Bank Proof, Owner ID) →
 Admin Reviews & Approves All 4 Documents →
 Activation Gate Unlocked → Status Changed from "Draft" to "Active".
@@ -202,6 +202,10 @@ Activation Gate Unlocked → Status Changed from "Draft" to "Active".
 ---
 
 ## 10. Acceptance Criteria
+
+### Partner Onboarding & Account Provisioning
+- When a restaurant profile is created by Super Admin, the system automatically provisions owner account credentials.
+- The system automatically sends the temporary login password and portal login link to the partner's registered email address.
 
 ### Pre-Booking (Food & Table)
 - User can select an available date, time slot, and guest party size.
