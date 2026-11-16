@@ -46,9 +46,9 @@ Multi-tenant user credentials, role-based access, and session management.
 | `restaurant_id` | `UUID` | `NULLABLE, REFERENCES restaurants(id) ON DELETE CASCADE` | Associated restaurant (`NULL` for Super Admin) |
 | `email` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | Normalized lowercase email address |
 | `password_hash` | `VARCHAR(255)` | `NOT NULL` | Cryptographic hash (`bcrypt` work factor $\ge 10$) |
-| `role` | `VARCHAR(32)` | `NOT NULL` | `SUPER_ADMIN`, `RESTAURANT_OWNER`, `RESTAURANT_MANAGER`, `STAFF` |
+| `role` | `VARCHAR(32)` | `NOT NULL` | `SUPER_ADMIN`, `RESTAURANT_OWNER`, `RESTAURANT_MANAGER`, `STAFF`, `CUSTOMER` |
 | `full_name` | `VARCHAR(128)` | `NOT NULL` | User full legal name |
-| `phone_number` | `VARCHAR(20)` | `NULLABLE` | Contact phone number |
+| `phone_number` | `VARCHAR(20)` | `NULLABLE, UNIQUE` | Contact/login phone number |
 | `must_reset_password` | `BOOLEAN` | `NOT NULL DEFAULT FALSE` | Set to `TRUE` for auto-generated brand passwords |
 | `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Active account status flag |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record creation timestamp |
@@ -243,6 +243,11 @@ Active dining orders originating from Pre-Bookings, Table QR web, or manual staf
 | `gross_food_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Subtotal of ordered items in INR (₹) |
 | `tax_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Calculated GST in INR (₹) |
 | `total_bill_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Final payable total in INR (₹) |
+| `customer_id` | `UUID` | `NULLABLE, REFERENCES users(id)` | Authenticated diner account |
+| `customer_name` | `VARCHAR(128)` | `NOT NULL` | Diner verified name captured during spot order |
+| `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Diner verified mobile phone number |
+| `client_ip` | `VARCHAR(45)` | `NOT NULL` | Remote client IP address (Admin-only visibility, masked from restaurant) |
+| `user_agent` | `VARCHAR(255)` | `NULLABLE` | Device and browser audit footprint |
 | `customer_notes` | `TEXT` | `NULLABLE` | Guest dietary or preparation instructions |
 | `completed_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when dining finished & order marked COMPLETED (anchors T+X delay clock) |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Order placement timestamp |
@@ -344,3 +349,6 @@ Monthly financial statement consolidating platform pre-booking fee splits.
    - Columns `applied_split_ratio`, `platform_fee_amount`, and `partner_payout_amount` on `table_reservations` are written upon reservation confirmation and cannot be modified by updates to `restaurants.prebooking_split_percentage`.
 4. **Spot Orders Zero Split:**
    - Table QR and manual staff orders logged in `table_orders` have no platform commission cuts. Diners settle gross bills directly with the venue cashier.
+5. **Anti-Fraud Attribution & IP Privacy Isolation:**
+   - Every spot order recorded in `table_orders` requires verified `customer_name` and `customer_phone`.
+   - `client_ip` is captured automatically during order creation. Backend serialization rules and database projection views strictly prohibit selecting or serializing `client_ip` to restaurant tenant users. Only Super Admin has access to customer IP address information in the Global Audit Ledger.

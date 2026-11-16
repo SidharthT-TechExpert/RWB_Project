@@ -21,6 +21,7 @@ erDiagram
     RESTAURANT_TABLES ||--o{ TABLE_RESERVATIONS : "allocated to"
     RESTAURANTS ||--o{ TABLE_ORDERS : "processes"
     RESTAURANT_TABLES ||--o{ TABLE_ORDERS : "served at"
+    USERS ||--o{ TABLE_ORDERS : "places"
     TABLE_RESERVATIONS ||--o| TABLE_ORDERS : "initiates"
     TABLE_ORDERS ||--o{ ORDER_ITEMS : "comprises"
     FOOD_ITEMS ||--o{ ORDER_ITEMS : "ordered as"
@@ -144,6 +145,11 @@ erDiagram
         uuid restaurant_id FK
         uuid table_id FK
         uuid reservation_id FK
+        uuid customer_id FK
+        string customer_name
+        string customer_phone
+        string client_ip
+        string user_agent
         string order_type
         string status
         decimal gross_food_amount
@@ -260,3 +266,4 @@ sequenceDiagram
 1. **Pre-Booking Fee Exclusivity:** The commercial split percentage (`prebooking_split_percentage`) applies strictly to upfront pre-booking customer charges. Spot QR orders and in-venue manual punching incur **0% platform commission**.
 2. **Snapshot Immutability:** When a pre-booking occurs, `applied_split_ratio`, `platform_fee_amount`, and `partner_payout_amount` are written to `table_reservations`. Any future change to the restaurant's contract split ratio in the Admin Portal leaves past reservations and statements untouched.
 3. **Paise Accuracy:** All columns use `DECIMAL(10, 2)` denominated strictly in Indian Rupees (₹), completely eliminating binary floating-point rounding errors.
+4. **Anti-Fraud IP Privacy Isolation:** Customer name, verified phone number, physical table number, and client IP address are permanently captured upon spot order creation. The client IP address is visible exclusively to Super Admin in the Global Audit Ledger for fraud mitigation, and is strictly stripped from all restaurant tenant endpoints.

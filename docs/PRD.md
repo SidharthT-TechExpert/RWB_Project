@@ -75,7 +75,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **ADM-05 Activation Gate:** System strictly prohibits setting restaurant status to `Active` unless all 4 mandatory documents are `Approved`.
 - **ADM-06 Emergency Toggle:** Admin can switch restaurant status between `Active` and `Suspended` to immediately halt live ordering.
 - **ADM-07 Pre-Booking Commercial Split Ratio:** Admin records the agreed split percentage on the restaurant profile during onboarding. This split ratio applies **strictly and exclusively to customer Pre-Booking charges** (food or table pre-booking amount collected upfront). It does **not** apply to spot QR orders, walk-ins, or general dining bills. Admin can update the split ratio at any time; changes apply only to future pre-bookings and never alter past pre-booking split records.
-- **ADM-08 Global Audit Ledger:** Filterable log of all orders, pre-bookings, and transactions across all venues.
+- **ADM-08 Global Audit Ledger & Anti-Fraud Inspector:** Filterable log of all orders, pre-bookings, and transactions across all venues. Displays full anti-fraud diagnostic information—including customer verified name, mobile phone number, physical table number, and client IP address—exclusively to Super Admin for fraud detection, prank order mitigation, and dispute auditing.
 - **ADM-09 Dual Settlement Engine & Invoice Generation:** 
   - **Daily Settlement Tab (T+X Days Post-Dining):** Dedicated dashboard tab tracking daily rolling batches of pre-booked food orders. The delay window begins strictly after the customer finishes dining and the order is marked `Completed` (`completed_at + X days delay`). Once matured, batches enter the Admin Daily Settlement window prioritized by a **First-In, First-Out (FIFO) sorting algorithm** (oldest completed and matured batches presented first for disbursement). Includes multi-criteria filters (by restaurant, settlement status, completion/maturity date range, payout amount range in ₹, and keyword search for UTR/Invoice/Restaurant). Displays batch volume metrics (pre-bookings created vs completed, gross food total, and net payout in ₹). Admin executes bank transfer to partner account and logs the Bank UTR reference.
   - **Monthly Settlement Tab:** Monthly consolidation of platform fee shares from pre-booking charges.
@@ -117,22 +117,25 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **PRE-08 Live Status Tracking:** Track booking progression (`Confirmed` → `Preparing` → `Ready for Seating` → `Completed`).
 
 ### 6.4 Spot Food Booking (On-Table QR Menu)
-- **SPO-01 Frictionless Web Menu:** Scans table QR code; opens instantly in mobile web browser with zero app download and zero login.
-- **SPO-02 Table Binding:** Securely bound to physical table ID (displays "Seated at Table 04").
+- **SPO-01 Mobile Web Menu & Customer Authentication:** Scans table QR code; opens instantly in mobile web browser with zero app download required. Incorporates a fast, proper customer authentication system (Sign Up / Login with Name and Mobile Phone Number OTP verification) required prior to order submission to prevent prank or fraudulent table orders.
+- **SPO-02 Table Binding & Customer Identification:** Securely bound to physical table ID (displays "Seated at Table 04"). Upon spot order creation, the system captures and stores the customer's verified Name, Mobile Phone Number, Table Number, and Order details to hold diners accountable and prevent fraudulent bookings.
 - **SPO-03 Category Navigation & Filters:** Rapid category jumping and dietary filtering (`Veg`, `Non-Veg`, `Vegan`, `Jain`).
 - **SPO-04 Dish Display:** Photo, dish name, description, price, dietary tags, and `+ Add` button.
 - **SPO-05 Real-Time Sold-Out Guard:** Sold-out items disabled from cart addition.
 - **SPO-06 Floating Cart Drawer:** Item counts, running subtotal, and special cooking instructions.
-- **SPO-07 Instant Order Placement:** One-tap submission pushes ticket directly to the restaurant's Kitchen Live Rush Board.
+- **SPO-07 Instant Order Placement:** One-tap authenticated submission pushes ticket directly to the restaurant's Kitchen Live Rush Board.
+- **SPO-08 Anti-Fraud IP Auditing & Role-Based Privacy Isolation:** At the time of order creation, the system automatically records the customer's client IP address and device footprint.
+  - **Super Admin Only:** The client IP address is visible exclusively to Super Admin in the Super Admin Portal (Audit Ledger / Order Details) for fraud investigations and abuse prevention.
+  - **Restaurant Privacy Protection:** The client IP address is strictly hidden and omitted from the Restaurant B2B Portal (restaurant staff see the customer name, phone number, table number, order items, and cooking notes only).
 
 ---
 
 ## 7. Non-Functional Requirements
 
 - **Sub-Second Performance:** On-table QR web menu loads in under `1.5 seconds` on mobile connections; order tickets push to Live Rush Board in $\le 500\text{ms}$.
-- **Zero-Friction Access:** Walk-in diners can view menus and order without installing any mobile application or signing up.
+- **Frictionless Mobile Web Access:** Walk-in diners access menus directly in mobile web browsers without installing native apps; lightweight phone OTP authentication guarantees order legitimacy without bulky signup friction.
 - **Reliability & Concurrency:** System supports high concurrent dining rushes without dropped tickets or double-booked tables.
-- **Multi-Tenant Data Isolation:** Complete data separation between restaurant venues. No venue can view or alter another venue's records.
+- **Multi-Tenant Data Isolation & Privacy:** Complete data separation between restaurant venues. Furthermore, sensitive audit metadata like customer IP addresses are isolated strictly to Super Admin and never leaked to restaurant tenants.
 - **Audit Logging:** Immutable audit logs for all administrative actions (document approvals/rejections, restaurant status changes, payout records).
 - **Progressive Web App (PWA) Architecture:** Both the Super Admin Portal and Restaurant B2B Operations Portal are installable Progressive Web Apps (PWAs). They feature standalone full-screen display modes (eliminating browser URL bars on POS tablets and iPads), service worker asset caching for instant launch, and Web Push notifications for incoming orders and kitchen chimes.
 - **Responsive Multi-Surface Support:** Portals optimized for desktop/tablet; Customer App optimized for iOS/Android; Table QR menu optimized for mobile browsers.
@@ -149,11 +152,14 @@ Pay Pre-Booking Charge (Platform/Partner Split Snapshot Captured) → Digital Pa
 Arrive at Restaurant → Seated at Reserved Table → Food Served Fresh with Zero Wait!
 ```
 
-### Flow 2: In-Venue Table QR Ordering (Spot Booking)
+### Flow 2: In-Venue Table QR Ordering (Spot Booking & Anti-Fraud Capture)
 ```text
-Diner Seated at Table → Scans Table QR Code → Live Menu Opens on Phone →
+Diner Seated at Table → Scans Table QR Code → Live Menu Opens on Phone (Zero App Download) →
+Customer Quick Sign Up / Login (Name & Mobile OTP Verification) →
 Selects Dishes & Adds Notes → Taps "Place Order" →
-Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (e.g. Shawarma Station prints Shawarmas, Drinks Bar prints Drinks) →
+System Records Order Details with Customer Name, Phone, Physical Table #, and Client IP →
+Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (Shawarma Station, Drinks Bar, etc.) →
+(Staff sees Customer Name, Phone, and Table #; Client IP visible exclusively to Super Admin) →
 Kitchen Prepares → Waiter Serves → Settle Bill with Cashier → Table Slot Freed.
 ```
 
@@ -243,12 +249,18 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - Booking cannot be placed for closed dates or slots that exceed available table capacity.
 - Confirmation generates a digital reservation pass with booking reference and order items.
 
-### Spot Ordering (Table QR Menu)
-- Scanning a physical table QR opens the live menu bound to that specific table without requiring app installation or login.
+### Spot Ordering (Table QR Menu) & Anti-Fraud Authentication
+- Scanning a physical table QR opens the live menu bound to that specific table without requiring app installation.
+- Customers must complete quick registration/login using their Name and Mobile Phone Number (OTP verification) prior to order submission.
+- When an order is placed, the system permanently records the customer's verified Name, Mobile Phone Number, physical Table Number, and complete Order details to prevent fake or fraudulent bookings.
+- The order creation service automatically captures the customer's client IP address and device footprint.
+- **Role-Based Privacy Enforcement:**
+  - The customer's client IP address is visible exclusively to Super Admin in the Super Admin Portal's Global Audit Ledger.
+  - The client IP address is strictly excluded and hidden from the Restaurant B2B Portal (restaurant staff see the customer name, phone number, table number, order items, and cooking notes only).
 - User can add in-stock dishes and update quantities.
 - Items marked `Sold Out` cannot be added to the cart.
 - Cart subtotal updates dynamically.
-- Submitting an order dispatches the ticket directly to the Kitchen Live Rush Board.
+- Submitting an order dispatches the ticket directly to the Kitchen Live Rush Board and station thermal printers.
 
 ### Kitchen Live Rush Board
 - Newly placed orders (pre-booking, QR spot, or staff punch) appear on the board within $\le 1\text{ second}$.

@@ -350,6 +350,20 @@ Security measurements must be implemented across all layers:
   - Stored in the database only as a `bcrypt` hash ($\ge 10$ rounds).
   - Flags account with `must_reset_password = true`, requiring the partner to change credentials upon first login.
 
+### 6.10 Spot Order Anti-Fraud Authentication & Client IP Auditing
+- **Customer Authentication on Table QR:**
+  Walk-in customers access the mobile web menu bound to the table. Prior to punching or confirming a spot order, customers authenticate via a lightweight signup/login service using their Name and Mobile Phone Number (SMS OTP verification).
+- **Fraud Prevention & Data Capture:**
+  Every spot order permanently records:
+  - `customer_name`: Verified customer legal/display name.
+  - `customer_phone`: Verified customer mobile number.
+  - `table_id`: Physical table where order is placed.
+  - `client_ip`: Remote IPv4/IPv6 address extracted safely from `X-Forwarded-For` or request socket connection.
+  - `user_agent`: Browser and device footprint.
+- **Strict Role-Based Privacy Isolation:**
+  - **Super Admin Visibility:** `client_ip` is fully serialized and visible to Super Admin in `/api/v1/admin/orders` and `/api/v1/admin/audit-logs` for bot/prank order mitigation and cybersecurity incident response.
+  - **Restaurant Privacy Protection:** The backend DTOs and serializers (`@Exclude()` in NestJS `ClassSerializerInterceptor`) strictly strip `client_ip` from all B2B restaurant endpoints (`/api/v1/b2b/orders`, Kitchen Rush Board WebSocket payloads). Restaurant staff have zero visibility into customer IP addresses.
+
 ---
 
 # 7. Database & Data Modeling Guidelines (Relational SQL)
@@ -442,23 +456,27 @@ Whether placed via diner QR or punched manually by restaurant staff, orders must
 ```text
 1. Validate Table ID & Cryptographic HMAC Signature
    ↓
-2. Verify Operating Hours & Calendar Overrides (Reject if Holiday)
+2. Authenticate Customer (Verified Name & Phone Number via OTP Session)
    ↓
-3. Validate Dishes:
+3. Extract Client IP & User Agent (Admin-Only Audit Payload)
+   ↓
+4. Verify Operating Hours & Calendar Overrides (Reject if Holiday)
+   ↓
+5. Validate Dishes:
    - Verify items belong to restaurant
    - Verify is_available = true (Reject if 86'd / sold out)
    ↓
-4. Calculate Gross Totals & Taxes
+6. Calculate Gross Totals & Taxes
    ↓
-5. Insert table_orders (Status: CONFIRMED)
+7. Insert table_orders (Status: CONFIRMED, Customer Name, Phone, Client IP, User Agent)
    ↓
-6. Insert order_items (Snapshot dish name, unit_price, quantity)
+8. Insert order_items (Snapshot dish name, unit_price, quantity, category, printer)
    ↓
-7. Update Table State: Mark Occupied
+9. Update Table State: Mark Occupied
    ↓
-8. Commit SQL Transaction
+10. Commit SQL Transaction
    ↓
-9. Broadcast WebSocket Event (RushBoardGateway)
+11. Broadcast WebSocket Event (RushBoardGateway - Client IP omitted from payload)
 ```
 
 ## 8.2 Real-Time Rush Board Sync
