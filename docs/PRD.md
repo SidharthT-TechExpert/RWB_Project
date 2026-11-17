@@ -126,8 +126,6 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
       - The completed order is permanently archived and sealed.
       - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
       - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
-      - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
-      - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
 
 ### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
 - **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
