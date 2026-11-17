@@ -112,8 +112,12 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
     - **Food Giving Time Card Hand-off:** When serving food, the waiter hands a physical dining session card (e.g. Card #07) to the seated customer.
     - **Billing Counter Card Insert:** After eating, the customer presents this card at the billing counter. The billing staff inserts the card into the countertop billing machine's slot.
     - **Dual-Screen Auto-Display:** Upon card insertion, the bill automatically populates simultaneously on:
-      1. **Staff Main Screen:** Full order breakdown (itemized dishes, quantities, GST taxes, advance paid online amount, and balance to collect).
-      2. **Customer Mini Screen:** Clean customer-facing summary showing total food price, amount already paid online, and net balance to pay.
+      1. **Staff Main Screen:** Full operational breakdown (itemized dishes, quantities, unit prices, GST taxes, advance paid online amount, and balance to collect).
+      2. **Customer Mini Screen:** Complete customer-facing **itemized food list** (dish names, quantities, item prices, subtotal), advance paid online amount, and net balance to pay.
+    - **Counter Order Item Management & Mandatory Audit Trail:**
+      - Billing staff can manage active table items directly at the counter (void unserved items, adjust quantities, add checkout items).
+      - Live Sync: Any item edit made by staff immediately and automatically updates the Customer Mini Screen in real-time.
+      - **Anti-Theft Audit Trail:** Any item void or quantity reduction requires a **Mandatory Reason Code** (e.g. `NOT_SERVED`, `CUSTOMER_REJECTED`, `WRONGLY_PUNCHED`). If the item was already printed in the kitchen (KOT printed), voiding strictly requires **Manager PIN Authorization**. The system writes an immutable record to the audit ledger capturing staff ID, dish name, previous/new quantities, delta ₹ amount, reason, and manager approver.
     - **Standard Restaurant Payment:** The customer settles any remaining balance directly with the restaurant using their normal payment method (Cash, restaurant's card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
     - **Staff 1-Tap "Print Receipt":** Once payment is received, staff taps 1 button: **"Print Receipt"**. The machine immediately prints the final itemized GST tax invoice and auto-cuts the paper. That 1 tap marks both the payment and the order as `Completed`.
     - **Strict Table Isolation for Next Customer:** Immediately upon order completion, the system executes an atomic table reset:
@@ -358,7 +362,11 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - Waiters hand a physical dining session card to the seated customer when serving food.
 - The customer presents the card at the billing counter after finishing their meal.
 - When the card is inserted into the machine's card slot:
-  - Bill automatically populates on both the **Staff Screen** (full operational breakdown) and **Customer Mini Screen** (total food, paid online, and balance to pay).
+  - Bill automatically populates on both the **Staff Screen** and the **Customer Mini Screen**.
+  - **Customer Mini Screen** displays the complete **itemized food list** (dish names, quantities, individual prices), subtotal, GST taxes, advance paid online amount, and net balance to pay.
+  - Billing staff can manage active table items (void dishes, adjust quantities, add checkout items).
+  - Any item modification at the counter immediately updates the Customer Mini Screen in real-time.
+  - Any item void or quantity reduction strictly requires a **Mandatory Reason Code** and writes an immutable entry into the audit ledger; items already dispatched to kitchen require **Manager Authorization**.
   - Automatically identifies advance food amounts already paid online during pre-booking (`Already Paid Amount`).
   - Correctly calculates the net balance due: $\text{Need to Pay Amount} = \text{Total Bill Amount} - \text{Already Paid Amount}$.
 - Customer pays the restaurant directly via the restaurant's normal in-venue payment setup (Cash, card machine, or restaurant's own Razorpay/UPI QR; funds go directly to the restaurant).

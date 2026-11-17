@@ -30,6 +30,8 @@ erDiagram
     USERS ||--o{ TABLE_ORDERS : "places"
     TABLE_RESERVATIONS ||--o| TABLE_ORDERS : "initiates"
     TABLE_ORDERS ||--o{ ORDER_ITEMS : "comprises"
+    TABLE_ORDERS ||--o{ ORDER_ITEM_AUDIT_LOGS : "audits edits on"
+    USERS ||--o{ ORDER_ITEM_AUDIT_LOGS : "performed by"
     FOOD_ITEMS ||--o{ ORDER_ITEMS : "ordered as"
     KITCHEN_PRINTERS ||--o{ ORDER_ITEMS : "routed to"
     RESTAURANTS ||--o{ DAILY_SETTLEMENT_BATCHES : "settled via"
@@ -206,6 +208,23 @@ erDiagram
         uuid category_id_snapshot FK
         uuid assigned_printer_id_snapshot FK
         timestamp kot_printed_at
+    }
+
+    ORDER_ITEM_AUDIT_LOGS {
+        uuid id PK
+        uuid order_id FK
+        uuid order_item_id FK
+        uuid performed_by_user_id FK
+        string action_type
+        string item_name_snapshot
+        int previous_quantity
+        int new_quantity
+        decimal unit_price
+        decimal total_delta_amount
+        string reason_code
+        string reason_notes
+        uuid manager_approved_by FK
+        timestamp created_at
     }
 
     DAILY_SETTLEMENT_BATCHES {

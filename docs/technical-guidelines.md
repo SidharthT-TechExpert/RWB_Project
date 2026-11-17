@@ -145,8 +145,13 @@ To streamline front-of-house table operations and eliminate counter bottlenecks:
     1. Looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
     2. Retrieves active `table_orders` and itemized `order_items`.
     3. Renders the complete reconciled bill simultaneously on:
-       - **Staff Main Screen:** Full operational breakdown (dishes, quantities, GST taxes, advance paid online amount, and balance to collect).
-       - **Customer Mini Screen:** High-contrast summary showing total food price, amount already paid online, and net balance to pay.
+       - **Staff Main Screen:** Full operational breakdown (dishes, quantities, unit prices, GST taxes, advance paid online amount, and balance to collect).
+       - **Customer Mini Screen:** Complete customer-facing **itemized food list** (dish names, quantities, line prices, subtotal), advance paid online amount, and net balance to pay.
+- **Counter Item Management & Anti-Theft Audit Trail:**
+  - Staff can void items, decrease quantities, or punch added items.
+  - Changes instantly update the Customer Mini Screen in real-time.
+  - Every modification creates an immutable entry in `order_item_audit_logs` recording user ID, dish name, previous/new quantities, delta amount, and mandatory `reason_code` (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`).
+  - Items already printed on kitchen KOTs strictly require **Manager Authorization** to void.
 - **Direct Restaurant Payment:**
   - Customer settles their bill directly with the restaurant (Cash, restaurant card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
 - **Staff 1-Tap "Print Receipt" & Table Isolation:**

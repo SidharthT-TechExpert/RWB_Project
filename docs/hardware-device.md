@@ -51,49 +51,55 @@ The **QuickBite Countertop Billing Machine** is a dedicated billing terminal pla
 
 ---
 
-## 3. Dual-Screen Interface Architecture
+## 3. Dual-Screen Interface Architecture & Item Management
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   QUICKBITE COUNTERTOP BILLING MACHINE                 │
-│                                                                        │
-│   [STAFF MAIN TOUCHSCREEN]                   [CUSTOMER MINI SCREEN]    │
-│   ┌───────────────────────────────┐          ┌───────────────────────┐ │
-│   │ Table: Table 04 | Card: #07   │          │ QuickBite Dining Bill │ │
-│   │ ----------------------------- │          │ --------------------- │ │
-│   │ 2x Chicken Biryani  ₹ 440.00  │          │ Total Food:   ₹720.00 │ │
-│   │ 4x Butter Naan      ₹ 160.00  │          │ GST (5%):     ₹ 36.00 │ │
-│   │ 2x Mint Lime Juice  ₹ 120.00  │          │ Total Bill:   ₹756.00 │ │
-│   │ ----------------------------- │          │                       │ │
-│   │ Total Bill:         ₹ 756.00  │          │ Paid Online: -₹400.00 │ │
-│   │ Already Paid (App):-₹ 400.00  │          │                       │ │
-│   │ Need to Pay:        ₹ 356.00  │          │ BALANCE TO PAY:₹356.00│ │
-│   │                               │          └───────────────────────┘ │
-│   │  ┌─────────────────────────┐  │                                    │
-│   │  │  [ PRINT RECEIPT ] (1)  │  │          [FRONT CARD SLOT]         │
-│   │  └─────────────────────────┘  │          [ ==== [CARD #07] ==== ]  │
-│   └───────────────────────────────┘          (Microswitch Auto-Detect) │
-│                                                                        │
-│   [BUILT-IN THERMAL PRINTER] -> [RECEIPT AUTO-CUT: GST TAX INVOICE]    │
-└────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                      QUICKBITE COUNTERTOP BILLING MACHINE                      │
+│                                                                                │
+│   [STAFF MAIN TOUCHSCREEN]                      [CUSTOMER MINI SCREEN]         │
+│   ┌──────────────────────────────────┐          ┌────────────────────────────┐ │
+│   │ Table: Table 04 | Card: #07      │          │ Table 04 - Order Summary   │ │
+│   │ -------------------------------- │          │ -------------------------- │ │
+│   │ 2x Chicken Biryani    [Edit][🗑️] │          │ 2x Chicken Biryani ₹440.00 │ │
+│   │ 4x Butter Naan        [Edit][🗑️] │          │ 4x Butter Naan     ₹160.00 │ │
+│   │ 2x Mint Lime Juice    [Edit][🗑️] │          │ 2x Mint Lime Juice ₹120.00 │ │
+│   │ -------------------------------- │          │ -------------------------- │ │
+│   │ [+ Add Item]  [Audit History 📜] │          │ Subtotal:          ₹720.00 │ │
+│   │ -------------------------------- │          │ GST (5%):          ₹ 36.00 │ │
+│   │ Total Bill:              ₹756.00 │          │ Total Bill:        ₹756.00 │ │
+│   │ Already Paid (App):     -₹400.00 │          │ Already Paid (App):-₹400.00│ │
+│   │ Need to Pay:             ₹356.00 │          │                            │ │
+│   │                                  │          │ BALANCE TO PAY:    ₹356.00 │ │
+│   │  ┌────────────────────────────┐  │          └────────────────────────────┘ │
+│   │  │   [ PRINT RECEIPT ] (1)    │  │                                         │
+│   │  └────────────────────────────┘  │          [FRONT CARD SLOT]              │
+│   └──────────────────────────────────┘          [ ==== [CARD #07] ==== ]       │
+│                                                 (Microswitch Auto-Detect)      │
+│   [BUILT-IN THERMAL PRINTER] -> [RECEIPT AUTO-CUT: GST TAX INVOICE]            │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Card Insert Auto-Trigger:**
-   - When the card is inserted into the slot, the hardware microswitch detects physical insertion and reads the card's unique identifier (`card_uid`).
-   - The device immediately queries the backend and populates the bill on **both** the Staff Screen and the Customer Mini Screen in $\le 300\text{ms}$.
-2. **Bill Breakdown:**
-   - Both screens clearly show:
-     - Gross Food Amount + GST Taxes.
-     - **Already Paid Online Amount** (advance pre-booking meal payment).
-     - **Need to Pay Balance Amount** (net outstanding balance).
-3. **In-Venue Payment Processing:**
-   - Customer pays via the restaurant's existing payment setup (Cash, card machine, or the restaurant's own Razorpay/UPI QR).
-   - This in-venue money goes directly to the restaurant partner. QuickBite does not intercept or hold in-venue dining payments.
-4. **Staff 1-Tap "Print Receipt":**
-   - Once payment is handed over/confirmed, the staff simply taps **"Print Receipt"**.
-   - Built-in thermal printer immediately prints the itemized GST tax invoice and auto-cuts the paper.
-   - Order status automatically updates to `COMPLETED`.
-   - Payment status automatically updates to `FULLY_PAID`.
+### 3.1 Customer Mini-Screen Display (Food List & Financials)
+- **Itemized Dish Transparency:** Customers clearly see the **full ordered food list**—dish name, quantity, unit price, and line total—along with the subtotal, GST taxes, advance online payments, and remaining balance to pay.
+- **Dynamic Real-Time Sync:** If billing staff adjusts quantities or voids an item at the counter, the customer mini-screen updates **instantly in real time** so the diner sees the exact adjusted bill before tendering payment.
+
+### 3.2 Billing Staff Order Item Management & Audit Log Controls
+Billing staff can manage active table items directly on the countertop machine prior to printing the final receipt:
+1. **Item Actions Supported:**
+   - **Void Item (Cancel Dish):** Remove an erroneously punched or unserved dish.
+   - **Adjust Quantity:** Increase or decrease item count (e.g. from 4 naans to 2 naans).
+   - **Add Item:** Punch an additional item requested by diners at checkout (e.g. bottled water, takeaway dessert).
+2. **Mandatory Audit Trail Enforcement:**
+   To eliminate cashier fraud, shrinkage, or bill tampering:
+   - Any item removal, cancellation, or quantity decrease requires a **Mandatory Reason Code** (e.g. `NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`).
+   - If the dish was already dispatched to the kitchen (KOT printed), voiding requires **Manager PIN Authorization**.
+   - Every change writes an immutable audit record to `order_item_audit_logs` capturing: Staff User ID, Dish Name, Old Qty, New Qty, Delta ₹ Amount, Reason Code, and Manager Approver.
+   - The staff screen has an `[Audit History 📜]` button allowing managers to inspect all past modifications on the ticket.
+
+### 3.3 Payment Settlement & 1-Tap Print
+1. **Customer In-Venue Payment:** Customer pays the net balance to the restaurant (Cash, restaurant card machine, or restaurant's own Razorpay/UPI setup).
+2. **Staff 1-Tap "Print Receipt":** Staff taps 1 button. The machine prints the receipt, updates order and payment to `COMPLETED`, and isolates the table for the next customer.
 
 ---
 

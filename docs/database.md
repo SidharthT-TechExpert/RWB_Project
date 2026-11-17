@@ -319,7 +319,29 @@ Individual line items on an order, carrying category and printer snapshots for a
 
 ---
 
-### 3.15 `daily_settlement_batches`
+### 3.15 `order_item_audit_logs`
+Immutable audit ledger recording all post-punch modifications, cancellations, voids, and quantity adjustments made to table order items by billing staff.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique audit record identifier |
+| `order_id` | `UUID` | `NOT NULL, REFERENCES table_orders(id) ON DELETE CASCADE` | Affected table order ticket |
+| `order_item_id` | `UUID` | `NULLABLE, REFERENCES order_items(id) ON DELETE SET NULL` | Target order line item |
+| `performed_by_user_id`| `UUID` | `NOT NULL, REFERENCES users(id)` | Cashier / staff user who performed the edit |
+| `action_type` | `VARCHAR(32)` | `NOT NULL` | `ITEM_VOIDED`, `QUANTITY_DECREASED`, `QUANTITY_INCREASED`, `ITEM_ADDED`, `PRICE_OVERRIDDEN` |
+| `item_name_snapshot` | `VARCHAR(150)` | `NOT NULL` | Name of dish modified |
+| `previous_quantity` | `INT` | `NOT NULL` | Quantity prior to modification |
+| `new_quantity` | `INT` | `NOT NULL` | Quantity after modification |
+| `unit_price` | `DECIMAL(10, 2)`| `NOT NULL` | Unit price in INR (₹) |
+| `total_delta_amount` | `DECIMAL(10, 2)`| `NOT NULL` | Change in order subtotal (negative for voids) in INR (₹) |
+| `reason_code` | `VARCHAR(64)` | `NOT NULL` | Standardized reason code (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`, `MANAGER_COMP`) |
+| `reason_notes` | `TEXT` | `NULLABLE` | Detailed staff explanation notes |
+| `manager_approved_by` | `UUID` | `NULLABLE, REFERENCES users(id)` | Manager who authorized void (mandatory if KOT was printed) |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Immutable audit record timestamp |
+
+---
+
+### 3.16 `daily_settlement_batches`
 Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payouts, booking metrics, bank UTR, and partner tax invoices.
 
 | Column | Type | Constraints | Description |
@@ -344,7 +366,7 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 
 ---
 
-### 3.16 `monthly_settlements`
+### 3.17 `monthly_settlements`
 Monthly financial statement consolidating platform pre-booking fee splits.
 
 | Column | Type | Constraints | Description |
@@ -382,6 +404,8 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 | `idx_orders_dining_card` | `table_orders` | `(dining_card_id, status)` | Instant order retrieval from card insert |
 | `idx_orders_table_status` | `table_orders` | `(table_id, status)` | Active table order retrieval |
 | `idx_order_items_order_printer` | `order_items` | `(order_id, assigned_printer_id_snapshot)` | Automated category KOT dispatch |
+| `idx_order_item_audit_order` | `order_item_audit_logs` | `(order_id, created_at DESC)` | Instant order audit trail inspection |
+| `idx_order_item_audit_user` | `order_item_audit_logs` | `(performed_by_user_id, created_at DESC)` | Staff accountability & anti-theft tracking |
 | `idx_daily_settlements_fifo` | `daily_settlement_batches` | `(status, holding_matures_at ASC)` | Admin Daily Settlement window FIFO sorting queue |
 | `idx_daily_settlements_rest_date`| `daily_settlement_batches` | `(restaurant_id, status, batch_date DESC)` | Multi-criteria filtering & partner Settlements tab |
 | `idx_monthly_settlements_lookup`| `monthly_settlements` | `(restaurant_id, period_month)` | Monthly partner statement tab |
@@ -412,3 +436,8 @@ Monthly financial statement consolidating platform pre-booking fee splits.
    - The completed order is permanently sealed in the database as an immutable historical record.
    - When the next customer sits at that table and scans the QR code or orders, the platform generates a completely fresh, isolated `table_orders` ticket.
    - Under zero circumstances can the next customer's order affect, leak into, or inherit items or amounts from the previous customer's completed dining session.
+8. **Mandatory Audit Logging for Counter Order Modifications:**
+   - Any post-punch edit to `table_orders` line items (voiding a dish, decreasing quantity, or adjusting price) made by billing staff at the countertop machine must atomically insert an immutable audit record into `order_item_audit_logs`.
+   - The audit log requires a mandatory `reason_code` (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`, `MANAGER_COMP`).
+   - If the item was already printed in the kitchen (`order_items.kot_printed_at IS NOT NULL`), voiding or reducing quantity strictly requires authorization by a manager (`manager_approved_by`).
+   - Audit log records are permanently append-only and cannot be updated or deleted.
