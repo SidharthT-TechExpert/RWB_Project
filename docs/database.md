@@ -77,6 +77,9 @@ Core tenant record capturing business profiles, onboarding status, and financial
 | `payout_delay_days` | `INT` | `NOT NULL DEFAULT 2` | Holding delay period ($X$ days) post-completion |
 | `opening_time` | `TIME` | `NOT NULL DEFAULT '09:00:00'` | Default venue daily opening time |
 | `closing_time` | `TIME` | `NOT NULL DEFAULT '23:00:00'` | Default venue daily closing time |
+| `upi_vpa` | `VARCHAR(100)` | `NULLABLE` | Merchant UPI Virtual Payment Address for dynamic QR code (e.g. "quickbite.tandoor@icici") |
+| `upi_merchant_name` | `VARCHAR(150)` | `NULLABLE` | Legal merchant display name encoded into UPI payment payload |
+| `merchant_category_code`| `VARCHAR(10)` | `NOT NULL DEFAULT '5812'` | NPCI Merchant Category Code (MCC 5812 = Restaurants) |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record last modification timestamp |
 
@@ -279,6 +282,8 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 | `total_bill_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Final payable total in INR (₹) |
 | `advance_paid_amount`| `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Advance food amount already paid online via pre-booking in INR (₹) |
 | `balance_due_amount`| `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Outstanding need-to-pay balance at counter (`total_bill - advance_paid`) in INR (₹) |
+| `upi_qr_payload` | `TEXT` | `NULLABLE` | Generated NPCI dynamic UPI QR URI (`upi://pay?pa=...&am=...`) |
+| `upi_transaction_id`| `VARCHAR(100)` | `NULLABLE` | Bank RRN / UPI Transaction Reference upon customer payment completion |
 | `payment_status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'UNPAID'` | `UNPAID`, `PARTIALLY_PAID`, `FULLY_PAID` |
 | `settlement_method` | `VARCHAR(32)` | `NULLABLE` | `ONLINE_PREPAID`, `CASH`, `UPI_QR`, `POS_CARD_SWIPE`, `SPLIT` |
 | `settled_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when cashier closed bill at counter |

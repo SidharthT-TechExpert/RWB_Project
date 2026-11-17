@@ -148,6 +148,8 @@ To streamline front-of-house table operations and eliminate counter bottlenecks:
     1. B2B POS catches the event, looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
     2. Retrieves linked `table_orders` and all `order_items`.
     3. Renders the complete reconciled billing modal instantly ($\le 300\text{ms}$) with itemized dish prices, GST taxes, advance payments, and net balance due.
+    4. If $\text{balance\_due\_amount} > ₹0.00$, the terminal renders a dynamic NPCI UPI QR code (`upi://pay?pa={upi_vpa}&pn={brand_name}&mc=5812&tr={order_number}&am={balance_due}&cu=INR`).
+    5. Upon customer scanning and completing UPI payment, the bank webhook confirms payment, triggering an instant soundbox audio announcement and automated ESC/POS thermal receipt printing and auto-cutting.
 
 ---
 

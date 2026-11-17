@@ -58,6 +58,9 @@ erDiagram
         int payout_delay_days
         time opening_time
         time closing_time
+        string upi_vpa
+        string upi_merchant_name
+        string merchant_category_code
     }
 
     COMPLIANCE_DOCUMENTS {
@@ -185,6 +188,8 @@ erDiagram
         decimal total_bill_amount
         decimal advance_paid_amount
         decimal balance_due_amount
+        string upi_qr_payload
+        string upi_transaction_id
         string payment_status
         string settlement_method
         timestamp settled_at

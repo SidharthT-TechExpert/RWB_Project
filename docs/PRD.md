@@ -108,13 +108,16 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-20 Physical Dining Card & Automated POS Counter Settlement:**
   - **Dining Session Card Binding:** Waiters/hosts carry a pool of physical dining session cards (Smart Chip cards, RFID/NFC tokens, or serialized magnetic/barcode cards). Upon seating a customer—whether for a full pre-booking, walk-in dining, or spot QR order—the waiter binds an available card to the table session (e.g. Card #14 bound to Table 04 / Order #ORD-1029).
   - **Incremental Order Accumulation:** If diners order additional rounds of food or beverages during their meal (via customer app spot ordering or punched by waiters), all items dynamically accumulate under this card's active table session.
-  - **Automated Bill Generation on Card Insertion:** After eating, the customer presents the card to the waiter or walks to the billing counter. When the card is inserted into the POS card reader (or scanned/tapped), the B2B POS portal **instantly and automatically retrieves and generates the complete finalized bill**:
+  - **Automated Bill Generation & Dynamic UPI Payment QR on Card Insertion:** After eating, the customer presents the card to the waiter or walks to the billing counter. When the card is inserted into the terminal's card reader (or scanned/tapped), the terminal / B2B POS portal **instantly and automatically retrieves and generates the complete finalized bill**:
     - Itemized breakdown of all ordered food items, quantities, dish prices, and GST taxes in INR (₹).
     - **Already Paid Amount Identification:** System checks for and clearly displays any advance online payments (pre-booked food payments captured during app checkout).
     - **Calculated Need-to-Pay Balance Due:**
       $$\text{Need-to-Pay Amount (₹)} = \text{Total Bill Amount} - \text{Already Paid Amount}$$
+    - **Dynamic Restaurant UPI Payment QR Code:** When $\text{Need-to-Pay} > ₹0.00$, the terminal screen automatically generates and displays a dynamic NPCI UPI Payment QR Code locked to the restaurant's merchant UPI VPA (`pa`) and the exact Need-to-Pay amount (`am`). The customer scans with any UPI app (GPay, PhonePe, Paytm, BHIM) and approves payment with zero manual amount typing.
+    - **Instant Payment Webhook & Voice Alert (Soundbox Function):** Upon successful customer UPI payment, the terminal immediately receives bank confirmation via webhook/WebSocket, flashes a green success banner, and plays an audible voice announcement (e.g. *"QuickBite: ₹350 received successfully!"*).
+    - **Automated Post-Payment Thermal Receipt Printing:** Immediately upon payment confirmation (or 1-tap zero-balance clearance for full pre-paid bookings), the terminal's integrated high-speed thermal printer automatically prints the complete official GST Tax Invoice / receipt and auto-cuts the paper.
     - **Full Pre-Booking Settlement (Zero Balance):** For diners who fully pre-booked and pre-paid their entire meal online without ordering additional dishes, the POS instantly displays: `Total Bill = ₹X`, `Already Paid = ₹X`, `Need to Pay = ₹0.00`. The cashier executes 1-tap checkout, prints the zero-balance tax receipt, marks the order `Completed` (initiating the $T+X$ payout delay clock), and automatically unbinds the physical card, returning it to the available pool.
-    - **Spot Orders & In-Venue Additions Settlement:** For walk-ins or pre-booked guests who ordered additional items, the POS clearly displays the net outstanding balance. Cashier collects payment via Cash, UPI QR, or Card, clicks "Settle & Release", prints the final tax invoice, marks the order `Completed`, and releases the card back into circulation.
+    - **Session Closure & Card Ejection:** Once payment is confirmed and the receipt prints, the terminal updates the order to `Completed`, resets table status to `Vacant`, and unbinds the dining card back to `Available` status in the card pool.
 
 ### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
 - **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
@@ -179,9 +182,13 @@ Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (Shawarma
 (Staff sees Customer Name, Phone, and Table #; Client IP visible exclusively to Super Admin) →
 Kitchen Prepares → Waiter Serves → Diners Order Additional Rounds Anytime (Accumulated Under Active Card Session) →
 After Meal, Customer Hands Card to Waiter or Billing Counter →
-Card Inserted into POS Terminal → System Automatically Generates Itemized Bill (Food + Taxes) →
-Displays: Already Paid = ₹0.00, Need to Pay Amount = Full Bill Total →
-Cashier Collects Payment (Cash/UPI QR/Card) → Final Tax Invoice Prints → Card Unlinked to Pool → Order Completed.
+Card Inserted into Q-Terminal Slot → System Automatically Generates Itemized Bill (Food + Taxes) →
+Displays: Already Paid = ₹0.00 (or pre-paid amount if reservation), Need to Pay Amount = Net Balance →
+Terminal Screen Automatically Generates & Displays Dynamic Restaurant UPI Payment QR Code →
+Customer Scans QR via GPay / PhonePe / Paytm / BHIM & Confirms UPI Payment →
+Instant Webhook Confirmation Received → Speaker Announces Payment ("₹X received on QuickBite!") →
+Terminal Built-In Thermal Printer Automatically Prints GST Tax Receipt & Cuts Paper →
+Dining Card Unbound to Available Pool & Table Freed → Order Completed (T+X Delay Clock Begins).
 ```
 
 ### Flow 3: In-Venue Dining Card Settlement & Reconciliation Flow (Unified All-Scenario Flow)
@@ -189,15 +196,17 @@ Cashier Collects Payment (Cash/UPI QR/Card) → Final Tax Invoice Prints → Car
 Diner Seated (Pre-Booked or Walk-in) → Waiter Assigns Physical Dining Card →
 Food Ordered (Pre-Booked Baseline + Optional Additional Spot Rounds Punched or QR-Ordered) →
 Meal Concluded → Diner Hands Card to Waiter or Presents at Billing Counter →
-Cashier Inserts Card into POS Terminal Card Reader →
-POS Instantly Fetches Linked Order & Computes:
+Cashier/Diner Inserts Card into Q-Terminal Card Reader Slot →
+Terminal Instantly Fetches Linked Order & Computes:
   [Gross Food Subtotal] + [Applicable Taxes] = Total Bill Amount
   [Advance Paid Online via Pre-Booking] = Already Paid Amount
   [Total Bill Amount] - [Already Paid Amount] = Need-to-Pay Amount
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Scenario A (Full Pre-Booking, No Extras): Need to Pay = ₹0.00 → 1-Tap Print & Close    │
-  │ Scenario B (Pre-Booking + Extra Items): Need to Pay = Difference → Collect & Print     │
-  │ Scenario C (Pure Spot Walk-in): Need to Pay = 100% of Bill → Collect & Print           │
+  │ Scenario A (Full Pre-Booking, No Extras): Need to Pay = ₹0.00 → 1-Tap Zero Clearance   │
+  │ Scenario B (Pre-Booking + Extra Items): Need to Pay = Difference → Terminal Displays   │
+  │   Dynamic Restaurant UPI QR → Customer Scans & Pays → Voice Alert & Auto-Print Receipt │
+  │ Scenario C (Pure Spot Walk-in): Need to Pay = 100% of Bill → Terminal Displays         │
+  │   Dynamic Restaurant UPI QR → Customer Scans & Pays → Voice Alert & Auto-Print Receipt │
   └────────────────────────────────────────────────────────────────────────────────────────┘
 → Order Marked COMPLETED (T+X Delay Clock Begins) → Card Reset to AVAILABLE in Card Pool.
 ```
