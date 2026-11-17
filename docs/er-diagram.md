@@ -338,7 +338,7 @@ sequenceDiagram
     DB-->>Machine: Return Order Items, Taxes, Advance Paid Online, Balance Due
     par Dual Screen Display
         Machine->>Machine: Staff Screen: Full operational item breakdown & balance
-        Machine->>Machine: Customer Mini Screen: Food total, advance paid, balance to pay
+        Machine->>Machine: Customer Mini Screen: Complete itemized dishes list (dishes x qty, prices), advance paid, balance to pay
     end
     Diner->>Cashier: Settle Payment (Cash, Card, or Restaurant's Own Razorpay/UPI)
     Cashier->>Machine: 1-Tap "Print Receipt"

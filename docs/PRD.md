@@ -193,7 +193,7 @@ After Meal, Customer Hands Card to Waiter or Billing Counter →
 Staff Inserts Card into Countertop Billing Machine Slot →
 Bill Instantly Displays on Both Displays:
   • Staff Main Screen: Full breakdown (dishes, prices, taxes, advance paid, net due)
-  • Customer Mini Screen: Food total, advance paid, and balance to pay
+  • Customer Mini Screen: Complete itemized ordered dishes list (dish names, quantities, unit prices), GST taxes, advance paid online, and balance to pay
 Customer Pays at Counter (Cash, Restaurant's Card POS, or Restaurant's Own Razorpay/UPI) →
 Staff 1-Tap "Print Receipt" →
 Machine Prints Final Tax Invoice Receipt & Cuts Paper →
@@ -209,6 +209,7 @@ Diners Finish Eating → Customer Hands Card to Billing Counter Staff →
 Staff Inserts Card into Countertop Billing Machine Slot →
 Machine Instantly Retrieves Linked Order & Populates Both Screens:
   [Staff Screen & Customer Mini Screen]
+  Itemized Dishes List (Dish Names × Quantities, Individual Prices)
   Gross Food Subtotal + Taxes = Total Bill Amount
   Advance Paid Online = Already Paid Amount
   Total Bill - Already Paid = Need to Pay Amount
