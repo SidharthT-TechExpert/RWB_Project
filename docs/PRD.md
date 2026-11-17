@@ -267,35 +267,138 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - **PWA Full-Screen Display Mode:** Borderless standalone execution optimized for counter POS touchscreens, kitchen wall-mounted displays, and mobile devices without browser interface distractions.
 
 ### 9.2 Key Screens & Views Needed
-1. **Super Admin Portal:**
-   - Restaurant Onboarding & Partner List
-   - Document Verification Modal (Approve / Reject with reason notes)
-   - Daily Settlement Tab (T+X Daily Batches, FIFO Queue Sorting, Multi-Criteria Filters, Created vs Completed Bookings, UTR Entry & Invoice Trigger)
-   - Monthly Settlement Tab (Platform Pre-Booking Split Fees)
-2. **Restaurant B2B SaaS Portal:**
-   - Floor & Table Layout Manager (with printable QR generator)
-   - Operating Hours & Shift Calendar Overrides
-   - Digital Menu & Category Manager (Category Create/Edit with Station Printer Selector, instant 86'd toggle)
-   - Kitchen Live Rush Board (real-time order tickets & status progression)
-   - Manual Order Punching Modal
-   - Kitchen Thermal Printers & KOT System Management (Register printers, test print, category routing)
-   - Billing Counter & Dining Card POS View (Card insertion auto-trigger, gross food price + taxes, already paid online identification, need-to-pay balance calculation, 1-tap zero balance clearance, card release)
-   - Daily Settlements Tab (T+X Payout Tracker, Created vs Completed Booking Volume Stats)
-   - Invoices & Statements Section (View & Download Official Invoices with UTR references)
-   - Monthly Settlements Tab (Pre-Booking Split Statements)
-3. **Unified Customer Application:**
-   - Auth & Profile Screen (Name & Phone Number OTP verification)
-   - Venue Discovery & Search (Filter by cuisines, dietary tags, ratings, opening hours)
-   - Table Reservation & Slot Selector (Party size, zones, calendar dates, time blocks, suitable table/tables selector)
-   - Advance Menu Pre-Ordering View (Browse dishes, add to reservation, dietary badges)
-   - Pre-Booking Checkout Screen (Pre-booking charge + selected food items price breakdown in ₹)
-   - Bound Physical Dining Card Banner (e.g. "Dining Card #14 Active at Table 04")
-   - Integrated QR Scanner & Table Binding Screen ("Seated at Table 04 at [Venue]")
-   - In-Venue Live Category Menu & Dietary Filters (`Veg`, `Non-Veg`, `Vegan`, `Jain`)
-   - Dish Details Modal with custom cooking notes
-   - Floating Cart Drawer with running subtotal in INR (₹)
-   - Digital Reservation Pass & Live Status Tracker (`Confirmed` → `Preparing` → `Served/Seated` → `Completed`)
-   - Consolidated Dining History (Past pre-bookings and spot dining receipts)
+
+The QuickBite ecosystem spans four tightly synchronized operational surfaces:
+1. **Super Admin Portal** (Platform Management & Governance)
+2. **Restaurant B2B SaaS Operations Portal** (Back-Office, Floor & Kitchen)
+3. **Countertop POS & Custom Billing Machine Hardware Surface** (Staff POS + Customer Mini-Screen)
+4. **Unified Customer Application** (Dedicated Mobile Native / PWA Experience)
+
+---
+
+#### 1. Super Admin Portal (PWA – Governance & Platform Settlements)
+1. **Platform Authentication & Security:** Secure login screen for super-administrators with multi-factor session validation.
+2. **Restaurant Partner Directory & Onboarding Wizard:**
+   - Multi-step onboarding form (Legal entity details, Brand name, Manager contacts, Dining address, Cuisine badges, Logo, and Ambiance photos).
+   - Commercial Pre-Booking Split Ratio configuration field (strictly applied to customer upfront pre-booking charges).
+3. **Compliance Verification & Activation Gate Modal:**
+   - Document inspection viewer for 4 mandatory uploads: FSSAI License, GST Certificate, Bank Account Proof (cancelled cheque/passbook), and Owner KYC ID.
+   - 1-Click `Approved` / `Rejected` toggles per document with mandatory Rejection Reason notes input.
+   - Automated email notification dispatch to partner on decision.
+   - Restaurant Activation Gate status switch (`Draft` locked until all 4 docs are approved; 1-click `Active` / `Suspended` emergency toggle).
+4. **Daily Delayed Settlement Hub (T+X Days Post-Dining):**
+   - FIFO Queue Sorting Table: Oldest matured batches (`completed_at + X days`) displayed first for bank disbursement.
+   - Multi-Criteria Filter Bar: Restaurant dropdown, Settlement Status (`Holding`, `Matured/Disbursable`, `Settled`), Completion Date Range, Payout Amount range (₹), and Keyword Search.
+   - Batch Volume Metrics Card: Pre-bookings created vs completed, gross food sales (₹), platform commission snapshot, and net partner payout in ₹.
+   - Bank Disbursement & UTR Entry Modal: Input partner bank transaction UTR reference and payout timestamp.
+   - Automated Official Tax Invoice / Settlement Receipt PDF generator trigger.
+5. **Monthly Pre-Booking Platform Split View:**
+   - Consolidated monthly ledger of platform commission shares retained from pre-booking charges.
+   - Monthly tax statements and exportable reconciliation reports (CSV/PDF).
+6. **Global Master Audit Ledger & Anti-Fraud Inspector:**
+   - Cross-restaurant real-time order stream.
+   - Anti-Fraud Diagnostic Inspection Modal: Displays customer verified Full Name, Mobile Phone Number, Physical Table #, and **Client IP Address & Device Footprint** (strictly isolated to Super Admin; concealed from restaurants).
+   - High-risk / suspicious order flagging mechanism.
+
+---
+
+#### 2. Restaurant B2B SaaS Operations Portal (PWA – Floor, Kitchen & Back-Office)
+1. **Partner Authentication & Onboarding Sign-In:**
+   - Owner/Manager login using email and system-generated credentials.
+   - Mandatory first-time login password change prompt.
+2. **Floor & Dining Layout Manager:**
+   - Dining Zone Creator & Editor (Main Dining Hall, AC Family Lounge, Terrace).
+   - Table Grid & Seating Capacity Editor (Table number, 2/4/6/8+ seat capacity, and assigned zone).
+   - Printable Table QR Studio: Generates and exports high-resolution, branded printable table QR codes (single table download or bulk PDF layout).
+3. **Operating Hours & Shift Calendar Overrides:**
+   - Weekly Standard Operating Hours matrix (Monday–Sunday opening/closing times, reservation slot intervals 60/90/120 mins).
+   - Half-Day Shift Override Modal (e.g. lunch-only or dinner-only service restrictions).
+   - Holiday / Emergency Closure Date Override: One-click date blackout halting all bookings and orders, with one-click restoration.
+4. **Digital Menu & Category Station Routing Studio:**
+   - Category Management (Starters, Mains, Desserts, Beverages) with drag-and-drop reordering.
+   - Dedicated Station Printer Selector Dropdown per category (e.g. Shawarma Station, Beverage Bar, Main Tandoor).
+   - Menu Item Editor: Dish name, pricing in ₹, photos, dietary tags (`Veg`, `Non-Veg`, `Vegan`, `Jain`), preparation time.
+   - Instant 86'd Stock Toggle: 1-click switch (`In Stock` / `Sold Out`) instantly disabling dishes across customer menus.
+5. **Kitchen Thermal Printers & KOT Management View:**
+   - Printer Device Registry: Add and manage network thermal printers (IP, Bluetooth, USB).
+   - Category-to-Printer Routing Table.
+   - 1-Click Hardware Test Print modal for line health check.
+6. **Kitchen Live Rush Board (Wall-Mounted KDS View):**
+   - Borderless, high-contrast PWA fullscreen interface optimized for 5–10ft visibility on kitchen wall screens.
+   - Color-Coded Status Cards: `Confirmed` (Blue) → `Preparing` (Amber) → `Served` (Violet) → `Completed` (Green).
+   - Real-time countdown timers, customer special cooking notes, and instant status advance buttons.
+   - Audio Chime integration for incoming orders.
+7. **Manual Order Punching ("Create Order") Modal:**
+   - Fast walk-in / phone call order entry for floor staff.
+   - Table selector, category dish search, special instructions, and 1-click dispatch to kitchen printers and rush board.
+8. **Daily Revenue & Operations Analytics Dashboard:**
+   - Daily gross revenue in ₹, order volume metrics, peak-hour rush velocity, average table turnaround duration, and food category sales performance.
+9. **Partner Settlement & Financial Invoices Hub:**
+   - Daily Settlement Tracker (T+X Days): Live monitoring of daily rolling food payouts (`Holding`, `Disbursable`, `Settled`).
+   - Pre-Booking Volume Comparison: Total pre-bookings created vs completed for each settlement cycle.
+   - Official Settlement Invoices & Receipts Tab: View and download generated PDF tax invoices stamped with bank UTR transaction references.
+   - Monthly Pre-Booking Fee Split Statements Tab.
+
+---
+
+#### 3. Countertop POS & Custom Billing Machine Hardware Surface (Dual Screen)
+1. **Staff POS Screen (Counter Computer / Tablet Interface):**
+   - Active Dining Card Ingestion View: Auto-triggered upon card insertion, showing Card UID, bound Table #, Guest Name, and linked Order ID.
+   - Order Item Management Table: View all ordered dishes, edit quantities, add counter items, or void unserved dishes.
+   - Void Item Reason Code Modal: Mandatory selection of reason (`NOT_SERVED`, `CUSTOMER_REJECTED`, `WRONGLY_PUNCHED`) with optional notes.
+   - Manager PIN Authorization Dialog: Enforced automatically if voiding an item whose KOT was already printed.
+   - Audit Log Inspector Modal: View full table history of voids, quantity edits, staff IDs, timestamps, and manager approvals.
+   - Reconciled Bill Card: Live display of Gross Food Total, GST Taxes, Advance Paid Online (App), and Balance to Pay (₹).
+   - Staff 1-Tap "Print Receipt" Primary Action: Instantly fires the custom machine's embedded thermal printer, marks payment & order as `Completed`, and triggers immediate table isolation.
+   - Table Isolation & Card Release HUD: Confirms table status reset to `Vacant` and prompts staff to return unlinked dining card to the available pool tray.
+2. **Machine Built-in Customer Mini-Screen (Integrated Hardware Display):**
+   - Live Itemized Ordered Dishes List: High-visibility display of dish names, quantities, unit prices, and line subtotals.
+   - Transparent Financial Breakdown: Subtotal, GST Tax (5%), Total Bill Amount, Advance Paid Online (`Already Paid (App)`), and bold high-contrast **Balance to Pay** (`Need to Pay Amount`).
+   - Dynamic Cashier Sync: Updates in real-time as cashier voids or adjusts items on the staff POS.
+   - Post-Print Closing Screen: "Payment Completed – Tax Receipt Printed. Thank you for dining with us!"
+
+---
+
+#### 4. Unified Customer Application (Dedicated Mobile Experience)
+1. **Authentication & Profile Management Screen:**
+   - Rapid Mobile Phone Number OTP login & Full Name verification.
+   - Dietary preferences selector (`Veg`, `Non-Veg`, `Vegan`, `Jain`).
+2. **Venue Discovery & Exploration Screen (Home View):**
+   - Location-aware search bar, cuisine filter pills, dietary filters.
+   - Restaurant Cards: High-res ambiance photos, live operating hours, open/closed tags, rating badges, and instant pre-booking buttons.
+3. **Restaurant Detail & Ambiance Showcase View:**
+   - Full venue gallery, address/map pin, operating schedule, active commercial notes, and primary action buttons ("Pre-Book Table" / "Scan Table QR").
+4. **Advance Table Reservation & Slot Selector Screen:**
+   - Calendar date picker (closed holidays disabled automatically).
+   - Guest party size selector (2, 4, 6, 8+ pax) and dining zone picker.
+   - Available time slot blocks (60, 90, 120 mins) with live vacancy status.
+   - Suitable Table / Multi-Table Selector: Visual floor selection of single or combined tables fitting party size.
+5. **Advance Menu Pre-Ordering View:**
+   - Categorized live menu browsing with dietary badges and dish images.
+   - Instant 86'd sold-out protection (dishes greyed out with "Sold Out" badge).
+   - Special Arrival & Cooking Notes modal (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp").
+6. **Pre-Booking Checkout & Payment Screen:**
+   - Itemized financial summary in INR (₹): Pre-Booking Fee + Selected Food Items Price.
+   - Online payment gateway integration (UPI, NetBanking, Cards).
+   - Order confirmation and lock of table slot.
+7. **Digital Reservation Pass & Arrival Screen:**
+   - Digital QR pass with booking reference, party size, reserved table numbers, and arrival countdown.
+   - Live Order Status Tracker: `Confirmed` → `Preparing` → `Ready for Seating` → `Completed`.
+   - Seated status trigger and notification upon host handing dining session card.
+8. **In-Venue Table QR Scanner & Binding Screen (Spot Dining):**
+   - Integrated camera QR scanner (with flashlight toggle and fallback numeric table code entry).
+   - Instant physical table binding confirmation banner: "Seated at Table 04 at [Restaurant Name]".
+9. **In-Venue Live Digital Menu & Quick Order View:**
+   - Sticky category navigation bar and dietary filter toggles.
+   - Bound Physical Dining Card Floating Pill: "Dining Card #07 Active at Table 04".
+   - Dish Details Modal with custom cooking notes.
+   - Floating Cart Drawer: Live item counter, running subtotal in ₹, cooking notes review, and 1-tap "Place Order" button.
+10. **In-Venue Live Spot Order Status Tracker:**
+    - Real-time progression bar: `Confirmed` → `Preparing` → `Served` → `Completed`.
+    - "Add More Dishes" button to append extra rounds to the active dining card session.
+11. **Unified Dining History & Receipt Archive Screen:**
+    - Tabbed view: "Active Reservations & Orders" vs "Past Dining History".
+    - Detailed digital receipts with itemized breakdown, taxes, advance paid vs counter paid amounts, and downloadable invoices.
 
 ---
 
