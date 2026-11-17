@@ -221,7 +221,6 @@ Staff 1-Tap "Print Receipt":
   4. Next Customer Seated at Table Receives 100% Isolated Fresh Session (Zero Cross-Order Contamination)
   5. Dining Card Unbound & Returned to Reusable Available Tray.
 ```
-```
 
 ### Flow 4: Restaurant Staff Order Punching
 ```text
