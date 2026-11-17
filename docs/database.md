@@ -242,7 +242,26 @@ Junction table mapping reservations to one or more physical dining tables, allow
 
 ---
 
-### 3.12 `table_orders`
+### 3.12 `dining_session_cards`
+Physical session cards (Smart Chip cards, RFID/NFC tokens, or magnetic/barcode cards) provided by waiters to seated diners for tracking incremental orders and enabling instantaneous POS billing counter settlement.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique card record identifier |
+| `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE CASCADE` | Venue holding this card in inventory |
+| `card_uid` | `VARCHAR(64)` | `NOT NULL, UNIQUE` | Hardware UID (RFID UID, NFC Tag ID, Chip Serial, or Barcode Token) |
+| `card_number` | `VARCHAR(32)` | `NOT NULL` | Human-readable embossed or printed identifier (e.g. "CARD-04") |
+| `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'AVAILABLE'` | `AVAILABLE` (in tray/pool), `ACTIVE_BOUND` (assigned to table/order), `LOST`, `DECOMMISSIONED` |
+| `active_table_id` | `UUID` | `NULLABLE, REFERENCES restaurant_tables(id) ON DELETE SET NULL` | Currently linked physical table |
+| `active_order_id` | `UUID` | `NULLABLE` | Currently linked active dining order (FK to table_orders) |
+| `active_reservation_id`| `UUID` | `NULLABLE, REFERENCES table_reservations(id) ON DELETE SET NULL` | Linked pre-booking pass (if applicable) |
+| `assigned_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when card was assigned to diners |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Card enrollment timestamp |
+| `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Status transition timestamp |
+
+---
+
+### 3.13 `table_orders`
 Active dining orders originating from Unified Customer App Pre-Bookings, In-Venue Table QR, or manual staff punching. Spot orders have zero platform commission.
 
 | Column | Type | Constraints | Description |
@@ -251,12 +270,19 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 | `order_number` | `VARCHAR(32)` | `NOT NULL, UNIQUE` | Human-friendly alphanumeric identifier (e.g. "ORD-84920") |
 | `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE RESTRICT` | Tenant restaurant |
 | `table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Physical table where food is served |
+| `dining_card_id` | `UUID` | `NULLABLE, REFERENCES dining_session_cards(id) ON DELETE SET NULL` | Linked physical dining session card |
 | `reservation_id`| `UUID` | `NULLABLE, REFERENCES table_reservations(id)` | Linked pre-booking (if pre-ordered meal) |
 | `order_type` | `VARCHAR(32)` | `NOT NULL` | `PRE_BOOKING`, `ON_TABLE_QR`, `STAFF_PUNCHED` |
 | `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'CONFIRMED'` | `CONFIRMED`, `PREPARING`, `SERVED`, `COMPLETED`, `CANCELLED` |
 | `gross_food_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Subtotal of ordered items in INR (₹) |
 | `tax_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Calculated GST in INR (₹) |
 | `total_bill_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Final payable total in INR (₹) |
+| `advance_paid_amount`| `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Advance food amount already paid online via pre-booking in INR (₹) |
+| `balance_due_amount`| `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Outstanding need-to-pay balance at counter (`total_bill - advance_paid`) in INR (₹) |
+| `payment_status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'UNPAID'` | `UNPAID`, `PARTIALLY_PAID`, `FULLY_PAID` |
+| `settlement_method` | `VARCHAR(32)` | `NULLABLE` | `ONLINE_PREPAID`, `CASH`, `UPI_QR`, `POS_CARD_SWIPE`, `SPLIT` |
+| `settled_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when cashier closed bill at counter |
+| `settled_by_user_id`| `UUID` | `NULLABLE, REFERENCES users(id)` | Cashier/Staff user who settled the bill |
 | `customer_id` | `UUID` | `NULLABLE, REFERENCES users(id)` | Authenticated diner account |
 | `customer_name` | `VARCHAR(128)` | `NOT NULL` | Diner verified name captured during spot order |
 | `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Diner verified mobile phone number |
@@ -269,7 +295,7 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 
 ---
 
-### 3.13 `order_items`
+### 3.14 `order_items`
 Individual line items on an order, carrying category and printer snapshots for atomic KOT printing.
 
 | Column | Type | Constraints | Description |
@@ -288,7 +314,7 @@ Individual line items on an order, carrying category and printer snapshots for a
 
 ---
 
-### 3.14 `daily_settlement_batches`
+### 3.15 `daily_settlement_batches`
 Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payouts, booking metrics, bank UTR, and partner tax invoices.
 
 | Column | Type | Constraints | Description |
@@ -313,7 +339,7 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 
 ---
 
-### 3.15 `monthly_settlements`
+### 3.16 `monthly_settlements`
 Monthly financial statement consolidating platform pre-booking fee splits.
 
 | Column | Type | Constraints | Description |
@@ -345,7 +371,10 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 | `idx_calendar_overrides_lookup` | `calendar_overrides` | `(restaurant_id, override_date)` | Daily booking availability guards |
 | `idx_reservations_rest_date` | `table_reservations` | `(restaurant_id, reservation_date, status)` | Pre-booking slot conflict checks |
 | `idx_reservation_tables_lookup` | `reservation_tables` | `(table_id, reservation_id)` | Fast lookup of reserved tables per slot |
+| `idx_dining_cards_uid` | `dining_session_cards` | `(card_uid)` | Instant POS card reader lookup on insert/tap |
+| `idx_dining_cards_rest_status` | `dining_session_cards` | `(restaurant_id, status)` | Fast pool inventory & active table checks |
 | `idx_orders_rest_status_created`| `table_orders` | `(restaurant_id, status, created_at DESC)` | Real-time Kitchen Rush Board queries |
+| `idx_orders_dining_card` | `table_orders` | `(dining_card_id, status)` | Instant order retrieval from card insert |
 | `idx_orders_table_status` | `table_orders` | `(table_id, status)` | Active table order retrieval |
 | `idx_order_items_order_printer` | `order_items` | `(order_id, assigned_printer_id_snapshot)` | Automated category KOT dispatch |
 | `idx_daily_settlements_fifo` | `daily_settlement_batches` | `(status, holding_matures_at ASC)` | Admin Daily Settlement window FIFO sorting queue |
@@ -367,3 +396,8 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 5. **Anti-Fraud Attribution & IP Privacy Isolation:**
    - Every spot order recorded in `table_orders` requires verified `customer_name` and `customer_phone`.
    - `client_ip` is captured automatically during order creation. Backend serialization rules and database projection views strictly prohibit selecting or serializing `client_ip` to restaurant tenant users. Only Super Admin has access to customer IP address information in the Global Audit Ledger.
+6. **Physical Dining Card Lifecycle & Automated Settlement Integrity:**
+   - When a physical dining card is assigned to a table or booking, `dining_session_cards.status` transitions from `AVAILABLE` to `ACTIVE_BOUND`.
+   - When linked to an advance pre-booking, `table_orders.advance_paid_amount` is populated directly from `table_reservations.preordered_food_amount`.
+   - Any additional food items added at the table increment `table_orders.gross_food_amount`, with `balance_due_amount = GREATEST(0.00, total_bill_amount - advance_paid_amount)`.
+   - Upon cashier card insertion and payment confirmation, `payment_status` is updated to `FULLY_PAID`, `settled_at` is timestamped, `table_orders.status` transitions to `COMPLETED` (which begins the $T+X$ payout delay countdown), and `dining_session_cards` unbinds and returns to `AVAILABLE` status.

@@ -105,6 +105,16 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
   - **Invoices Section:** Once Admin marks a payout completed with UTR, partners can view and download official payment invoices showing itemized order breakdown, gross food sales, and bank UTR transaction references.
   - **Monthly Settlement Tab:** View and download monthly pre-booking fee split statements.
 - **B2B-19 Manager KOT System & Station Routing:** Managers have an intuitive KOT dashboard to register thermal printers (IP, Bluetooth, USB) and manage station routing. When an order is placed, the system automatically splits items by category and fires Kitchen Order Tickets (KOTs) directly to the assigned station printer with dish names, quantities, and cooking notes without manual clicks.
+- **B2B-20 Physical Dining Card & Automated POS Counter Settlement:**
+  - **Dining Session Card Binding:** Waiters/hosts carry a pool of physical dining session cards (Smart Chip cards, RFID/NFC tokens, or serialized magnetic/barcode cards). Upon seating a customer—whether for a full pre-booking, walk-in dining, or spot QR order—the waiter binds an available card to the table session (e.g. Card #14 bound to Table 04 / Order #ORD-1029).
+  - **Incremental Order Accumulation:** If diners order additional rounds of food or beverages during their meal (via customer app spot ordering or punched by waiters), all items dynamically accumulate under this card's active table session.
+  - **Automated Bill Generation on Card Insertion:** After eating, the customer presents the card to the waiter or walks to the billing counter. When the card is inserted into the POS card reader (or scanned/tapped), the B2B POS portal **instantly and automatically retrieves and generates the complete finalized bill**:
+    - Itemized breakdown of all ordered food items, quantities, dish prices, and GST taxes in INR (₹).
+    - **Already Paid Amount Identification:** System checks for and clearly displays any advance online payments (pre-booked food payments captured during app checkout).
+    - **Calculated Need-to-Pay Balance Due:**
+      $$\text{Need-to-Pay Amount (₹)} = \text{Total Bill Amount} - \text{Already Paid Amount}$$
+    - **Full Pre-Booking Settlement (Zero Balance):** For diners who fully pre-booked and pre-paid their entire meal online without ordering additional dishes, the POS instantly displays: `Total Bill = ₹X`, `Already Paid = ₹X`, `Need to Pay = ₹0.00`. The cashier executes 1-tap checkout, prints the zero-balance tax receipt, marks the order `Completed` (initiating the $T+X$ payout delay clock), and automatically unbinds the physical card, returning it to the available pool.
+    - **Spot Orders & In-Venue Additions Settlement:** For walk-ins or pre-booked guests who ordered additional items, the POS clearly displays the net outstanding balance. Cashier collects payment via Cash, UPI QR, or Card, clicks "Settle & Release", prints the final tax invoice, marks the order `Completed`, and releases the card back into circulation.
 
 ### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
 - **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
@@ -126,6 +136,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
   - For Pre-Bookings: `Confirmed` → `Preparing` → `Ready for Seating` → `Completed`.
   - For Spot Table Orders: `Confirmed` → `Preparing` → `Served` → `Completed`.
   - Consolidated dining history displaying all past reservations, digital passes, and in-venue dining receipts.
+- **CUST-15 Physical Dining Card Integration:** Diners receive a physical dining card upon being seated. The mobile app reflects their bound physical card number (e.g. "Dining Card #14 Active"), and app-based additional item orders immediately append to this card session. After dining, the customer presents the card to the waiter or cashier to generate their instant reconciled bill.
 
 ---
 
@@ -143,33 +154,62 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ## 8. User Flow
 
-### Flow 1: Customer Food & Table Pre-Booking
+### Flow 1: Customer Food & Table Pre-Booking (Full Pre-Booking with Dining Card)
 ```text
 Open App → Select Restaurant → Choose Date, Time Slot, Party Size & Select Suitable Table or Tables →
 Pre-Select Food from Live Menu → Add Special Notes →
 Pay Pre-Booking Charge (Platform/Partner Split Snapshot Captured) + Selected Food Items Price → Digital Pass Generated →
-Arrive at Restaurant → Seated at Reserved Table(s) → Food Served Fresh with Zero Wait!
+Arrive at Restaurant → Host/Waiter Provides Physical Dining Session Card (Bound to Table & Pre-Booking) →
+Seated at Reserved Table(s) → Food Served Fresh with Zero Wait! →
+Diners Finish Meal → Hand Dining Card to Waiter or Billing Counter →
+Card Inserted into POS Reader → System Automatically Generates Itemized Reconciled Bill (Food Price + Taxes) →
+POS Automatically Identifies: Total Bill = ₹X, Already Paid Online = ₹X, Need to Pay Amount = ₹0.00 →
+Cashier Executes 1-Tap Zero-Balance Clearance → Tax Receipt Prints → Physical Card Unlinked to Available Pool →
+Table Slot Freed & Order Status Transitions to Completed (T+X Delay Clock Initiated).
 ```
 
-### Flow 2: In-Venue Table QR Ordering (Spot Booking & Anti-Fraud Capture)
+### Flow 2: In-Venue Table QR Ordering (Spot Booking & Anti-Fraud Capture with Dining Card)
 ```text
-Diner Seated at Table → Scans Table QR Code via Customer Application → Table Bound Instantly ("Seated at Table 04") →
+Diner Seated at Table → Waiter Provides Physical Dining Session Card (Bound to Table ID) →
+Diner Scans Table QR Code via Unified Customer Application → Table Bound Instantly ("Seated at Table 04") →
 Customer Quick Sign Up / Login (Name & Mobile OTP Verification) →
-Selects Dishes & Adds Notes → Taps "Place Order" →
+Selects Dishes & Adds Cooking Notes → Taps "Place Order" →
 System Records Order Details with Customer Name, Phone, Physical Table #, and Client IP →
 Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (Shawarma Station, Drinks Bar, etc.) →
 (Staff sees Customer Name, Phone, and Table #; Client IP visible exclusively to Super Admin) →
-Kitchen Prepares → Waiter Serves → Settle Bill with Cashier → Table Slot Freed.
+Kitchen Prepares → Waiter Serves → Diners Order Additional Rounds Anytime (Accumulated Under Active Card Session) →
+After Meal, Customer Hands Card to Waiter or Billing Counter →
+Card Inserted into POS Terminal → System Automatically Generates Itemized Bill (Food + Taxes) →
+Displays: Already Paid = ₹0.00, Need to Pay Amount = Full Bill Total →
+Cashier Collects Payment (Cash/UPI QR/Card) → Final Tax Invoice Prints → Card Unlinked to Pool → Order Completed.
 ```
 
-### Flow 3: Restaurant Staff Order Punching
+### Flow 3: In-Venue Dining Card Settlement & Reconciliation Flow (Unified All-Scenario Flow)
+```text
+Diner Seated (Pre-Booked or Walk-in) → Waiter Assigns Physical Dining Card →
+Food Ordered (Pre-Booked Baseline + Optional Additional Spot Rounds Punched or QR-Ordered) →
+Meal Concluded → Diner Hands Card to Waiter or Presents at Billing Counter →
+Cashier Inserts Card into POS Terminal Card Reader →
+POS Instantly Fetches Linked Order & Computes:
+  [Gross Food Subtotal] + [Applicable Taxes] = Total Bill Amount
+  [Advance Paid Online via Pre-Booking] = Already Paid Amount
+  [Total Bill Amount] - [Already Paid Amount] = Need-to-Pay Amount
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Scenario A (Full Pre-Booking, No Extras): Need to Pay = ₹0.00 → 1-Tap Print & Close    │
+  │ Scenario B (Pre-Booking + Extra Items): Need to Pay = Difference → Collect & Print     │
+  │ Scenario C (Pure Spot Walk-in): Need to Pay = 100% of Bill → Collect & Print           │
+  └────────────────────────────────────────────────────────────────────────────────────────┘
+→ Order Marked COMPLETED (T+X Delay Clock Begins) → Card Reset to AVAILABLE in Card Pool.
+```
+
+### Flow 4: Restaurant Staff Order Punching
 ```text
 Customer Orders via Phone or Walk-in → Staff Opens "Punch Order" in B2B Portal →
 Selects Table & Menu Dishes → Submits Order →
 Ticket Dispatches to Kitchen Rush Board & Category Station Printers Auto-Print → Staff Appends Extra Rounds Anytime.
 ```
 
-### Flow 4: Restaurant Onboarding & Activation Gate
+### Flow 5: Restaurant Onboarding & Activation Gate
 ```text
 Admin Creates Restaurant Profile → System Automatically Generates & Emails Owner Login Password →
 Admin Uploads 4 Mandatory Documents (FSSAI, GST, Bank Proof, Owner ID) →
@@ -178,7 +218,7 @@ When All 4 Documents Are Approved → Activation Gate Unlocked → Status Change
 (If any doc is missing/rejected, status remains locked in "Draft").
 ```
 
-### Flow 5: Daily Delayed Food Payout & Partner Invoice Generation (T+X Days Post-Dining)
+### Flow 6: Daily Delayed Food Payout & Partner Invoice Generation (T+X Days Post-Dining)
 ```text
 Customer Pre-Pays Food & Booking Online → Diners Arrive & Enjoy Meal →
 Staff Marks Order "Completed" (completed_at timestamp recorded) → 
@@ -219,6 +259,7 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
    - Kitchen Live Rush Board (real-time order tickets & status progression)
    - Manual Order Punching Modal
    - Kitchen Thermal Printers & KOT System Management (Register printers, test print, category routing)
+   - Billing Counter & Dining Card POS View (Card insertion auto-trigger, gross food price + taxes, already paid online identification, need-to-pay balance calculation, 1-tap zero balance clearance, card release)
    - Daily Settlements Tab (T+X Payout Tracker, Created vs Completed Booking Volume Stats)
    - Invoices & Statements Section (View & Download Official Invoices with UTR references)
    - Monthly Settlements Tab (Pre-Booking Split Statements)
@@ -228,6 +269,7 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
    - Table Reservation & Slot Selector (Party size, zones, calendar dates, time blocks, suitable table/tables selector)
    - Advance Menu Pre-Ordering View (Browse dishes, add to reservation, dietary badges)
    - Pre-Booking Checkout Screen (Pre-booking charge + selected food items price breakdown in ₹)
+   - Bound Physical Dining Card Banner (e.g. "Dining Card #14 Active at Table 04")
    - Integrated QR Scanner & Table Binding Screen ("Seated at Table 04 at [Venue]")
    - In-Venue Live Category Menu & Dietary Filters (`Veg`, `Non-Veg`, `Vegan`, `Jain`)
    - Dish Details Modal with custom cooking notes
@@ -296,6 +338,19 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - In-venue spot QR orders, walk-in orders, and seated dining bills are 100% exempt from split deductions.
 - When a customer confirms a pre-booking, the system permanently snapshots the active split ratio and calculated share amounts (platform fee vs partner fee) onto the reservation record.
 - Modifying a restaurant's split ratio in the Admin Portal applies only to subsequent pre-bookings and never retroactively modifies past pre-bookings or historical accounting statements.
+
+### Physical Dining Session Card & Automated POS Counter Settlement
+- Waiters/hosts can assign an available physical dining session card (Smart Card, RFID/NFC token, or serialized barcode card) to a table session upon customer seating (for pre-bookings, walk-ins, and spot QR orders).
+- The customer application reflects the bound physical card session upon binding.
+- Any subsequent food rounds added by the diner (via customer app) or punched by staff automatically accrue under this active card session.
+- When the card is inserted into the billing counter POS reader (or scanned/tapped):
+  - POS instantly retrieves the active order ticket without manual search.
+  - Automatically breaks down gross food items, itemized prices, and applicable GST taxes in INR (₹).
+  - Automatically identifies and displays advance amounts already paid online during pre-booking (`Already Paid Amount`).
+  - Automatically computes the exact balance due: $\text{Need to Pay Amount} = \text{Total Bill Amount} - \text{Already Paid Amount}$.
+  - **Full Pre-Booking Clearance:** For diners whose entire meal was pre-paid online with zero additional in-venue orders, POS displays `Need to Pay = ₹0.00`, enabling 1-tap checkout, instant tax receipt printing, and card unbinding.
+  - **Incremental Order Settlement:** For diners with extra spot dishes, POS displays the net balance due; cashier records payment (Cash, UPI QR, or Card), prints the finalized tax invoice, and completes the transaction.
+  - Completing bill settlement immediately updates order status to `COMPLETED` (triggering the $T+X$ delayed daily settlement clock) and unlinks the physical card, returning its status to `AVAILABLE` in the venue card inventory.
 
 ### Daily Delayed Food Payouts (T+X Days Post-Dining), FIFO Queue & Partner Invoices
 - Pre-booked ordered food amounts collected upfront in INR (₹) enter the delayed holding window strictly after the customer finishes eating and the order is marked `Completed` (`completed_at`).

@@ -131,6 +131,24 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
   - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
   - **Cooking Notes:** Bold, high-contrast instructions (e.g. `*** NOTE: Extra Garlic Paste, Less Spicy ***`).
 
+## 3.6 Physical Dining Session Card & Billing Counter POS Integration
+
+To streamline front-of-house table operations and eliminate counter bottlenecks:
+- **Card Reader Interface Protocols:**
+  - B2B PWA Billing Counter supports USB/HID smart card chip readers, magnetic stripe readers, and NFC/RFID readers via standard **Keyboard Wedge emulation** (instant newline-terminated card UID input) or browser **WebHID / WebUSB API**.
+  - Also supports 2D barcode/QR scanners reading serialized dining session cards.
+- **Card Assignment & Table Binding Event:**
+  - When seating a party, floor staff scans or taps an available physical card (e.g. Card #07, UID `RFID-9842104`) and binds it to the active table session (`active_table_id = Table 04`, `active_order_id = ORD-9821`, `status = 'ACTIVE_BOUND'`).
+  - Diners hold this physical card at the table throughout their meal.
+- **Incremental Order Accumulation:**
+  - Additional food rounds placed via the diner's customer app or punched by waiters are automatically appended to the active order ticket bound to this physical card UID.
+- **Automated Settlement on Card Insertion:**
+  - Diners hand the card to the waiter or cashier.
+  - Inserting the card into the counter reader dispatches a hardware event `CARD_READ(card_uid)`:
+    1. B2B POS catches the event, looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
+    2. Retrieves linked `table_orders` and all `order_items`.
+    3. Renders the complete reconciled billing modal instantly ($\le 300\text{ms}$) with itemized dish prices, GST taxes, advance payments, and net balance due.
+
 ---
 
 # 4. Backend Architecture – NestJS Modular Monolith
@@ -448,6 +466,48 @@ Mandatory compound and single-column indexes:
   - Sets batch status to `SETTLED`, records `disbursed_at = NOW()`, logs `utr_number`.
   - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_pdf_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
   - Emits `PayoutDisbursedEvent` notifying partner owners and managers via email and populating their B2B portal Invoices section for immediate download.
+
+## 7.6 Physical Dining Card Settlement Mathematics & Reconciliation Algorithm
+
+The billing counter POS executes a deterministic financial reconciliation pipeline upon card insertion:
+
+1. **Gross Order Total:**
+   $$\text{gross\_food\_amount} = \sum (\text{unit\_price\_snapshot}_i \times \text{quantity}_i)$$
+   $$\text{tax\_amount} = \text{gross\_food\_amount} \times (\text{gst\_rate} / 100)$$
+   $$\text{total\_bill\_amount} = \text{gross\_food\_amount} + \text{tax\_amount}$$
+
+2. **Advance Paid Attribution:**
+   - If order originated from an advance Pre-Booking (`order_type = 'PRE_BOOKING'`):
+     $$\text{advance\_paid\_amount} = \text{table\_reservations.preordered\_food\_amount}$$
+   - If order originated from an In-Venue Spot QR or Walk-in (`order_type = 'ON_TABLE_QR'` or `'STAFF_PUNCHED'`):
+     $$\text{advance\_paid\_amount} = ₹0.00$$
+
+3. **Net Balance Due (Need to Pay):**
+   $$\text{balance\_due\_amount} = \max(0.00, \text{total\_bill\_amount} - \text{advance\_paid\_amount})$$
+
+4. **Settlement Branch Execution:**
+   - **Scenario A: Full Pre-Booking (No Extra Items Ordered):**
+     - Condition: $\text{balance\_due\_amount} == ₹0.00$.
+     - POS Display: "Total Bill: ₹X | Paid Online: ₹X | Net Balance Due: ₹0.00".
+     - Cashier Action: 1-Tap "Zero-Balance Clearance & Release".
+     - Mutation: `payment_status = 'FULLY_PAID'`, `settlement_method = 'ONLINE_PREPAID'`.
+   - **Scenario B: Pre-Booking with Additional Spot Items:**
+     - Condition: $\text{balance\_due\_amount} > ₹0.00$.
+     - POS Display: "Total Bill: ₹X | Paid Online: ₹Y | Net Balance Due: ₹(X - Y)".
+     - Cashier Action: Collects net balance via UPI QR, Cash, or POS Card, clicks "Settle & Release".
+     - Mutation: `payment_status = 'FULLY_PAID'`, `settlement_method = 'SPLIT'`.
+   - **Scenario C: Pure Spot Walk-in:**
+     - Condition: $\text{advance\_paid\_amount} == ₹0.00$.
+     - POS Display: "Total Bill: ₹X | Net Balance Due: ₹X".
+     - Cashier Action: Collects total bill amount, clicks "Settle & Release".
+     - Mutation: `payment_status = 'FULLY_PAID'`.
+
+5. **Post-Settlement Atomic Mutations:**
+   Executed in an atomic SQL transaction:
+   - Sets `table_orders.status = 'COMPLETED'` and records `completed_at = NOW()` (which initiates the $T+X$ delayed daily settlement clock for pre-ordered food).
+   - Clears physical dining card association: `dining_session_cards.status = 'AVAILABLE'`, `active_table_id = NULL`, `active_order_id = NULL`, `active_reservation_id = NULL`.
+   - Releases table status: `restaurant_tables.status = 'VACANT'`.
+   - Dispatches ESC/POS thermal command to print the finalized official tax invoice / customer receipt.
 
 ---
 

@@ -21,6 +21,10 @@ erDiagram
     RESTAURANT_TABLES ||--o{ TABLE_RESERVATIONS : "allocated to"
     TABLE_RESERVATIONS ||--o{ RESERVATION_TABLES : "allocates"
     RESTAURANT_TABLES ||--o{ RESERVATION_TABLES : "booked by"
+    RESTAURANTS ||--o{ DINING_SESSION_CARDS : "stocks"
+    DINING_SESSION_CARDS ||--o| RESTAURANT_TABLES : "assigned to"
+    DINING_SESSION_CARDS ||--o| TABLE_ORDERS : "tracks"
+    DINING_SESSION_CARDS ||--o| TABLE_RESERVATIONS : "binds to"
     RESTAURANTS ||--o{ TABLE_ORDERS : "processes"
     RESTAURANT_TABLES ||--o{ TABLE_ORDERS : "served at"
     USERS ||--o{ TABLE_ORDERS : "places"
@@ -150,11 +154,24 @@ erDiagram
         timestamp created_at
     }
 
+    DINING_SESSION_CARDS {
+        uuid id PK
+        uuid restaurant_id FK
+        string card_uid UK
+        string card_number
+        string status
+        uuid active_table_id FK
+        uuid active_order_id FK
+        uuid active_reservation_id FK
+        timestamp assigned_at
+    }
+
     TABLE_ORDERS {
         uuid id PK
         string order_number UK
         uuid restaurant_id FK
         uuid table_id FK
+        uuid dining_card_id FK
         uuid reservation_id FK
         uuid customer_id FK
         string customer_name
@@ -166,6 +183,11 @@ erDiagram
         decimal gross_food_amount
         decimal tax_amount
         decimal total_bill_amount
+        decimal advance_paid_amount
+        decimal balance_due_amount
+        string payment_status
+        string settlement_method
+        timestamp settled_at
         timestamp completed_at
     }
 
@@ -268,6 +290,48 @@ sequenceDiagram
     Batch->>Batch: Status -> SETTLED
     Batch->>Partner: Push Formal PDF Tax Invoice to Invoices Section
     Batch->>Partner: Send Email Notification with UTR Reference
+```
+
+### 2.4 Physical Dining Session Card Hand-Off, POS Insertion & Automated Bill Settlement Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Diner as Customer / Diners
+    actor Waiter as Waiter / Floor Staff
+    participant POS as Restaurant B2B POS (Billing Counter)
+    participant DB as Backend Database
+    actor Cashier as Cashier / Billing Staff
+
+    Note over Diner,Waiter: Customer Arrives (Pre-Booked or Walk-in) & Seated
+    Waiter->>DB: Scan/Assign Available Card (e.g. CARD-07) to Table & Order
+    DB->>DB: dining_session_cards.status = 'ACTIVE_BOUND'
+    Waiter->>Diner: Hand Physical Dining Session Card
+    opt In-Venue Additional Spot Food Rounds
+        Diner->>DB: Scan Table QR via Customer App or Waiter Punches Dishes
+        DB->>DB: Append Items to table_orders (Update Gross Food Amount)
+    end
+    Note over Diner: Diners Finish Eating Meal
+    Diner->>Cashier: Present Physical Dining Card at Billing Counter (or via Waiter)
+    Cashier->>POS: Insert / Tap Card into POS Card Reader
+    POS->>DB: Read Card UID -> Query Active Linked Order Ticket
+    DB-->>POS: Return Gross Total, Taxes, and Advance Paid Online Amount
+    POS->>POS: Auto-Compute Balance Due = Total Bill - Advance Paid
+    alt Scenario A: Full Pre-Booking (No Extra Items)
+        Note over POS: Already Paid == Total Bill -> Balance Due = ₹0.00
+        Cashier->>POS: 1-Tap "Confirm Zero-Balance Checkout"
+    else Scenario B: Additional Spot Dishes Ordered / Walk-in
+        Note over POS: Balance Due > ₹0.00 (Customer Pays Outstanding Difference)
+        Cashier->>Diner: Request Remaining Balance in ₹
+        Diner->>Cashier: Pay via UPI QR / Cash / Card
+        Cashier->>POS: Record Settlement Method & Amount
+    end
+    POS->>DB: Update table_orders: payment_status = 'FULLY_PAID', status = 'COMPLETED'
+    DB->>DB: Record completed_at (Starts T+X Day Delayed Settlement Clock)
+    POS->>DB: Unlink Card: dining_session_cards.status = 'AVAILABLE'
+    POS-->>Cashier: Print Final Itemized Tax Invoice / Receipt
+    Cashier->>Diner: Hand Printed Bill Receipt
+    Note over POS,DB: Card returned to pool tray ready for next dining party
 ```
 
 ---
