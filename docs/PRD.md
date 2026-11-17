@@ -108,21 +108,24 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-20 Physical Dining Card & Automated POS Counter Settlement:**
   - **Dining Session Card Binding:** Waiters/hosts carry a pool of physical dining session cards (Smart Chip cards, RFID/NFC tokens, or serialized magnetic/barcode cards). Upon seating a customer—whether for a full pre-booking, walk-in dining, or spot QR order—the waiter binds an available card to the table session (e.g. Card #14 bound to Table 04 / Order #ORD-1029).
   - **Incremental Order Accumulation:** If diners order additional rounds of food or beverages during their meal (via customer app spot ordering or punched by waiters), all items dynamically accumulate under this card's active table session.
-  - **Countertop Billing Machine (Dual Screen & 1-Tap Receipt):**
+  - **Custom Billing Machine (Integrated Customer Mini Screen, Card Slot & Thermal Printer in One Single Machine):**
+    - **Single Custom Device Architecture:** The Customer Mini Screen, the physical card ingestion slot, and the high-speed thermal receipt printer are unified directly inside **ONE single custom-designed physical machine** (not two separate devices). It sits on the cash counter facing the diner and connects to the staff's POS screen (computer/tablet).
     - **Food Giving Time Card Hand-off:** When serving food, the waiter hands a physical dining session card (e.g. Card #07) to the seated customer.
-    - **Billing Counter Card Insert:** After eating, the customer presents this card at the billing counter. The billing staff inserts the card into the countertop billing machine's slot.
+    - **Billing Counter Card Insert:** After eating, the customer presents this card at the billing counter. The billing staff inserts the card into the custom machine's front slot.
     - **Dual-Screen Auto-Display:** Upon card insertion, the bill automatically populates simultaneously on:
-      1. **Staff Main Screen:** Full operational breakdown (itemized dishes, quantities, unit prices, GST taxes, advance paid online amount, and balance to collect).
-      2. **Customer Mini Screen:** Complete customer-facing **itemized food list** (dish names, quantities, item prices, subtotal), advance paid online amount, and net balance to pay.
+      1. **Staff POS Screen:** Full operational breakdown (itemized dishes, quantities, unit prices, GST taxes, advance paid online amount, and balance to collect).
+      2. **Machine's Integrated Customer Mini Screen:** Complete customer-facing **itemized food list** (dish names, quantities, item prices, subtotal), advance paid online amount, and net balance to pay.
     - **Counter Order Item Management & Mandatory Audit Trail:**
-      - Billing staff can manage active table items directly at the counter (void unserved items, adjust quantities, add checkout items).
-      - Live Sync: Any item edit made by staff immediately and automatically updates the Customer Mini Screen in real-time.
+      - Billing staff can manage active table items directly on their screen (void unserved items, adjust quantities, add checkout items).
+      - Live Sync: Any item edit made by staff immediately and automatically updates the Customer Mini Screen on the custom machine in real-time.
       - **Anti-Theft Audit Trail:** Any item void or quantity reduction requires a **Mandatory Reason Code** (e.g. `NOT_SERVED`, `CUSTOMER_REJECTED`, `WRONGLY_PUNCHED`). If the item was already printed in the kitchen (KOT printed), voiding strictly requires **Manager PIN Authorization**. The system writes an immutable record to the audit ledger capturing staff ID, dish name, previous/new quantities, delta ₹ amount, reason, and manager approver.
     - **Standard Restaurant Payment:** The customer settles any remaining balance directly with the restaurant using their normal payment method (Cash, restaurant's card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
-    - **Staff 1-Tap "Print Receipt":** Once payment is received, staff taps 1 button: **"Print Receipt"**. The machine immediately prints the final itemized GST tax invoice and auto-cuts the paper. That 1 tap marks both the payment and the order as `Completed`.
+    - **Staff 1-Tap "Print Receipt":** Once payment is received, staff taps 1 button: **"Print Receipt"**. This custom machine immediately prints the final itemized GST tax invoice from its built-in printer mouth and auto-cuts the paper. That 1 tap marks both the payment and the order as `Completed`.
     - **Strict Table Isolation for Next Customer:** Immediately upon order completion, the system executes an atomic table reset:
       - The table session is closed and the table status resets to `Vacant`.
       - The completed order is permanently archived and sealed.
+      - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
+      - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
       - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
       - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
 

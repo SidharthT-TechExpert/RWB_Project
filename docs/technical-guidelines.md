@@ -131,9 +131,12 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
   - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
   - **Cooking Notes:** Bold, high-contrast instructions (e.g. `*** NOTE: Extra Garlic Paste, Less Spicy ***`).
 
-## 3.6 Countertop Billing Machine & Dual-Screen POS Integration
+## 3.6 Custom Billing Machine Architecture (Single Integrated Unit)
 
 To streamline front-of-house table operations and eliminate counter bottlenecks:
+- **Unified Single-Unit Custom Machine:**
+  - The **Customer Mini Screen**, the **Card Ingestion Slot**, and the **High-Speed Thermal Receipt Printer** are engineered directly into **ONE single custom-designed physical machine** (not two separate external devices).
+  - It connects to the cashier's computer/tablet (running the QuickBite B2B Portal) via USB or Local Network.
 - **Card Reader Interface Protocols:**
   - Machine supports physical dining session cards via contact chip slot (ISO 7816) or contactless RFID/NFC reader slot with microswitch insertion auto-detection.
 - **Card Hand-off & Dining Accumulation:**
