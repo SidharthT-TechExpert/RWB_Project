@@ -131,25 +131,29 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
   - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
   - **Cooking Notes:** Bold, high-contrast instructions (e.g. `*** NOTE: Extra Garlic Paste, Less Spicy ***`).
 
-## 3.6 Physical Dining Session Card & Billing Counter POS Integration
+## 3.6 Countertop Billing Machine & Dual-Screen POS Integration
 
 To streamline front-of-house table operations and eliminate counter bottlenecks:
 - **Card Reader Interface Protocols:**
-  - B2B PWA Billing Counter supports USB/HID smart card chip readers, magnetic stripe readers, and NFC/RFID readers via standard **Keyboard Wedge emulation** (instant newline-terminated card UID input) or browser **WebHID / WebUSB API**.
-  - Also supports 2D barcode/QR scanners reading serialized dining session cards.
-- **Card Assignment & Table Binding Event:**
-  - When seating a party, floor staff scans or taps an available physical card (e.g. Card #07, UID `RFID-9842104`) and binds it to the active table session (`active_table_id = Table 04`, `active_order_id = ORD-9821`, `status = 'ACTIVE_BOUND'`).
-  - Diners hold this physical card at the table throughout their meal.
-- **Incremental Order Accumulation:**
-  - Additional food rounds placed via the diner's customer app or punched by waiters are automatically appended to the active order ticket bound to this physical card UID.
-- **Automated Settlement on Card Insertion:**
-  - Diners hand the card to the waiter or cashier.
-  - Inserting the card into the counter reader dispatches a hardware event `CARD_READ(card_uid)`:
-    1. B2B POS catches the event, looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
-    2. Retrieves linked `table_orders` and all `order_items`.
-    3. Renders the complete reconciled billing modal instantly ($\le 300\text{ms}$) with itemized dish prices, GST taxes, advance payments, and net balance due.
-    4. If $\text{balance\_due\_amount} > ₹0.00$, the terminal renders a dynamic NPCI UPI QR code (`upi://pay?pa={upi_vpa}&pn={brand_name}&mc=5812&tr={order_number}&am={balance_due}&cu=INR`).
-    5. Upon customer scanning and completing UPI payment, the bank webhook confirms payment, triggering an instant soundbox audio announcement and automated ESC/POS thermal receipt printing and auto-cutting.
+  - Machine supports physical dining session cards via contact chip slot (ISO 7816) or contactless RFID/NFC reader slot with microswitch insertion auto-detection.
+- **Card Hand-off & Dining Accumulation:**
+  - When serving food, the waiter hands a physical dining session card (e.g. Card #07) to the seated customer.
+  - Any additional spot dishes ordered during the meal dynamically accumulate under this card's linked table order.
+- **Dual-Screen Auto-Display on Card Insertion:**
+  - Diners present the card at the billing counter; staff inserts the card into the machine's slot.
+  - Microswitch triggers instant lookup (`CARD_READ(card_uid)`):
+    1. Looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
+    2. Retrieves active `table_orders` and itemized `order_items`.
+    3. Renders the complete reconciled bill simultaneously on:
+       - **Staff Main Screen:** Full operational breakdown (dishes, quantities, GST taxes, advance paid online amount, and balance to collect).
+       - **Customer Mini Screen:** High-contrast summary showing total food price, amount already paid online, and net balance to pay.
+- **Direct Restaurant Payment:**
+  - Customer settles their bill directly with the restaurant (Cash, restaurant card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
+- **Staff 1-Tap "Print Receipt" & Table Isolation:**
+  - Staff taps 1 button: **"Print Receipt"**.
+  - Built-in thermal printer prints the official itemized GST tax invoice and auto-cuts the paper.
+  - Payment and order are immediately marked `COMPLETED`.
+  - The table is atomically isolated and reset to `VACANT` for the next customer.
 
 ---
 
@@ -469,47 +473,34 @@ Mandatory compound and single-column indexes:
   - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_pdf_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
   - Emits `PayoutDisbursedEvent` notifying partner owners and managers via email and populating their B2B portal Invoices section for immediate download.
 
-## 7.6 Physical Dining Card Settlement Mathematics & Reconciliation Algorithm
+## 7.6 Countertop Machine Settlement, 1-Tap Print & Strict Table Isolation
 
-The billing counter POS executes a deterministic financial reconciliation pipeline upon card insertion:
+The countertop billing machine executes a deterministic financial display and table isolation transaction:
 
-1. **Gross Order Total:**
+1. **Dual-Screen Bill Breakdown:**
    $$\text{gross\_food\_amount} = \sum (\text{unit\_price\_snapshot}_i \times \text{quantity}_i)$$
    $$\text{tax\_amount} = \text{gross\_food\_amount} \times (\text{gst\_rate} / 100)$$
    $$\text{total\_bill\_amount} = \text{gross\_food\_amount} + \text{tax\_amount}$$
-
-2. **Advance Paid Attribution:**
-   - If order originated from an advance Pre-Booking (`order_type = 'PRE_BOOKING'`):
-     $$\text{advance\_paid\_amount} = \text{table\_reservations.preordered\_food\_amount}$$
-   - If order originated from an In-Venue Spot QR or Walk-in (`order_type = 'ON_TABLE_QR'` or `'STAFF_PUNCHED'`):
-     $$\text{advance\_paid\_amount} = ₹0.00$$
-
-3. **Net Balance Due (Need to Pay):**
+   $$\text{advance\_paid\_amount} = \text{table\_reservations.preordered\_food\_amount (or ₹0.00 if walk-in)}$$
    $$\text{balance\_due\_amount} = \max(0.00, \text{total\_bill\_amount} - \text{advance\_paid\_amount})$$
 
-4. **Settlement Branch Execution:**
-   - **Scenario A: Full Pre-Booking (No Extra Items Ordered):**
-     - Condition: $\text{balance\_due\_amount} == ₹0.00$.
-     - POS Display: "Total Bill: ₹X | Paid Online: ₹X | Net Balance Due: ₹0.00".
-     - Cashier Action: 1-Tap "Zero-Balance Clearance & Release".
-     - Mutation: `payment_status = 'FULLY_PAID'`, `settlement_method = 'ONLINE_PREPAID'`.
-   - **Scenario B: Pre-Booking with Additional Spot Items:**
-     - Condition: $\text{balance\_due\_amount} > ₹0.00$.
-     - POS Display: "Total Bill: ₹X | Paid Online: ₹Y | Net Balance Due: ₹(X - Y)".
-     - Cashier Action: Collects net balance via UPI QR, Cash, or POS Card, clicks "Settle & Release".
-     - Mutation: `payment_status = 'FULLY_PAID'`, `settlement_method = 'SPLIT'`.
-   - **Scenario C: Pure Spot Walk-in:**
-     - Condition: $\text{advance\_paid\_amount} == ₹0.00$.
-     - POS Display: "Total Bill: ₹X | Net Balance Due: ₹X".
-     - Cashier Action: Collects total bill amount, clicks "Settle & Release".
-     - Mutation: `payment_status = 'FULLY_PAID'`.
+2. **In-Venue Restaurant Payment:**
+   - The diner settles any remaining balance (`balance_due_amount`) directly with the restaurant via the venue's existing payment setup (Cash, card machine, or restaurant's own Razorpay/UPI setup).
+   - In-venue payments flow directly to the restaurant partner. QuickBite never intercepts, delays, or takes commission on in-venue table collections.
 
-5. **Post-Settlement Atomic Mutations:**
-   Executed in an atomic SQL transaction:
-   - Sets `table_orders.status = 'COMPLETED'` and records `completed_at = NOW()` (which initiates the $T+X$ delayed daily settlement clock for pre-ordered food).
-   - Clears physical dining card association: `dining_session_cards.status = 'AVAILABLE'`, `active_table_id = NULL`, `active_order_id = NULL`, `active_reservation_id = NULL`.
-   - Releases table status: `restaurant_tables.status = 'VACANT'`.
-   - Dispatches ESC/POS thermal command to print the finalized official tax invoice / customer receipt.
+3. **Staff 1-Tap "Print Receipt":**
+   Staff taps 1 button: **"Print Receipt"**. The system executes an atomic transaction:
+   - Sets `table_orders.status = 'COMPLETED'` and records `completed_at = NOW()` (which initiates the $T+X$ delayed daily settlement clock for any online pre-booked food).
+   - Sets `table_orders.payment_status = 'FULLY_PAID'`.
+   - Dispatches ESC/POS binary command to the built-in thermal printer: prints official itemized tax invoice receipt and triggers auto-cut.
+   - Clears physical dining card association: `dining_session_cards.status = 'AVAILABLE'`, unlinking it for reuse in the card tray.
+
+4. **Strict Table Isolation Guarantee for Next Customer:**
+   - Immediately upon order completion, `restaurant_tables.status` resets to `VACANT`.
+   - The completed order is permanently sealed and archived in PostgreSQL (read-only).
+   - When the next customer is seated at this table and scans the QR code or orders:
+     - The backend creates a completely new, isolated `table_orders` record with a unique `order_number`.
+     - The previous customer's order history, line items, and financial records are 100% isolated. Under zero circumstances can previous items or amounts bleed into or affect the new customer's dining session.
 
 ---
 

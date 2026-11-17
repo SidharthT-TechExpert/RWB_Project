@@ -108,16 +108,19 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-20 Physical Dining Card & Automated POS Counter Settlement:**
   - **Dining Session Card Binding:** Waiters/hosts carry a pool of physical dining session cards (Smart Chip cards, RFID/NFC tokens, or serialized magnetic/barcode cards). Upon seating a customer—whether for a full pre-booking, walk-in dining, or spot QR order—the waiter binds an available card to the table session (e.g. Card #14 bound to Table 04 / Order #ORD-1029).
   - **Incremental Order Accumulation:** If diners order additional rounds of food or beverages during their meal (via customer app spot ordering or punched by waiters), all items dynamically accumulate under this card's active table session.
-  - **Automated Bill Generation & Dynamic UPI Payment QR on Card Insertion:** After eating, the customer presents the card to the waiter or walks to the billing counter. When the card is inserted into the terminal's card reader (or scanned/tapped), the terminal / B2B POS portal **instantly and automatically retrieves and generates the complete finalized bill**:
-    - Itemized breakdown of all ordered food items, quantities, dish prices, and GST taxes in INR (₹).
-    - **Already Paid Amount Identification:** System checks for and clearly displays any advance online payments (pre-booked food payments captured during app checkout).
-    - **Calculated Need-to-Pay Balance Due:**
-      $$\text{Need-to-Pay Amount (₹)} = \text{Total Bill Amount} - \text{Already Paid Amount}$$
-    - **Dynamic Restaurant UPI Payment QR Code:** When $\text{Need-to-Pay} > ₹0.00$, the terminal screen automatically generates and displays a dynamic NPCI UPI Payment QR Code locked to the restaurant's merchant UPI VPA (`pa`) and the exact Need-to-Pay amount (`am`). The customer scans with any UPI app (GPay, PhonePe, Paytm, BHIM) and approves payment with zero manual amount typing.
-    - **Instant Payment Webhook & Voice Alert (Soundbox Function):** Upon successful customer UPI payment, the terminal immediately receives bank confirmation via webhook/WebSocket, flashes a green success banner, and plays an audible voice announcement (e.g. *"QuickBite: ₹350 received successfully!"*).
-    - **Automated Post-Payment Thermal Receipt Printing:** Immediately upon payment confirmation (or 1-tap zero-balance clearance for full pre-paid bookings), the terminal's integrated high-speed thermal printer automatically prints the complete official GST Tax Invoice / receipt and auto-cuts the paper.
-    - **Full Pre-Booking Settlement (Zero Balance):** For diners who fully pre-booked and pre-paid their entire meal online without ordering additional dishes, the POS instantly displays: `Total Bill = ₹X`, `Already Paid = ₹X`, `Need to Pay = ₹0.00`. The cashier executes 1-tap checkout, prints the zero-balance tax receipt, marks the order `Completed` (initiating the $T+X$ payout delay clock), and automatically unbinds the physical card, returning it to the available pool.
-    - **Session Closure & Card Ejection:** Once payment is confirmed and the receipt prints, the terminal updates the order to `Completed`, resets table status to `Vacant`, and unbinds the dining card back to `Available` status in the card pool.
+  - **Countertop Billing Machine (Dual Screen & 1-Tap Receipt):**
+    - **Food Giving Time Card Hand-off:** When serving food, the waiter hands a physical dining session card (e.g. Card #07) to the seated customer.
+    - **Billing Counter Card Insert:** After eating, the customer presents this card at the billing counter. The billing staff inserts the card into the countertop billing machine's slot.
+    - **Dual-Screen Auto-Display:** Upon card insertion, the bill automatically populates simultaneously on:
+      1. **Staff Main Screen:** Full order breakdown (itemized dishes, quantities, GST taxes, advance paid online amount, and balance to collect).
+      2. **Customer Mini Screen:** Clean customer-facing summary showing total food price, amount already paid online, and net balance to pay.
+    - **Standard Restaurant Payment:** The customer settles any remaining balance directly with the restaurant using their normal payment method (Cash, restaurant's card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
+    - **Staff 1-Tap "Print Receipt":** Once payment is received, staff taps 1 button: **"Print Receipt"**. The machine immediately prints the final itemized GST tax invoice and auto-cuts the paper. That 1 tap marks both the payment and the order as `Completed`.
+    - **Strict Table Isolation for Next Customer:** Immediately upon order completion, the system executes an atomic table reset:
+      - The table session is closed and the table status resets to `Vacant`.
+      - The completed order is permanently archived and sealed.
+      - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
+      - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
 
 ### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
 - **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
@@ -182,33 +185,36 @@ Ticket Pushes to Kitchen Live Rush Board & Station Printers Auto-Print (Shawarma
 (Staff sees Customer Name, Phone, and Table #; Client IP visible exclusively to Super Admin) →
 Kitchen Prepares → Waiter Serves → Diners Order Additional Rounds Anytime (Accumulated Under Active Card Session) →
 After Meal, Customer Hands Card to Waiter or Billing Counter →
-Card Inserted into Q-Terminal Slot → System Automatically Generates Itemized Bill (Food + Taxes) →
-Displays: Already Paid = ₹0.00 (or pre-paid amount if reservation), Need to Pay Amount = Net Balance →
-Terminal Screen Automatically Generates & Displays Dynamic Restaurant UPI Payment QR Code →
-Customer Scans QR via GPay / PhonePe / Paytm / BHIM & Confirms UPI Payment →
-Instant Webhook Confirmation Received → Speaker Announces Payment ("₹X received on QuickBite!") →
-Terminal Built-In Thermal Printer Automatically Prints GST Tax Receipt & Cuts Paper →
-Dining Card Unbound to Available Pool & Table Freed → Order Completed (T+X Delay Clock Begins).
+Staff Inserts Card into Countertop Billing Machine Slot →
+Bill Instantly Displays on Both Displays:
+  • Staff Main Screen: Full breakdown (dishes, prices, taxes, advance paid, net due)
+  • Customer Mini Screen: Food total, advance paid, and balance to pay
+Customer Pays at Counter (Cash, Restaurant's Card POS, or Restaurant's Own Razorpay/UPI) →
+Staff 1-Tap "Print Receipt" →
+Machine Prints Final Tax Invoice Receipt & Cuts Paper →
+Order & Payment Automatically Marked Completed (T+X Delay Clock Begins for Online Pre-Booked Food) →
+Table Atomically Isolated & Reset to VACANT for Next Customer (Zero Bleed-Over) →
+Dining Card Reset to AVAILABLE in Card Pool Tray.
 ```
 
-### Flow 3: In-Venue Dining Card Settlement & Reconciliation Flow (Unified All-Scenario Flow)
+### Flow 3: In-Venue Dining Card Settlement & Table Isolation Lifecycle
 ```text
-Diner Seated (Pre-Booked or Walk-in) → Waiter Assigns Physical Dining Card →
-Food Ordered (Pre-Booked Baseline + Optional Additional Spot Rounds Punched or QR-Ordered) →
-Meal Concluded → Diner Hands Card to Waiter or Presents at Billing Counter →
-Cashier/Diner Inserts Card into Q-Terminal Card Reader Slot →
-Terminal Instantly Fetches Linked Order & Computes:
-  [Gross Food Subtotal] + [Applicable Taxes] = Total Bill Amount
-  [Advance Paid Online via Pre-Booking] = Already Paid Amount
-  [Total Bill Amount] - [Already Paid Amount] = Need-to-Pay Amount
-  ┌────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Scenario A (Full Pre-Booking, No Extras): Need to Pay = ₹0.00 → 1-Tap Zero Clearance   │
-  │ Scenario B (Pre-Booking + Extra Items): Need to Pay = Difference → Terminal Displays   │
-  │   Dynamic Restaurant UPI QR → Customer Scans & Pays → Voice Alert & Auto-Print Receipt │
-  │ Scenario C (Pure Spot Walk-in): Need to Pay = 100% of Bill → Terminal Displays         │
-  │   Dynamic Restaurant UPI QR → Customer Scans & Pays → Voice Alert & Auto-Print Receipt │
-  └────────────────────────────────────────────────────────────────────────────────────────┘
-→ Order Marked COMPLETED (T+X Delay Clock Begins) → Card Reset to AVAILABLE in Card Pool.
+Food Serving Time: Waiter Hands Physical Dining Session Card to Seated Customer →
+Diners Finish Eating → Customer Hands Card to Billing Counter Staff →
+Staff Inserts Card into Countertop Billing Machine Slot →
+Machine Instantly Retrieves Linked Order & Populates Both Screens:
+  [Staff Screen & Customer Mini Screen]
+  Gross Food Subtotal + Taxes = Total Bill Amount
+  Advance Paid Online = Already Paid Amount
+  Total Bill - Already Paid = Need to Pay Amount
+Customer Settles Payment Directly with Restaurant (Cash, Card, or Restaurant's Own Razorpay/UPI) →
+Staff 1-Tap "Print Receipt":
+  1. Built-in Thermal Printer Prints Official Tax Invoice Receipt & Auto-Cuts
+  2. Order Status Transitions to COMPLETED & Payment Status to FULLY_PAID
+  3. Strict Table Isolation: Table Status Resets to VACANT; Order Sealed in Archive
+  4. Next Customer Seated at Table Receives 100% Isolated Fresh Session (Zero Cross-Order Contamination)
+  5. Dining Card Unbound & Returned to Reusable Available Tray.
+```
 ```
 
 ### Flow 4: Restaurant Staff Order Punching
@@ -348,18 +354,22 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - When a customer confirms a pre-booking, the system permanently snapshots the active split ratio and calculated share amounts (platform fee vs partner fee) onto the reservation record.
 - Modifying a restaurant's split ratio in the Admin Portal applies only to subsequent pre-bookings and never retroactively modifies past pre-bookings or historical accounting statements.
 
-### Physical Dining Session Card & Automated POS Counter Settlement
-- Waiters/hosts can assign an available physical dining session card (Smart Card, RFID/NFC token, or serialized barcode card) to a table session upon customer seating (for pre-bookings, walk-ins, and spot QR orders).
-- The customer application reflects the bound physical card session upon binding.
-- Any subsequent food rounds added by the diner (via customer app) or punched by staff automatically accrue under this active card session.
-- When the card is inserted into the billing counter POS reader (or scanned/tapped):
-  - POS instantly retrieves the active order ticket without manual search.
-  - Automatically breaks down gross food items, itemized prices, and applicable GST taxes in INR (₹).
-  - Automatically identifies and displays advance amounts already paid online during pre-booking (`Already Paid Amount`).
-  - Automatically computes the exact balance due: $\text{Need to Pay Amount} = \text{Total Bill Amount} - \text{Already Paid Amount}$.
-  - **Full Pre-Booking Clearance:** For diners whose entire meal was pre-paid online with zero additional in-venue orders, POS displays `Need to Pay = ₹0.00`, enabling 1-tap checkout, instant tax receipt printing, and card unbinding.
-  - **Incremental Order Settlement:** For diners with extra spot dishes, POS displays the net balance due; cashier records payment (Cash, UPI QR, or Card), prints the finalized tax invoice, and completes the transaction.
-  - Completing bill settlement immediately updates order status to `COMPLETED` (triggering the $T+X$ delayed daily settlement clock) and unlinks the physical card, returning its status to `AVAILABLE` in the venue card inventory.
+### Physical Dining Session Card & Countertop Billing Machine Settlement
+- Waiters hand a physical dining session card to the seated customer when serving food.
+- The customer presents the card at the billing counter after finishing their meal.
+- When the card is inserted into the machine's card slot:
+  - Bill automatically populates on both the **Staff Screen** (full operational breakdown) and **Customer Mini Screen** (total food, paid online, and balance to pay).
+  - Automatically identifies advance food amounts already paid online during pre-booking (`Already Paid Amount`).
+  - Correctly calculates the net balance due: $\text{Need to Pay Amount} = \text{Total Bill Amount} - \text{Already Paid Amount}$.
+- Customer pays the restaurant directly via the restaurant's normal in-venue payment setup (Cash, card machine, or restaurant's own Razorpay/UPI QR; funds go directly to the restaurant).
+- Staff executes **1-Tap "Print Receipt"**:
+  - Built-in thermal printer immediately prints the official itemized GST tax invoice and auto-cuts the paper.
+  - Payment status updates to `FULLY_PAID` and order status updates to `COMPLETED` (initiating the $T+X$ delayed settlement clock for any pre-booked food).
+- **Strict Table Isolation for Next Customer:**
+  - Upon order completion, table status immediately resets to `VACANT`.
+  - The previous order is permanently archived and cannot be reopened or edited.
+  - When the next customer arrives and orders at that table, a fresh isolated session is generated with zero data or billing bleed-over from the previous customer.
+  - The dining card unlinks from the completed order and returns to `AVAILABLE` status in the card pool.
 
 ### Daily Delayed Food Payouts (T+X Days Post-Dining), FIFO Queue & Partner Invoices
 - Pre-booked ordered food amounts collected upfront in INR (₹) enter the delayed holding window strictly after the customer finishes eating and the order is marked `Completed` (`completed_at`).

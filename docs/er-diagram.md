@@ -297,46 +297,47 @@ sequenceDiagram
     Batch->>Partner: Send Email Notification with UTR Reference
 ```
 
-### 2.4 Physical Dining Session Card Hand-Off, POS Insertion & Automated Bill Settlement Lifecycle
+### 2.4 Countertop Billing Machine, 1-Tap Receipt & Table Isolation Lifecycle
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Diner as Customer / Diners
     actor Waiter as Waiter / Floor Staff
-    participant POS as Restaurant B2B POS (Billing Counter)
-    participant DB as Backend Database
+    participant Machine as Countertop Billing Machine (Dual Screen)
+    participant DB as Backend Database (PostgreSQL)
     actor Cashier as Cashier / Billing Staff
+    actor NextCustomer as Next Dining Party
 
-    Note over Diner,Waiter: Customer Arrives (Pre-Booked or Walk-in) & Seated
-    Waiter->>DB: Scan/Assign Available Card (e.g. CARD-07) to Table & Order
+    Note over Diner,Waiter: Food Served: Waiter Hands Physical Dining Card (Card #07)
+    Waiter->>DB: Bind Card #07 to Table 04 Active Order
     DB->>DB: dining_session_cards.status = 'ACTIVE_BOUND'
-    Waiter->>Diner: Hand Physical Dining Session Card
-    opt In-Venue Additional Spot Food Rounds
-        Diner->>DB: Scan Table QR via Customer App or Waiter Punches Dishes
-        DB->>DB: Append Items to table_orders (Update Gross Food Amount)
+    Note over Diner: Diners Finish Meal
+    Diner->>Cashier: Hands Dining Card at Billing Counter
+    Cashier->>Machine: Inserts Card #07 into Machine Slot
+    Machine->>DB: Query Order by card_uid
+    DB-->>Machine: Return Order Items, Taxes, Advance Paid Online, Balance Due
+    par Dual Screen Display
+        Machine->>Machine: Staff Screen: Full operational item breakdown & balance
+        Machine->>Machine: Customer Mini Screen: Food total, advance paid, balance to pay
     end
-    Note over Diner: Diners Finish Eating Meal
-    Diner->>Cashier: Present Physical Dining Card at Billing Counter (or via Waiter)
-    Cashier->>POS: Insert / Tap Card into POS Card Reader
-    POS->>DB: Read Card UID -> Query Active Linked Order Ticket
-    DB-->>POS: Return Gross Total, Taxes, and Advance Paid Online Amount
-    POS->>POS: Auto-Compute Balance Due = Total Bill - Advance Paid
-    alt Scenario A: Full Pre-Booking (No Extra Items)
-        Note over POS: Already Paid == Total Bill -> Balance Due = ₹0.00
-        Cashier->>POS: 1-Tap "Confirm Zero-Balance Checkout"
-    else Scenario B: Additional Spot Dishes Ordered / Walk-in
-        Note over POS: Balance Due > ₹0.00 (Customer Pays Outstanding Difference)
-        Cashier->>Diner: Request Remaining Balance in ₹
-        Diner->>Cashier: Pay via UPI QR / Cash / Card
-        Cashier->>POS: Record Settlement Method & Amount
+    Diner->>Cashier: Settle Payment (Cash, Card, or Restaurant's Own Razorpay/UPI)
+    Cashier->>Machine: 1-Tap "Print Receipt"
+    
+    rect rgb(240, 255, 240)
+        Note over DB: ATOMIC ISOLATION & SETTLEMENT TRANSACTION
+        DB->>DB: 1. table_orders: status = 'COMPLETED', payment_status = 'FULLY_PAID'
+        DB->>DB: 2. Record completed_at = NOW() (Starts T+X delayed payout clock)
+        DB->>DB: 3. Unbind Card: dining_session_cards.status = 'AVAILABLE'
+        DB->>DB: 4. Reset Table: restaurant_tables.status = 'VACANT'
+        DB->>DB: 5. Archive & Seal Previous Order Record (Read-Only)
     end
-    POS->>DB: Update table_orders: payment_status = 'FULLY_PAID', status = 'COMPLETED'
-    DB->>DB: Record completed_at (Starts T+X Day Delayed Settlement Clock)
-    POS->>DB: Unlink Card: dining_session_cards.status = 'AVAILABLE'
-    POS-->>Cashier: Print Final Itemized Tax Invoice / Receipt
-    Cashier->>Diner: Hand Printed Bill Receipt
-    Note over POS,DB: Card returned to pool tray ready for next dining party
+
+    Machine->>Machine: Built-in Thermal Printer Prints Receipt & Auto-Cuts
+    Cashier->>Diner: Hand Printed Official Tax Receipt
+    Cashier->>Cashier: Remove Card & Return to Available Tray
+
+    Note over NextCustomer,DB: Table 04 is 100% Isolated: Next customer's order is completely independent!
 ```
 
 ---

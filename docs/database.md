@@ -401,8 +401,14 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 5. **Anti-Fraud Attribution & IP Privacy Isolation:**
    - Every spot order recorded in `table_orders` requires verified `customer_name` and `customer_phone`.
    - `client_ip` is captured automatically during order creation. Backend serialization rules and database projection views strictly prohibit selecting or serializing `client_ip` to restaurant tenant users. Only Super Admin has access to customer IP address information in the Global Audit Ledger.
-6. **Physical Dining Card Lifecycle & Automated Settlement Integrity:**
-   - When a physical dining card is assigned to a table or booking, `dining_session_cards.status` transitions from `AVAILABLE` to `ACTIVE_BOUND`.
+6. **Physical Dining Card Lifecycle & Countertop Billing Machine Settlement:**
+   - When food is served, a dining card is assigned to the table, transitioning `dining_session_cards.status` from `AVAILABLE` to `ACTIVE_BOUND`.
    - When linked to an advance pre-booking, `table_orders.advance_paid_amount` is populated directly from `table_reservations.preordered_food_amount`.
    - Any additional food items added at the table increment `table_orders.gross_food_amount`, with `balance_due_amount = GREATEST(0.00, total_bill_amount - advance_paid_amount)`.
-   - Upon cashier card insertion and payment confirmation, `payment_status` is updated to `FULLY_PAID`, `settled_at` is timestamped, `table_orders.status` transitions to `COMPLETED` (which begins the $T+X$ payout delay countdown), and `dining_session_cards` unbinds and returns to `AVAILABLE` status.
+   - In-venue payments are collected directly by the restaurant partner (Cash, restaurant card machine, or restaurant's own Razorpay/UPI). QuickBite does not intercept in-venue payments.
+   - Upon staff 1-tap "Print Receipt", `payment_status` is updated to `FULLY_PAID`, `settled_at` is timestamped, `table_orders.status` transitions to `COMPLETED` (which begins the $T+X$ payout delay countdown for any online pre-booked food), and `dining_session_cards` unbinds and returns to `AVAILABLE` status in the card pool.
+7. **Strict Table Isolation & Cross-Session Separation:**
+   - Transitioning an order to `COMPLETED` atomically terminates the table session and resets `restaurant_tables.status` to `VACANT`.
+   - The completed order is permanently sealed in the database as an immutable historical record.
+   - When the next customer sits at that table and scans the QR code or orders, the platform generates a completely fresh, isolated `table_orders` ticket.
+   - Under zero circumstances can the next customer's order affect, leak into, or inherit items or amounts from the previous customer's completed dining session.
