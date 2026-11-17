@@ -109,14 +109,14 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 ### 6.3 Unified Customer Application (Advance Pre-Booking & In-Venue Spot QR Ordering)
 - **CUST-01 Unified Account & Auth:** Customer registration and login using verified Full Name and Mobile Phone Number (SMS OTP verification). Manages customer profile, saved preferences, and unified dining history across both advance reservations and in-venue spot dining.
 - **CUST-02 Venue Discovery & Search:** Search and browse partner restaurants, cuisines, ambiance photos, live operating hours, dietary filters, and ratings.
-- **CUST-03 Table & Slot Reservation (Advance Pre-Booking):** Select future dining date, guest party size (2, 4, 6, 8+ pax), preferred dining zone, and available time slot.
+- **CUST-03 Table & Slot Reservation (Advance Pre-Booking):** Select future dining date, guest party size (2, 4, 6, 8+ pax), preferred dining zone, available time slot, and select suitable table or tables matching party size and venue layout.
 - **CUST-04 Advance Meal Pre-Ordering:** Browse live menu catalog and pre-select dishes attached to the reservation with INR (₹) pricing to ensure meals are served promptly upon arrival.
 - **CUST-05 Built-in QR Scanner & On-Table Binding (In-Venue Spot Mode):** Seated diners can scan physical table QR codes using the app's integrated camera scanner (or open the table link directly). Securely binds to the physical table ID (displays "Seated at Table 04 at [Restaurant Name]").
 - **CUST-06 In-Venue Digital Menu & Category Navigation:** Rapid category jumping, dietary filtering (`Veg`, `Non-Veg`, `Vegan`, `Jain`), dish photos, descriptions, and `+ Add` button.
 - **CUST-07 Real-Time Sold-Out (86'd) Guard:** Real-time stock validation prevents adding sold-out dishes across advance pre-bookings and spot orders.
 - **CUST-08 Special Cooking & Arrival Instructions:** Add arrival notes for pre-bookings (e.g. "Meeting lunch, serve appetizers at 1:15 PM sharp") and dish-level cooking notes for spot orders.
 - **CUST-09 Floating Cart Drawer:** Item counts, running subtotal in INR (₹), cooking instructions, and one-tap checkout.
-- **CUST-10 Pre-Booking Checkout & Pass:** Customer pays the pre-booked food order amount and pre-booking fee upfront in Indian Rupees (₹); system locks the slot, snapshots the active split ratio, and generates confirmation pass with booking reference, table zone, and order summary.
+- **CUST-10 Pre-Booking Checkout & Pass:** Customer pays the upfront Pre-Booking Charge (where the active platform/partner commercial split ratio is snapshotted) plus the Selected Food Items Price in Indian Rupees (₹). The system locks the selected table(s) and slot, snapshots the active split ratio and calculated shares, and generates a digital confirmation pass with booking reference, selected table(s), dining zone, and pre-order summary.
 - **CUST-11 Instant Spot Order Submission:** One-tap authenticated submission pushes ticket directly to the restaurant's Kitchen Live Rush Board and triggers category-routed KOT thermal printing.
 - **CUST-12 Anti-Fraud Verification & Identification:** Every spot order placed permanently records the customer's verified Name, Mobile Phone Number, physical Table Number, and complete Order details to hold diners accountable and prevent fraudulent or prank bookings.
 - **CUST-13 Anti-Fraud Client IP Auditing & Role Privacy Isolation:** At the time of order creation, the system automatically records the customer's client IP address and device footprint.
@@ -145,10 +145,10 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ### Flow 1: Customer Food & Table Pre-Booking
 ```text
-Open App → Select Restaurant → Choose Date, Time Slot & Party Size →
+Open App → Select Restaurant → Choose Date, Time Slot, Party Size & Select Suitable Table or Tables →
 Pre-Select Food from Live Menu → Add Special Notes →
-Pay Pre-Booking Charge (Platform/Partner Split Snapshot Captured) → Digital Pass Generated →
-Arrive at Restaurant → Seated at Reserved Table → Food Served Fresh with Zero Wait!
+Pay Pre-Booking Charge (Platform/Partner Split Snapshot Captured) + Selected Food Items Price → Digital Pass Generated →
+Arrive at Restaurant → Seated at Reserved Table(s) → Food Served Fresh with Zero Wait!
 ```
 
 ### Flow 2: In-Venue Table QR Ordering (Spot Booking & Anti-Fraud Capture)
@@ -225,8 +225,9 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 3. **Unified Customer Application:**
    - Auth & Profile Screen (Name & Phone Number OTP verification)
    - Venue Discovery & Search (Filter by cuisines, dietary tags, ratings, opening hours)
-   - Table Reservation & Slot Selector (Party size, zones, calendar dates, time blocks)
+   - Table Reservation & Slot Selector (Party size, zones, calendar dates, time blocks, suitable table/tables selector)
    - Advance Menu Pre-Ordering View (Browse dishes, add to reservation, dietary badges)
+   - Pre-Booking Checkout Screen (Pre-booking charge + selected food items price breakdown in ₹)
    - Integrated QR Scanner & Table Binding Screen ("Seated at Table 04 at [Venue]")
    - In-Venue Live Category Menu & Dietary Filters (`Veg`, `Non-Veg`, `Vegan`, `Jain`)
    - Dish Details Modal with custom cooking notes
@@ -247,10 +248,11 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 - Customer can register and log in quickly with verified Full Name and Mobile Phone Number (SMS OTP verification).
 - Customer can browse partner venues, cuisines, live operating hours, and search restaurants.
 - **Advance Pre-Booking Mode:**
-  - User can select an available date, time slot, and guest party size.
+  - User can select an available date, time slot, guest party size, and choose suitable table or tables matching party size.
   - User can add in-stock dishes to the pre-order with special arrival notes.
-  - Booking cannot be placed for closed dates or slots that exceed available table capacity.
-  - Pre-booking confirmation locks slot, snapshots active split ratio, and generates digital reservation pass.
+  - Booking checkout calculates and charges Pre-Booking Charge + Selected Food Items Price upfront in Indian Rupees (₹).
+  - Booking cannot be placed for closed dates or slots where selected table(s) are unavailable or capacity is exceeded.
+  - Pre-booking confirmation locks selected table(s) and slot, snapshots active split ratio on the pre-booking charge, and generates digital reservation pass.
 - **In-Venue Spot QR Ordering Mode:**
   - Scanning a physical table QR opens the app bound directly to that physical table.
   - User must be authenticated with Name and Phone Number prior to order submission.

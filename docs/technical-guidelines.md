@@ -402,13 +402,18 @@ Mandatory compound and single-column indexes:
 - `restaurant_payouts(restaurant_id, status, payout_mature_at)`
 - `calendar_overrides(restaurant_id, override_date)`
 
-## 7.4 Pre-Booking Split Immutability Standards
+## 7.4 Pre-Booking Split Immutability & Multi-Table Standards
 - **Contract Split Ratio:** Stored in `restaurants.prebooking_split_percentage` (e.g., `20.00` representing 20% platform share).
-- **Snapshot Requirement:** When an advance reservation is confirmed via the Customer App:
-  - The system records `prebooking_amount` in INR (₹) (e.g., ₹500.00).
+- **Multi-Table Selection Support:** When booking, customers select date, time slot, party size, and one or more suitable physical tables matching party size and venue floor layout. The platform links tables via `reservation_tables (reservation_id, table_id)` and records `primary_table_id` on `table_reservations`.
+- **Checkout Financial Composition:**
+  $$\text{Total Paid at Checkout (INR ₹)} = \text{prebooking\_fee} + \text{preordered\_food\_amount}$$
+- **Snapshot Requirements:** When an advance reservation is confirmed via the Customer App:
+  - The system records `prebooking_fee` in INR (₹) (e.g., ₹500.00).
+  - The system records `preordered_food_amount` in INR (₹) (e.g., ₹1,850.00).
+  - The customer pays `total_paid_amount = prebooking_fee + preordered_food_amount` upfront in INR (₹) (e.g., ₹2,350.00).
   - Snapshots `applied_split_ratio = restaurants.prebooking_split_percentage`.
-  - Snapshots `platform_fee_amount = prebooking_amount * (applied_split_ratio / 100)`.
-  - Snapshots `partner_payout_amount = prebooking_amount - platform_fee_amount`.
+  - Snapshots `platform_fee_amount = prebooking_fee * (applied_split_ratio / 100)`.
+  - Snapshots `partner_payout_amount = prebooking_fee - platform_fee_amount`.
 - **Zero Retroactive Mutation:** Any subsequent change by Super Admin to `restaurants.prebooking_split_percentage` applies exclusively to future reservations. Existing records in `table_reservations` are permanently immutable.
 - **Exclusion of Spot Orders:** `table_orders` (placed via table QR or punched by staff) have zero platform commission cuts. Diners pay the venue directly.
 

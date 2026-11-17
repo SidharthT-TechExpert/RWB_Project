@@ -204,23 +204,25 @@ Operating exceptions overriding normal weekly operating hours.
 ---
 
 ### 3.10 `table_reservations`
-Pre-bookings created via Customer App capturing party size, advance fees, and immutable split snapshots.
+Pre-bookings created via Customer App capturing party size, advance fees, multi-table selections, and immutable split snapshots.
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
 | `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique pre-booking identifier |
 | `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE RESTRICT` | Target venue |
-| `table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Reserved physical table |
+| `primary_table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Primary reserved table (matching reservation_tables) |
 | `customer_name` | `VARCHAR(128)` | `NOT NULL` | Customer primary contact name |
 | `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Customer phone number |
 | `customer_email` | `VARCHAR(255)` | `NOT NULL` | Customer email address for booking pass |
 | `reservation_date` | `DATE` | `NOT NULL` | Booking calendar date |
 | `slot_time` | `TIME` | `NOT NULL` | Confirmed arrival time slot |
 | `party_size` | `INT` | `NOT NULL CHECK (party_size > 0)` | Number of dining guests |
-| `prebooking_amount`| `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Total upfront pre-booking amount in INR (₹) |
-| `applied_split_ratio` | `DECIMAL(5, 2)`| `NOT NULL` | Snapshot of restaurant's split % at checkout |
-| `platform_fee_amount` | `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Snapshot: Platform cut in INR (₹) |
-| `partner_payout_amount`| `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Snapshot: Partner cut in INR (₹) |
+| `prebooking_fee` | `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Pre-booking charge (where commercial split applies) in INR (₹) |
+| `preordered_food_amount` | `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Subtotal of pre-selected food items held for T+X daily payout in INR (₹) |
+| `total_paid_amount` | `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Upfront total paid at checkout (`prebooking_fee + preordered_food_amount`) in INR (₹) |
+| `applied_split_ratio` | `DECIMAL(5, 2)`| `NOT NULL` | Snapshot of restaurant's split % applied to prebooking_fee |
+| `platform_fee_amount` | `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Snapshot: Platform cut from prebooking_fee in INR (₹) |
+| `partner_payout_amount`| `DECIMAL(10, 2)`| `NOT NULL DEFAULT 0.00` | Snapshot: Partner cut from prebooking_fee in INR (₹) |
 | `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'CONFIRMED'` | `CONFIRMED`, `SEATED`, `COMPLETED`, `CANCELLED`, `NO_SHOW` |
 | `daily_batch_id` | `UUID` | `NULLABLE, REFERENCES daily_settlement_batches(id)` | Associated daily settlement batch |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Reservation placement timestamp |
@@ -228,7 +230,19 @@ Pre-bookings created via Customer App capturing party size, advance fees, and im
 
 ---
 
-### 3.11 `table_orders`
+### 3.11 `reservation_tables`
+Junction table mapping reservations to one or more physical dining tables, allowing parties to reserve suitable single or combined multi-table seating.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique junction record identifier |
+| `reservation_id` | `UUID` | `NOT NULL, REFERENCES table_reservations(id) ON DELETE CASCADE` | Associated pre-booking |
+| `table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Reserved physical table |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Mapping creation timestamp |
+
+---
+
+### 3.12 `table_orders`
 Active dining orders originating from Unified Customer App Pre-Bookings, In-Venue Table QR, or manual staff punching. Spot orders have zero platform commission.
 
 | Column | Type | Constraints | Description |
@@ -255,7 +269,7 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 
 ---
 
-### 3.12 `order_items`
+### 3.13 `order_items`
 Individual line items on an order, carrying category and printer snapshots for atomic KOT printing.
 
 | Column | Type | Constraints | Description |
@@ -274,7 +288,7 @@ Individual line items on an order, carrying category and printer snapshots for a
 
 ---
 
-### 3.13 `daily_settlement_batches`
+### 3.14 `daily_settlement_batches`
 Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payouts, booking metrics, bank UTR, and partner tax invoices.
 
 | Column | Type | Constraints | Description |
@@ -299,7 +313,7 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 
 ---
 
-### 3.14 `monthly_settlements`
+### 3.15 `monthly_settlements`
 Monthly financial statement consolidating platform pre-booking fee splits.
 
 | Column | Type | Constraints | Description |
@@ -330,6 +344,7 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 | `idx_food_items_rest_cat_avail` | `food_items` | `(restaurant_id, category_id, is_available)` | High-speed menu ordering queries |
 | `idx_calendar_overrides_lookup` | `calendar_overrides` | `(restaurant_id, override_date)` | Daily booking availability guards |
 | `idx_reservations_rest_date` | `table_reservations` | `(restaurant_id, reservation_date, status)` | Pre-booking slot conflict checks |
+| `idx_reservation_tables_lookup` | `reservation_tables` | `(table_id, reservation_id)` | Fast lookup of reserved tables per slot |
 | `idx_orders_rest_status_created`| `table_orders` | `(restaurant_id, status, created_at DESC)` | Real-time Kitchen Rush Board queries |
 | `idx_orders_table_status` | `table_orders` | `(table_id, status)` | Active table order retrieval |
 | `idx_order_items_order_printer` | `order_items` | `(order_id, assigned_printer_id_snapshot)` | Automated category KOT dispatch |

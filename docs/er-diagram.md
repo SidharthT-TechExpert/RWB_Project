@@ -19,6 +19,8 @@ erDiagram
     RESTAURANTS ||--o{ CALENDAR_OVERRIDES : "schedules"
     RESTAURANTS ||--o{ TABLE_RESERVATIONS : "receives"
     RESTAURANT_TABLES ||--o{ TABLE_RESERVATIONS : "allocated to"
+    TABLE_RESERVATIONS ||--o{ RESERVATION_TABLES : "allocates"
+    RESTAURANT_TABLES ||--o{ RESERVATION_TABLES : "booked by"
     RESTAURANTS ||--o{ TABLE_ORDERS : "processes"
     RESTAURANT_TABLES ||--o{ TABLE_ORDERS : "served at"
     USERS ||--o{ TABLE_ORDERS : "places"
@@ -126,17 +128,26 @@ erDiagram
     TABLE_RESERVATIONS {
         uuid id PK
         uuid restaurant_id FK
-        uuid table_id FK
+        uuid primary_table_id FK
         string customer_name
         date reservation_date
         time slot_time
         int party_size
-        decimal prebooking_amount
+        decimal prebooking_fee
+        decimal preordered_food_amount
+        decimal total_paid_amount
         decimal applied_split_ratio
         decimal platform_fee_amount
         decimal partner_payout_amount
         string status
         uuid daily_batch_id FK
+    }
+
+    RESERVATION_TABLES {
+        uuid id PK
+        uuid reservation_id FK
+        uuid table_id FK
+        timestamp created_at
     }
 
     TABLE_ORDERS {
@@ -241,8 +252,8 @@ sequenceDiagram
     actor Admin as Super Admin
     actor Partner as Restaurant Partner
 
-    Customer->>Platform: Pre-book Table & Meal (Transacted in ₹)
-    Platform->>Platform: Snapshot Split Ratio & Calculate Platform Fee
+    Customer->>Platform: Select Table(s) & Pre-Book Meal: Pay Pre-Booking Charge + Food Price in ₹
+    Platform->>Platform: Snapshot Split Ratio on Pre-Booking Charge; Hold Food Amount for T+X Payout
     Customer->>Platform: Diners Arrive, Eat & Finish Meal
     Platform->>Platform: Staff Marks Order COMPLETED (completed_at recorded)
     Note over Platform,Batch: Holding clock starts strictly from completed_at: holding_matures_at = completed_at + X days
