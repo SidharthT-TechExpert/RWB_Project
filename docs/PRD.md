@@ -131,13 +131,13 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 
 ## 7. Non-Functional Requirements
 
-- **Sub-Second Performance:** On-table QR web menu loads in under `1.5 seconds` on mobile connections; order tickets push to Live Rush Board in $\le 500\text{ms}$.
-- **Frictionless Mobile Web Access:** Walk-in diners access menus directly in mobile web browsers without installing native apps; lightweight phone OTP authentication guarantees order legitimacy without bulky signup friction.
+- **Sub-Second Performance:** Customer application screens and menus load in under `1.5 seconds` on mobile connections; order tickets push to Live Rush Board in $\le 500\text{ms}$.
+- **Seamless Application Access:** Diners access both advance pre-bookings and in-venue table QR ordering inside the unified Customer Application; fast phone OTP authentication guarantees order legitimacy without friction.
 - **Reliability & Concurrency:** System supports high concurrent dining rushes without dropped tickets or double-booked tables.
 - **Multi-Tenant Data Isolation & Privacy:** Complete data separation between restaurant venues. Furthermore, sensitive audit metadata like customer IP addresses are isolated strictly to Super Admin and never leaked to restaurant tenants.
 - **Audit Logging:** Immutable audit logs for all administrative actions (document approvals/rejections, restaurant status changes, payout records).
 - **Progressive Web App (PWA) Architecture:** Both the Super Admin Portal and Restaurant B2B Operations Portal are installable Progressive Web Apps (PWAs). They feature standalone full-screen display modes (eliminating browser URL bars on POS tablets and iPads), service worker asset caching for instant launch, and Web Push notifications for incoming orders and kitchen chimes.
-- **Responsive Multi-Surface Support:** Portals optimized for desktop/tablet; Unified Customer Application optimized for smartphones and mobile web browsers (supporting pre-booking discovery and seamless on-table QR camera scanning).
+- **Multi-Surface Architecture:** Portals optimized for desktop, tablets, and POS hardware; the Unified Customer Application is a dedicated mobile application for smartphones (supporting pre-booking discovery and integrated on-table QR scanning).
 
 ---
 
@@ -153,7 +153,7 @@ Arrive at Restaurant → Seated at Reserved Table → Food Served Fresh with Zer
 
 ### Flow 2: In-Venue Table QR Ordering (Spot Booking & Anti-Fraud Capture)
 ```text
-Diner Seated at Table → Scans Table QR Code → Live Menu Opens on Phone (Zero App Download) →
+Diner Seated at Table → Scans Table QR Code via Customer Application → Table Bound Instantly ("Seated at Table 04") →
 Customer Quick Sign Up / Login (Name & Mobile OTP Verification) →
 Selects Dishes & Adds Notes → Taps "Place Order" →
 System Records Order Details with Customer Name, Phone, Physical Table #, and Client IP →
@@ -320,7 +320,7 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 
 - **Platform Currency Standard:** The platform strictly operates in **Indian National Rupees (INR / ₹)**. All dish menu prices, advance pre-booking charges, food bills, and bank transfers (NEFT / RTGS / IMPS) are transacted exclusively in ₹. Foreign currencies (such as USD / $) are not supported.
 - **Pre-Booking Fee Split vs In-Venue Settlement:** Platform commercial split applies strictly to upfront pre-booking charges collected via the customer app. In-venue dining bills (QR orders and extra rounds) are settled directly with the venue (cash, card, or POS) with zero platform fee deductions.
-- **Connectivity:** Diners require active mobile data or venue Wi-Fi to load digital QR menus.
+- **Connectivity:** Diners require active mobile network data or venue Wi-Fi for application communication and order dispatch.
 - **Compliance Validity:** Restaurant activation depends on valid partner legal licenses (FSSAI, GST).
 
 ---
@@ -329,7 +329,7 @@ Partner (Owner/Manager) Views Settlement Stats & Downloads Invoice in B2B Invoic
 
 | Metric | Target |
 |---|---|
-| **Average Seating-to-Order Time** | Reduced from 15 minutes to $< 3$ minutes via on-table QR |
+| **Average Seating-to-Order Time** | Reduced from 15 minutes to $< 3$ minutes via in-app on-table QR ordering |
 | **Peak-Hour Table Turnover** | 25–35% faster table turnaround |
 | **Out-of-Stock Ordering Complaints** | Reduced to 0 (via instant 86'd stock toggle) |
 | **Active Compliant Restaurants** | 100% verified with mandatory compliance documents |

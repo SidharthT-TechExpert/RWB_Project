@@ -10,7 +10,7 @@
 **QuickBite** is an enterprise-grade B2B SaaS platform designed for modern hospitality businesses. In traditional dining environments, customers spend significant time waiting for waitstaff to bring physical menus, take manual orders, and process bills during peak dining rushes. This friction overwhelms floor staff, leads to dining bottlenecks, and reduces daily table turnaround rates.
 
 **QuickBite solves this challenge** by providing:
-1. **Frictionless On-Table QR Ordering**: Diners scan an HMAC-secured physical table QR code to view live, dynamic digital menus and place orders directly to the kitchen from their mobile browser—**with zero app downloads required**.
+1. **Unified Customer Application (Pre-Booking & In-Venue QR Ordering)**: Diners discover venues, reserve slots, and pre-order meals ahead of time, or scan in-venue table QR codes via the Customer Application to place orders directly to the kitchen.
 2. **Restaurant B2B Portal**: A comprehensive operational web suite for restaurant owners and floor staff to configure table floor plans, build categorized menus with instant sold-out (86'd) stock toggles, manage operating calendars, punch manual orders, and manage live orders via a real-time **Live Rush Board**.
 3. **Super Admin SaaS Operations**: A platform-wide command center for onboarding restaurant partners, enforcing legal compliance via an automated **Activation Gate**, configuring commercial split rates, and generating monthly billing settlements.
 
@@ -33,7 +33,7 @@ QuickBite utilizes a modern, typed, and resilient tech stack optimized for perfo
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Portals (Admin & B2B PWA)      │ React PWA (Vite, vite-plugin-pwa, Standalone Mode)    │
-│ Unified Customer App (Diners)  │ React Native / Web (Cross-Platform Mobile & Web PWA)   │
+│ Unified Customer App (Diners)  │ React Native (Cross-Platform iOS & Android Mobile App)│
 │ Form & Input Validation        │ Zod (Strict schema validation across all inputs)      │
 │ Client State Management        │ Zustand (Lightweight modular client UI stores)        │
 │ Server State & Data Caching    │ TanStack Query v5 (Data fetching, caching & sync)     │

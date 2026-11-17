@@ -64,7 +64,7 @@ Core tenant record capturing business profiles, onboarding status, and financial
 | `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique restaurant identifier |
 | `legal_name` | `VARCHAR(255)` | `NOT NULL` | Registered legal business entity name |
 | `brand_name` | `VARCHAR(255)` | `NOT NULL` | Public customer-facing brand name |
-| `slug` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | URL-safe slug for web menus and routing |
+| `slug` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | URL-safe slug for restaurant identification and app deep linking |
 | `phone` | `VARCHAR(20)` | `NOT NULL` | Primary operations contact phone |
 | `email` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | Registered business contact email |
 | `address_line1` | `VARCHAR(255)` | `NOT NULL` | Street address line 1 |

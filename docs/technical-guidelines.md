@@ -27,8 +27,7 @@ The tech stack is fixed across all development tracks:
 │                                 FRONTEND SURFACES                                      │
 ├────────────────────────────────┬───────────────────────────────────────────────────────┤
 │ Portals (Admin & B2B PWA)      │ React PWA (Vite, vite-plugin-pwa, Standalone Mode)    │
-│ Customer Mobile App (Diners)   │ React Native (Cross-Platform iOS & Android)           │
-│ On-Table Digital Menu (Spot)   │ React (Lightweight Responsive Web, Zero App Download) │
+│ Unified Customer App (Diners)  │ React Native (Cross-Platform iOS & Android Mobile App)│
 │ Form & Input Validation        │ Zod (Strict schema validation across forms)           │
 │ Client State Management        │ Zustand (Lightweight modular client stores)           │
 │ Server State & Caching         │ TanStack Query v5 (Data fetching, caching & sync)     │
@@ -352,7 +351,7 @@ Security measurements must be implemented across all layers:
 
 ### 6.10 Spot Order Anti-Fraud Authentication & Client IP Auditing
 - **Customer Authentication on Table QR:**
-  Walk-in customers access the mobile web menu bound to the table. Prior to punching or confirming a spot order, customers authenticate via a lightweight signup/login service using their Name and Mobile Phone Number (SMS OTP verification).
+  Walk-in customers scan the table QR code using the Customer Application to bind the active table session. Prior to punching or confirming a spot order, customers authenticate via a fast signup/login flow using their Name and Mobile Phone Number (SMS OTP verification).
 - **Fraud Prevention & Data Capture:**
   Every spot order permanently records:
   - `customer_name`: Verified customer legal/display name.
