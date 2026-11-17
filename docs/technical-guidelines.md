@@ -162,6 +162,9 @@ To streamline front-of-house table operations and eliminate counter bottlenecks:
   - Built-in thermal printer prints the official itemized GST tax invoice and auto-cuts the paper.
   - Payment and order are immediately marked `COMPLETED`.
   - The table is atomically isolated and reset to `VACANT` for the next customer.
+- **Color Card & Table QR Print Engine:**
+  - The machine integrates a secondary internal 300 DPI dye-sublimation / thermal transfer color print head along the card transport path.
+  - Allows venue managers to print edge-to-edge full-color PVC Dining Cards (with automatic RFID encoding) and Table QR acrylic standee inserts with QuickBite branding and restaurant logos directly from the B2B Portal.
 
 ---
 

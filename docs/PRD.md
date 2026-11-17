@@ -85,7 +85,7 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
 - **B2B-01 Secure Multi-Tenant Login:** Isolated access to own restaurant data only.
 - **B2B-02 Floor Zones:** Create and manage dining sections (Main Hall, AC Lounge, Terrace).
 - **B2B-03 Table Inventory:** Add tables with table numbers, seat capacity (2, 4, 6, 8+ pax), and assigned zone.
-- **B2B-04 Table QR Generator:** Generate and download unique, printable, high-resolution QR codes tied to each physical table.
+- **B2B-04 Table QR Generator & Hardware Card Printing:** Generate and download unique, printable, high-resolution QR codes tied to each physical table. Managers can print durable full-color Table QR tent cards, acrylic standee inserts, and PVC dining session cards directly from the custom billing machine's built-in color card print engine.
 - **B2B-05 Availability Slot Engine:** Configure daily operating hours and reservation slot duration blocks (60, 90, 120 mins).
 - **B2B-06 Operating Calendar:** Base Full Day hours apply automatically to all dates.
 - **B2B-07 Half-Day Shift Override:** Restrict availability to specific shift windows (e.g. lunch only or dinner only).
@@ -121,11 +121,10 @@ Dining out during peak rush hours (lunch and dinner) creates severe delays for d
       - **Anti-Theft Audit Trail:** Any item void or quantity reduction requires a **Mandatory Reason Code** (e.g. `NOT_SERVED`, `CUSTOMER_REJECTED`, `WRONGLY_PUNCHED`). If the item was already printed in the kitchen (KOT printed), voiding strictly requires **Manager PIN Authorization**. The system writes an immutable record to the audit ledger capturing staff ID, dish name, previous/new quantities, delta ₹ amount, reason, and manager approver.
     - **Standard Restaurant Payment:** The customer settles any remaining balance directly with the restaurant using their normal payment method (Cash, restaurant's card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
     - **Staff 1-Tap "Print Receipt":** Once payment is received, staff taps 1 button: **"Print Receipt"**. This custom machine immediately prints the final itemized GST tax invoice from its built-in printer mouth and auto-cuts the paper. That 1 tap marks both the payment and the order as `Completed`.
+    - **Color Printing for PVC Cards & Table QR Codes:** The machine features a secondary internal dye-sublimation color print head along the card path. Venue managers can print edge-to-edge full-color PVC Dining Session Cards (with RFID encoding) and Table QR acrylic standee inserts with QuickBite branding and restaurant logos directly from the portal.
     - **Strict Table Isolation for Next Customer:** Immediately upon order completion, the system executes an atomic table reset:
       - The table session is closed and the table status resets to `Vacant`.
       - The completed order is permanently archived and sealed.
-      - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
-      - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
       - When the next customer arrives, a brand-new, isolated session is generated. The new customer's order has zero connection to or effect from the previous customer's orders.
       - The dining card is unlinked from the completed order and returned to the available pool tray for reuse.
 

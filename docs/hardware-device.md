@@ -192,3 +192,73 @@ sequenceDiagram
 +------------------------------------------+
 [AUTO-CUT PAPER]
 ```
+
+---
+
+## 6. Color Printing & Table QR / Dining Card Generation Upgrade
+
+To allow restaurant managers to print **Table QR Codes** and **Physical Dining Session Cards** in vibrant full color directly from this machine without needing external printing vendors, the machine incorporates a **Dual-Mechanism Print Architecture**:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│             DUAL-MECHANISM PRINT ARCHITECTURE IN ONE CHASSIS           │
+│                                                                        │
+│   MECHANISM A: Front Receipt Printer                                   │
+│   • Technology: Monochrome Direct Thermal (80mm roll, 203 DPI)         │
+│   • Output: Customer dining bills & GST tax invoices                   │
+│   • Speed: < 1 second per bill, zero ink/ribbon cost                   │
+│                                                                        │
+│   MECHANISM B: Rear/Internal Color Card & QR Print Engine              │
+│   • Technology: Direct-to-Card (DTC) Dye-Sublimation / Thermal Transfer│
+│   • Resolution: 300 DPI edge-to-edge full-color (16.7M colors)         │
+│   • Consumables: Compact replaceable YMCKO full-color ribbon cartridge │
+│   • Outputs:                                                           │
+│     1. Physical PVC Dining Session Cards (CR-80 RFID/NFC cards)        │
+│     2. Table QR Tent Cards / Acrylic Standee Inserts                   │
+│     3. Heavy-Duty Laminated Table QR Stickers                          │
+│   • Integrated RFID Encoder: Automatically writes table binding & UID  │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.1 What Hardware Updates are Needed Inside the Machine?
+1. **DTC Thermal Transfer Print Head:** A compact 300 DPI dye-sublimation print head installed along the internal card transport path.
+2. **YMCKO Ribbon Cartridge Bay:** A snap-in slot under the top maintenance hatch for a miniature YMCKO (Yellow, Magenta, Cyan, Black, Overlay) color ribbon.
+3. **Card Feeder / Reversible Transport Rollers:** Motorized bi-directional rollers in the rear slot allowing blank PVC cards (or synthetic QR cards) to pass under the color print head, receive the overlay protective coat, encode the RFID chip, and eject.
+4. **Firmware & Driver Pipeline:** Embedded ESC/POS driver for front thermal receipts, paired with a card rendering engine (CUPS / raster image processor) for 300 DPI CMYK color dithering on cards.
+
+---
+
+## 7. QuickBite Brand Identity & Physical Placement Guidelines
+
+To establish a premium, cohesive, and instantly recognizable brand aesthetic on the custom machine:
+
+| Touchpoint | Placement Location | Branding Specifications |
+|---|---|---|
+| **1. Primary Hardware Badge** | Front top of display bezel (centered) | Laser-etched or brushed metallic silver **QuickBite** wordmark with signature leaf/bite emblem ($\approx 45\text{mm} \times 12\text{mm}$). |
+| **2. Signature LED Light Accent** | Aerodynamic side curves, front indicator, and card slot edge | **QuickBite Cyan/Electric Blue** LED glow (`#00D2FF` / `#0084FF`). Breaths softly when idle, solid blue during card read, pulse green on bill completion. |
+| **3. Customer Mini-Screen UI** | Top navigation bar on customer LCD | Deep navy blue / teal banner (`#0D2040`) with crisp white **QuickBite** logo on top-left, `Table 04` on center, and venue brand on top-right. |
+| **4. Physical Dining Session Cards** | Edge-to-edge CR-80 PVC Smart Cards | Dark titanium/sapphire background with QuickBite geometric contours, embossed card number (`CARD-07`), NFC wave symbol, and venue co-brand badge. |
+| **5. Printed Table QR Cards** | High-gloss waterproof acrylic standee inserts | Clean white & electric cyan border, bold **QuickBite "Scan to Order"** banner, central high-contrast HMAC QR code, and table number badge. |
+| **6. Thermal Receipt Header & Footer**| Top & Bottom of thermal paper | Centered QuickBite monochrome logo header stamp, followed by restaurant legal details; footer reads: `Powered by QuickBite • www.quickbite.in`. |
+
+---
+
+## 8. AI / GPT Image Generation Prompts (Text-to-Image / 3D Render)
+
+Use the following tailored prompts in **Midjourney v6**, **ChatGPT (DALL-E 3)**, or **Flux.1** to generate hyper-realistic, studio-grade 3D renders matching the design aesthetic of your prototype with proper QuickBite branding and color card printing:
+
+### Prompt 1: Front 3/4 Perspective Studio Product Shot (Primary Display & Card Showcase)
+```text
+Industrial design studio photography of a premium all-in-one restaurant countertop billing machine named "QuickBite", sleek dark titanium and matte slate-gray finish with soft cyan LED accent lines. The machine features an adjustable tilted front touchscreen displaying a clean customer order summary in Indian Rupees (₹) with the "QuickBite" logo in the top nav bar. From the lower front slot, an itemized paper tax invoice receipt is smoothly printing out with "Powered by QuickBite" at the bottom. Standing beside the machine on the polished marble cafe counter is a high-gloss, full-color printed Table QR acrylic standee branded with "QuickBite - Scan to Order Table 04". In the background, warm atmospheric restaurant bokeh lighting. Photorealistic 8k, Octane Render, clean commercial product shot, Apple-like industrial design. --ar 16:9 --style raw --v 6.0
+```
+
+### Prompt 2: Dual-Angle Operator Side Showing Color Card Printing & Insertion
+```text
+Professional 3D CAD product render of the custom "QuickBite" smart billing machine shown from the rear operator perspective. A human hand is inserting a sleek, custom-designed full-color printed PVC dining session card with an embedded gold chip and vibrant QuickBite teal-and-navy branding into an illuminated horizontal card slot with a crisp cyan LED guide light. The machine chassis is seamless dark gunmetal ABS with subtle chamfered corners. In the foreground, two newly printed full-color dining cards and a color table QR tent card lie neatly on the counter, showing pristine edge-to-edge dye-sublimation print quality. Sharp focus, studio softbox lighting, high-end retail POS hardware visualization, 8k resolution. --ar 16:9 --v 6.0
+```
+
+### Prompt 3: Detailed Exploded / Feature Callout Hero View
+```text
+A commercial hero shot of the QuickBite unified countertop POS billing terminal on a luxury wooden restaurant counter. The machine has an embossed metallic "QuickBite" logo centered above its 7-inch sharp color customer display showing Indian Rupee pricing (₹440, ₹160, ₹756). An integrated front auto-cutter thermal printer is feeding an official printed tax invoice. On the side, an illuminated card slot holds a customized NFC smart card with QuickBite branding. Next to it rests a freshly printed colorful Table QR tent card. Clean aesthetic, soft ambient shadows, depth of field, hyper-detailed textures, brushed metal and premium matte plastic, raytraced reflections. --ar 16:9 --v 6.0
+```
+
