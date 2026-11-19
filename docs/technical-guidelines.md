@@ -319,41 +319,41 @@ Security measurements must be implemented across all layers:
   app.use(helmet());
   ```
 
-### 6.2 Rate Limiting & Abuse Prevention
+### 6.3 Rate Limiting & Abuse Prevention
 - Implemented via `@nestjs/throttler` backed by Redis:
   - Auth routes (`/api/v1/auth/login`): 5 requests per minute.
   - Table QR order placement: 10 requests per minute per table IP.
   - General API routes: 100 requests per minute.
 
-### 6.3 Password Hashing
+### 6.4 Password Hashing
 - Cryptographic password hashing using `bcrypt` (work factor $\ge 10$) or `argon2`. Plaintext passwords must never be stored, logged, or serialized.
 
-### 6.4 CORS Policy
+### 6.5 CORS Policy
 - Explicit origin whitelisting:
   - Admin Portal origin (`https://admin.quickbite.com` or local dev)
   - B2B Portal origin (`https://partner.quickbite.com` or local dev)
   - Unified Customer App origin (`https://app.quickbite.com` or local dev)
   - Wildcards (`*`) are prohibited in production.
 
-### 6.5 Tenant Data Isolation
+### 6.6 Tenant Data Isolation
 - Strict row-level multi-tenancy: Every query executed on behalf of a Restaurant Owner injects `restaurant_id = :authenticatedUserRestaurantId`.
 - An owner can never query, update, or delete data belonging to another restaurant.
 
-### 6.6 Cryptographic QR Table Binding (HMAC)
+### 6.7 Cryptographic QR Table Binding (HMAC)
 - Table QR URLs must be signed with a cryptographic HMAC token:
   `https://app.quickbite.com/table?id=table_uuid&sig=HMAC_SHA256(table_uuid, SECRET)`
 - A `QrSignatureGuard` validates the signature before allowing any customer menu access or order placement, preventing URL manipulation.
 
-### 6.7 Compliance Document Security & Verification Notifications
+### 6.8 Compliance Document Security & Verification Notifications
 - Legal KYC documents (FSSAI, GST, Bank Proof, Owner ID) must be stored in a **private cloud storage bucket** (AWS S3).
 - Direct public access is disabled.
 - Authenticated Super Admins receive short-lived (15-minute) pre-signed download URLs generated on-demand during verification workflows.
 - **Verification Notification Events:** Marking any document `Approved` or `Rejected` emits a domain event handled by `MailService`, sending transactional HTML emails to the partner's registered email with verification status and mandatory rejection feedback.
 
-### 6.8 SQL Injection Immunity
+### 6.9 SQL Injection Immunity
 - Direct string concatenation in SQL queries is strictly prohibited. All queries must utilize parameterized statements or type-safe ORM query builders (Prisma / TypeORM).
 
-### 6.9 Temporary Password Generation (Restaurant Name Starter)
+### 6.10 Temporary Password Generation (Restaurant Name Starter)
 - When Super Admin onboards a new restaurant, the backend generates a cryptographically secure temporary password.
 - **Starter Pattern:** Takes the sanitized alphanumeric brand name as prefix (e.g. `SpicyGrill`), appended with `@`, followed by cryptographically random characters via `crypto.randomBytes`:
   - **Format:** `[SanitizedBrandName]@[RandomSecureString]` (e.g., `SpicyGrill@9mK#4vL2!`).
@@ -363,7 +363,7 @@ Security measurements must be implemented across all layers:
   - Stored in the database only as a `bcrypt` hash ($\ge 10$ rounds).
   - Flags account with `must_reset_password = true`, requiring the partner to change credentials upon first login.
 
-### 6.10 Pre-Booking Anti-Fraud Verification & Client IP Auditing
+### 6.11 Pre-Booking Anti-Fraud Verification & Client IP Auditing
 - **Customer Authentication:**
   Customers pre-booking food and tables authenticate via SMS OTP verification using their Full Name and Mobile Phone Number.
 - **Fraud Prevention & Data Capture:**

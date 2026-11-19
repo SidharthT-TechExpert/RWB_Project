@@ -37,26 +37,66 @@ restaurants
 
 ## 3. Detailed Data Dictionaries
 
-### 3.1 `users`
-Multi-tenant user credentials, role-based access, and session management.
+### 3.1 `admin_users`
+Super Admin platform operator credentials, system roles, MFA configurations, and administrative audit references.
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique user identifier |
-| `restaurant_id` | `UUID` | `NULLABLE, REFERENCES restaurants(id) ON DELETE CASCADE` | Associated restaurant (`NULL` for Super Admin) |
-| `email` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | Normalized lowercase email address |
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique super admin identifier |
+| `email` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | Normalized lowercase administrator email address |
 | `password_hash` | `VARCHAR(255)` | `NOT NULL` | Cryptographic hash (`bcrypt` work factor $\ge 10$) |
-| `role` | `VARCHAR(32)` | `NOT NULL` | `SUPER_ADMIN`, `RESTAURANT_OWNER`, `RESTAURANT_MANAGER`, `STAFF`, `CUSTOMER` |
-| `full_name` | `VARCHAR(128)` | `NOT NULL` | User full legal name |
-| `phone_number` | `VARCHAR(20)` | `NULLABLE, UNIQUE` | Contact/login phone number |
-| `must_reset_password` | `BOOLEAN` | `NOT NULL DEFAULT FALSE` | Set to `TRUE` for auto-generated brand passwords |
-| `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Active account status flag |
+| `full_name` | `VARCHAR(128)` | `NOT NULL` | Administrator full legal name |
+| `phone_number` | `VARCHAR(20)` | `NOT NULL, UNIQUE` | Verified administrator mobile phone number |
+| `role` | `VARCHAR(32)` | `NOT NULL DEFAULT 'SUPER_ADMIN'` | `SUPER_ADMIN`, `COMPLIANCE_OFFICER`, `FINANCE_ADMIN` |
+| `mfa_enabled` | `BOOLEAN` | `NOT NULL DEFAULT FALSE` | Multi-factor authentication enforcement flag |
+| `mfa_secret` | `VARCHAR(255)` | `NULLABLE` | Encrypted TOTP authenticator secret |
+| `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Active administrative account status flag |
+| `last_login_at` | `TIMESTAMPTZ` | `NULLABLE` | Last successful administrative sign-in timestamp |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record last modification timestamp |
 
 ---
 
-### 3.2 `restaurants`
+### 3.2 `partner_users`
+Multi-tenant hotel and destination restaurant staff accounts (owners, managers, head chefs, and front-desk welcome hosts) strictly bound to their respective hotel.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique partner staff identifier |
+| `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE CASCADE` | Bound destination hotel venue |
+| `email` | `VARCHAR(255)` | `NOT NULL, UNIQUE` | Partner staff login email address |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL` | Cryptographic hash (`bcrypt` work factor $\ge 10$) |
+| `full_name` | `VARCHAR(128)` | `NOT NULL` | Staff member full legal name |
+| `phone_number` | `VARCHAR(20)` | `NOT NULL, UNIQUE` | Operational mobile contact number |
+| `role` | `VARCHAR(32)` | `NOT NULL` | `RESTAURANT_OWNER`, `RESTAURANT_MANAGER`, `HEAD_CHEF`, `FRONT_DESK_HOST` |
+| `must_reset_password` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Set to `TRUE` for auto-generated onboarding passwords |
+| `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Active employment / account status flag |
+| `last_login_at` | `TIMESTAMPTZ` | `NULLABLE` | Last successful partner login timestamp |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record creation timestamp |
+| `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Record last modification timestamp |
+
+---
+
+### 3.3 `customers`
+Consumer profiles for travelers, highway road-trippers, and destination foodies. Authenticates passwordlessly via Mobile Phone Number and SMS OTP verification.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique customer traveler identifier |
+| `phone_number` | `VARCHAR(20)` | `NOT NULL, UNIQUE` | Verified primary mobile phone number (SMS OTP login) |
+| `full_name` | `VARCHAR(128)` | `NOT NULL` | Customer display / legal full name |
+| `email` | `VARCHAR(255)` | `NULLABLE, UNIQUE` | Optional email address for digital passes and tax invoices |
+| `dietary_preference` | `VARCHAR(32)` | `NOT NULL DEFAULT 'ALL'` | Default dietary preference: `ALL`, `VEG`, `NON_VEG`, `VEGAN`, `JAIN` |
+| `otp_hash` | `VARCHAR(255)` | `NULLABLE` | Secure hashed active 6-digit SMS OTP |
+| `otp_expires_at` | `TIMESTAMPTZ` | `NULLABLE` | Active OTP expiry timestamp (5-minute window) |
+| `is_phone_verified` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Phone verification completion status |
+| `fcm_push_token` | `VARCHAR(255)` | `NULLABLE` | Firebase Cloud Messaging token for 7:00 PM trip pass notifications |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Customer registration timestamp |
+| `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Profile last update timestamp |
+
+---
+
+### 3.4 `restaurants`
 Core tenant record capturing business profiles, onboarding status, and financial terms.
 
 | Column | Type | Constraints | Description |
@@ -85,7 +125,7 @@ Core tenant record capturing business profiles, onboarding status, and financial
 
 ---
 
-### 3.3 `compliance_documents`
+### 3.5 `compliance_documents`
 Verification records for the 4 mandatory onboarding legal artifacts.
 
 | Column | Type | Constraints | Description |
@@ -96,14 +136,14 @@ Verification records for the 4 mandatory onboarding legal artifacts.
 | `file_s3_key` | `VARCHAR(512)` | `NOT NULL` | Private S3 bucket object storage key |
 | `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'PENDING'` | `PENDING`, `APPROVED`, `REJECTED` |
 | `rejection_reason` | `TEXT` | `NULLABLE` | Mandatory feedback note if status is `REJECTED` |
-| `verified_by_user_id`| `UUID` | `NULLABLE, REFERENCES users(id)` | Super Admin who executed verification |
+| `verified_by_admin_id`| `UUID` | `NULLABLE, REFERENCES admin_users(id)` | Super Admin who executed verification |
 | `verified_at` | `TIMESTAMPTZ` | `NULLABLE` | Verification execution timestamp |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Upload timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Last review timestamp |
 
 ---
 
-### 3.4 `dining_zones`
+### 3.6 `dining_zones`
 Spatial architectural areas within a dining venue (e.g. AC Main Dining, Rooftop, Patio).
 
 | Column | Type | Constraints | Description |
@@ -118,7 +158,7 @@ Spatial architectural areas within a dining venue (e.g. AC Main Dining, Rooftop,
 
 ---
 
-### 3.5 `restaurant_tables`
+### 3.7 `restaurant_tables`
 Physical tables mapped to dining zones, bound to cryptographic QR codes.
 
 | Column | Type | Constraints | Description |
@@ -136,7 +176,7 @@ Physical tables mapped to dining zones, bound to cryptographic QR codes.
 
 ---
 
-### 3.6 `kitchen_printers`
+### 3.8 `kitchen_printers`
 Hardware thermal printers registered by venue managers for automated category KOT dispatch.
 
 | Column | Type | Constraints | Description |
@@ -153,7 +193,7 @@ Hardware thermal printers registered by venue managers for automated category KO
 
 ---
 
-### 3.7 `menu_categories`
+### 3.9 `menu_categories`
 Catalog taxonomies for grouping food dishes and directing KOT thermal routing.
 
 | Column | Type | Constraints | Description |
@@ -169,7 +209,7 @@ Catalog taxonomies for grouping food dishes and directing KOT thermal routing.
 
 ---
 
-### 3.8 `food_items`
+### 3.10 `food_items`
 Culinary offerings with pricing in Indian Rupees (₹) and 86'd stock controls.
 
 | Column | Type | Constraints | Description |
@@ -189,7 +229,7 @@ Culinary offerings with pricing in Indian Rupees (₹) and 86'd stock controls.
 
 ---
 
-### 3.9 `calendar_overrides`
+### 3.11 `calendar_overrides`
 Operating exceptions overriding normal weekly operating hours.
 
 | Column | Type | Constraints | Description |
@@ -206,7 +246,7 @@ Operating exceptions overriding normal weekly operating hours.
 
 ---
 
-### 3.10 `table_reservations`
+### 3.12 `table_reservations`
 Pre-bookings created via Customer App capturing party size, advance fees, multi-table selections, and immutable split snapshots.
 
 | Column | Type | Constraints | Description |
@@ -214,6 +254,8 @@ Pre-bookings created via Customer App capturing party size, advance fees, multi-
 | `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique pre-booking identifier |
 | `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE RESTRICT` | Target venue |
 | `primary_table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Primary reserved table (matching reservation_tables) |
+| `customer_id` | `UUID` | `NOT NULL, REFERENCES customers(id) ON DELETE RESTRICT` | Pre-booking diner account |
+| `checked_in_by_staff_id` | `UUID` | `NULLABLE, REFERENCES partner_users(id)` | Hotel host who checked in the guest |
 | `customer_name` | `VARCHAR(128)` | `NOT NULL` | Customer primary contact name |
 | `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Customer phone number |
 | `customer_email` | `VARCHAR(255)` | `NOT NULL` | Customer email address for booking pass |
@@ -233,7 +275,7 @@ Pre-bookings created via Customer App capturing party size, advance fees, multi-
 
 ---
 
-### 3.11 `reservation_tables`
+### 3.13 `reservation_tables`
 Junction table mapping reservations to one or more physical dining tables, allowing parties to reserve suitable single or combined multi-table seating.
 
 | Column | Type | Constraints | Description |
@@ -245,7 +287,7 @@ Junction table mapping reservations to one or more physical dining tables, allow
 
 ---
 
-### 3.12 `kitchen_batch_manifests`
+### 3.14 `kitchen_batch_manifests`
 Consolidated preparation sheets generated automatically every evening at 7:00 PM for the following day's pre-bookings. Provides destination kitchens with aggregated portion forecasts per arrival slot to eliminate food waste and ensure signature dishes are guaranteed.
 
 | Column | Type | Constraints | Description |
@@ -262,7 +304,7 @@ Consolidated preparation sheets generated automatically every evening at 7:00 PM
 
 ---
 
-### 3.13 `table_orders`
+### 3.15 `table_orders`
 Pre-booked dining orders created via Unified Customer App, scheduled for arrival slots, and fulfilled upon diner check-in.
 
 | Column | Type | Constraints | Description |
@@ -284,8 +326,8 @@ Pre-booked dining orders created via Unified Customer App, scheduled for arrival
 | `payment_status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'UNPAID'` | `UNPAID`, `PARTIALLY_PAID`, `FULLY_PAID` |
 | `settlement_method` | `VARCHAR(32)` | `NULLABLE` | `ONLINE_PREPAID`, `CASH`, `UPI_QR`, `POS_CARD_SWIPE`, `SPLIT` |
 | `settled_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when cashier closed bill at counter |
-| `settled_by_user_id`| `UUID` | `NULLABLE, REFERENCES users(id)` | Cashier/Staff user who settled the bill |
-| `customer_id` | `UUID` | `NULLABLE, REFERENCES users(id)` | Authenticated diner account |
+| `checked_in_by_staff_id`| `UUID` | `NULLABLE, REFERENCES partner_users(id)` | Hotel staff who checked in arriving diner |
+| `customer_id` | `UUID` | `NOT NULL, REFERENCES customers(id)` | Authenticated diner account |
 | `customer_name` | `VARCHAR(128)` | `NOT NULL` | Diner verified full name |
 | `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Diner verified mobile phone number |
 | `client_ip` | `VARCHAR(45)` | `NOT NULL` | Remote client IP address (Admin-only visibility, masked from restaurant) |
@@ -297,7 +339,7 @@ Pre-booked dining orders created via Unified Customer App, scheduled for arrival
 
 ---
 
-### 3.14 `order_items`
+### 3.16 `order_items`
 Individual line items on an order, carrying category and printer snapshots for atomic KOT printing.
 
 | Column | Type | Constraints | Description |
@@ -316,7 +358,7 @@ Individual line items on an order, carrying category and printer snapshots for a
 
 ---
 
-### 3.15 `daily_settlement_batches`
+### 3.17 `daily_settlement_batches`
 Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payouts, booking metrics, bank UTR, and partner tax invoices.
 
 | Column | Type | Constraints | Description |
@@ -335,13 +377,13 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 | `invoice_number` | `VARCHAR(64)` | `NULLABLE, UNIQUE` | Formal sequential Tax Invoice number |
 | `invoice_pdf_url` | `VARCHAR(512)` | `NULLABLE` | Presigned URL to downloadable partner PDF invoice |
 | `settled_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when Admin logged UTR disbursement |
-| `settled_by_admin_id` | `UUID` | `NULLABLE, REFERENCES users(id)` | Super Admin who approved and disbursed funds |
+| `disbursed_by_admin_id` | `UUID` | `NULLABLE, REFERENCES admin_users(id)` | Super Admin who approved and disbursed funds |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Batch creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Batch status modification timestamp |
 
 ---
 
-### 3.16 `monthly_settlements`
+### 3.18 `monthly_settlements`
 Monthly financial statement consolidating platform pre-booking fee splits.
 
 | Column | Type | Constraints | Description |

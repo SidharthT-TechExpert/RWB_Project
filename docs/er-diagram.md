@@ -8,7 +8,12 @@ This document provides visual architectural diagrams and domain relationship map
 
 ```mermaid
 erDiagram
-    USERS ||--o| RESTAURANTS : "manages/belongs to"
+    ADMIN_USERS ||--o{ COMPLIANCE_DOCUMENTS : "verifies"
+    ADMIN_USERS ||--o{ DAILY_SETTLEMENT_BATCHES : "disburses"
+    RESTAURANTS ||--o{ PARTNER_USERS : "employs"
+    PARTNER_USERS ||--o{ TABLE_RESERVATIONS : "checks in"
+    CUSTOMERS ||--o{ TABLE_RESERVATIONS : "pre-books"
+    CUSTOMERS ||--o{ TABLE_ORDERS : "owns"
     RESTAURANTS ||--o{ COMPLIANCE_DOCUMENTS : "submits"
     RESTAURANTS ||--o{ DINING_ZONES : "contains"
     DINING_ZONES ||--o{ RESTAURANT_TABLES : "houses"
@@ -24,25 +29,46 @@ erDiagram
     RESTAURANTS ||--o{ KITCHEN_BATCH_MANIFESTS : "generates"
     RESTAURANTS ||--o{ TABLE_ORDERS : "processes"
     RESTAURANT_TABLES ||--o{ TABLE_ORDERS : "served at"
-    USERS ||--o{ TABLE_ORDERS : "places"
     TABLE_RESERVATIONS ||--o| TABLE_ORDERS : "initiates"
     TABLE_ORDERS ||--o{ ORDER_ITEMS : "comprises"
-
     FOOD_ITEMS ||--o{ ORDER_ITEMS : "ordered as"
     KITCHEN_PRINTERS ||--o{ ORDER_ITEMS : "routed to"
     RESTAURANTS ||--o{ DAILY_SETTLEMENT_BATCHES : "settled via"
     DAILY_SETTLEMENT_BATCHES ||--o{ TABLE_RESERVATIONS : "aggregates"
     RESTAURANTS ||--o{ MONTHLY_SETTLEMENTS : "reconciles"
 
-    USERS {
+    ADMIN_USERS {
+        uuid id PK
+        string email UK
+        string password_hash
+        string full_name
+        string phone_number UK
+        string role
+        boolean mfa_enabled
+        boolean is_active
+        timestamp created_at
+    }
+
+    PARTNER_USERS {
         uuid id PK
         uuid restaurant_id FK
         string email UK
         string password_hash
-        string role
         string full_name
+        string phone_number UK
+        string role
         boolean must_reset_password
         boolean is_active
+        timestamp created_at
+    }
+
+    CUSTOMERS {
+        uuid id PK
+        string phone_number UK
+        string full_name
+        string email UK
+        string dietary_preference
+        boolean is_phone_verified
         timestamp created_at
     }
 
@@ -68,7 +94,7 @@ erDiagram
         string file_s3_key
         string status
         string rejection_reason
-        uuid verified_by_user_id FK
+        uuid verified_by_admin_id FK
         timestamp verified_at
     }
 
@@ -134,6 +160,8 @@ erDiagram
         uuid id PK
         uuid restaurant_id FK
         uuid primary_table_id FK
+        uuid customer_id FK
+        uuid checked_in_by_staff_id FK
         string customer_name
         date reservation_date
         time slot_time
