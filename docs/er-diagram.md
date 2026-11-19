@@ -321,42 +321,38 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Diner as Customer / Diners
-    actor Waiter as Waiter / Floor Staff
-    participant Machine as Countertop Billing Machine (Dual Screen)
+    actor Diner as Traveler / Diners
+    participant App as QuickBite Customer App
+    participant System as QuickBite Batch Engine
     participant DB as Backend Database (PostgreSQL)
-    actor Cashier as Cashier / Billing Staff
-    actor NextCustomer as Next Dining Party
+    actor Host as Hotel Host / Front Desk
+    actor Chef as Kitchen Head Chef
 
-    Note over Diner,Waiter: Food Served: Waiter Hands Physical Dining Card (Card #07)
-    Waiter->>DB: Bind Card #07 to Table 04 Active Order
-    DB->>DB: dining_session_cards.status = 'ACTIVE_BOUND'
-    Note over Diner: Diners Finish Meal
-    Diner->>Cashier: Hands Dining Card at Billing Counter
-    Cashier->>Machine: Inserts Card #07 into Machine Slot
-    Machine->>DB: Query Order by card_uid
-    DB-->>Machine: Return Order Items, Taxes, Advance Paid Online, Balance Due
-    par Dual Screen Display
-        Machine->>Machine: Staff Screen: Full operational item breakdown & balance
-        Machine->>Machine: Customer Mini Screen: Complete itemized dishes list (dishes x qty, prices), advance paid, balance to pay
+    Note over Diner,App: Phase 1: Advance Discovery & Pre-Booking (Before 12:00 PM Cut-off)
+    Diner->>App: Discover Trending Restaurant & Select Slot (e.g. 1:00 PM)
+    Diner->>App: Pre-Order Signature Dishes & Pay Upfront in ₹
+    App->>DB: Lock Table Slot & Reserve Food Portions
+    DB-->>App: Issue Digital VIP Trip Pass with QR Code
+
+    Note over System,Chef: Phase 2: 7:00 PM Day-Before Batch Dispatch
+    System->>DB: Query All Tomorrow's Confirmed Bookings at 19:00
+    DB-->>System: Aggregated Pre-Bookings & Portions Count
+    par 7:00 PM Notifications
+        System->>Chef: Dispatch Kitchen Batch Prep Sheet (Exact Portions per Slot)
+        System->>Diner: Send VIP Pass Reminder & Highway Navigation Link
     end
-    Diner->>Cashier: Settle Payment (Cash, Card, or Restaurant's Own Razorpay/UPI)
-    Cashier->>Machine: 1-Tap "Print Receipt"
+    Chef->>Chef: Procure & Prep Exact Fresh Portions (Zero Waste)
+
+    Note over Diner,Host: Phase 3: Arrival & Zero-Wait VIP Hospitality
+    Diner->>Host: Arrive at Hotel & Present Digital VIP Pass
+    Host->>DB: 1-Tap Check-In / Scan Pass QR (status = 'ARRIVED_SEATED')
+    Host->>Diner: Escort to Reserved Table (Zero Wait, Good Hospitality Culture)
+    Chef->>Diner: Serve Guaranteed Hot Signature Dishes Immediately
     
-    rect rgb(240, 255, 240)
-        Note over DB: ATOMIC ISOLATION & SETTLEMENT TRANSACTION
-        DB->>DB: 1. table_orders: status = 'COMPLETED', payment_status = 'FULLY_PAID'
-        DB->>DB: 2. Record completed_at = NOW() (Starts T+X delayed payout clock)
-        DB->>DB: 3. Unbind Card: dining_session_cards.status = 'AVAILABLE'
-        DB->>DB: 4. Reset Table: restaurant_tables.status = 'VACANT'
-        DB->>DB: 5. Archive & Seal Previous Order Record (Read-Only)
-    end
-
-    Machine->>Machine: Built-in Thermal Printer Prints Receipt & Auto-Cuts
-    Cashier->>Diner: Hand Printed Official Tax Receipt
-    Cashier->>Cashier: Remove Card & Return to Available Tray
-
-    Note over NextCustomer,DB: Table 04 is 100% Isolated: Next customer's order is completely independent!
+    Note over Diner,Host: Phase 4: Dining Completion & Settlement Clock
+    Diner->>Host: Conclude Meal
+    Host->>DB: 1-Tap "Complete Booking" (status = 'COMPLETED', completed_at = NOW())
+    DB->>DB: Release Table Slot & Initiate T+X Delayed Settlement Clock
 ```
 
 ---

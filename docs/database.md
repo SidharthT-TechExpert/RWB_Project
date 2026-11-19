@@ -245,22 +245,20 @@ Junction table mapping reservations to one or more physical dining tables, allow
 
 ---
 
-### 3.12 `dining_session_cards`
-Physical session cards (Smart Chip cards, RFID/NFC tokens, or magnetic/barcode cards) provided by waiters to seated diners for tracking incremental orders and enabling instantaneous POS billing counter settlement.
+### 3.12 `kitchen_batch_manifests`
+Consolidated preparation sheets generated automatically every evening at 7:00 PM for the following day's pre-bookings. Provides destination kitchens with aggregated portion forecasts per arrival slot to eliminate food waste and ensure signature dishes are guaranteed.
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique card record identifier |
-| `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE CASCADE` | Venue holding this card in inventory |
-| `card_uid` | `VARCHAR(64)` | `NOT NULL, UNIQUE` | Hardware UID (RFID UID, NFC Tag ID, Chip Serial, or Barcode Token) |
-| `card_number` | `VARCHAR(32)` | `NOT NULL` | Human-readable embossed or printed identifier (e.g. "CARD-04") |
-| `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'AVAILABLE'` | `AVAILABLE` (in tray/pool), `ACTIVE_BOUND` (assigned to table/order), `LOST`, `DECOMMISSIONED` |
-| `active_table_id` | `UUID` | `NULLABLE, REFERENCES restaurant_tables(id) ON DELETE SET NULL` | Currently linked physical table |
-| `active_order_id` | `UUID` | `NULLABLE` | Currently linked active dining order (FK to table_orders) |
-| `active_reservation_id`| `UUID` | `NULLABLE, REFERENCES table_reservations(id) ON DELETE SET NULL` | Linked pre-booking pass (if applicable) |
-| `assigned_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when card was assigned to diners |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Card enrollment timestamp |
-| `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Status transition timestamp |
+| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique manifest record identifier |
+| `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE CASCADE` | Destination restaurant |
+| `manifest_date` | `DATE` | `NOT NULL` | Target dining date for this batch preparation |
+| `dispatched_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Trigger timestamp (7:00 PM day before dining) |
+| `total_bookings` | `INT` | `NOT NULL DEFAULT 0` | Total pre-bookings included in batch |
+| `total_guests` | `INT` | `NOT NULL DEFAULT 0` | Aggregated guest count across all slots |
+| `slot_breakdown_json` | `JSONB` | `NOT NULL` | Aggregated dishes & portions required per arrival slot |
+| `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'DISPATCHED'` | `DISPATCHED`, `ACKNOWLEDGED_BY_KITCHEN`, `PREPPED` |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Generation timestamp |
 
 ---
 

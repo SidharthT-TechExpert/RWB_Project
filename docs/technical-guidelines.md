@@ -131,37 +131,19 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
   - **Body:** Item Name, Quantity, Dietary Badge (`Veg` / `Non-Veg`).
   - **Cooking Notes:** Bold, high-contrast instructions (e.g. `*** NOTE: Extra Garlic Paste, Less Spicy ***`).
 
-## 3.6 Custom Billing Machine Architecture (Single Integrated Unit)
+## 3.6 Pre-Booking Cut-Off & Kitchen Manifest Engine
 
-To streamline front-of-house table operations and eliminate counter bottlenecks:
-- **Unified Single-Unit Custom Machine:**
-  - The **Customer Mini Screen**, the **Card Ingestion Slot**, and the **High-Speed Thermal Receipt Printer** are engineered directly into **ONE single custom-designed physical machine** (not two separate external devices).
-  - It connects to the cashier's computer/tablet (running the QuickBite B2B Portal) via USB or Local Network.
-- **Card Reader Interface Protocols:**
-  - Machine supports physical dining session cards via contact chip slot (ISO 7816) or contactless RFID/NFC reader slot with microswitch insertion auto-detection.
-- **Card Hand-off & Dining Accumulation:**
-  - When serving food, the waiter hands a physical dining session card (e.g. Card #07) to the seated customer.
-  - Any additional spot dishes ordered during the meal dynamically accumulate under this card's linked table order.
-- **Dual-Screen Auto-Display on Card Insertion:**
-  - Diners present the card at the billing counter; staff inserts the card into the machine's slot.
-  - Microswitch triggers instant lookup (`CARD_READ(card_uid)`):
-    1. Looks up `dining_session_cards` where `card_uid = :uid` and `status = 'ACTIVE_BOUND'`.
-    2. Retrieves active `table_orders` and itemized `order_items`.
-    3. Renders the complete reconciled bill simultaneously on:
-       - **Staff Main Screen:** Full operational breakdown (dishes, quantities, unit prices, GST taxes, advance paid online amount, and balance to collect).
-       - **Customer Mini Screen:** Complete customer-facing **itemized food list** (dish names, quantities, line prices, subtotal), advance paid online amount, and net balance to pay.
-- **Counter Item Management & Anti-Theft Audit Trail:**
-  - Staff can void items, decrease quantities, or punch added items.
-  - Changes instantly update the Customer Mini Screen in real-time.
-  - Every modification creates an immutable entry in `order_item_audit_logs` recording user ID, dish name, previous/new quantities, delta amount, and mandatory `reason_code` (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`).
-  - Items already printed on kitchen KOTs strictly require **Manager Authorization** to void.
-- **Direct Restaurant Payment:**
-  - Customer settles their bill directly with the restaurant (Cash, restaurant card POS, or restaurant's own Razorpay/UPI setup). In-venue food payments flow 100% directly to the restaurant; QuickBite does not intercept or hold in-venue dining collections.
-- **Staff 1-Tap "Print Receipt" & Table Isolation:**
-  - Staff taps 1 button: **"Print Receipt"**.
-  - Built-in thermal printer prints the official itemized GST tax invoice and auto-cuts the paper.
-  - Payment and order are immediately marked `COMPLETED`.
-  - The table is atomically isolated and reset to `VACANT` for the next customer.
+To give destination kitchens predictable preparation lead times and guarantee travelers their meals:
+- **Same-Day 12:00 PM Hard Cut-off:**
+  - Same-day bookings must be placed before 12:00 PM (Noon). Any booking attempt past this cut-off is rejected with a clear notice that kitchen prep allocations have closed.
+- **7:00 PM Day-Before Batch Dispatch:**
+  - Every evening at 19:00, the system automatically aggregates all confirmed bookings for the following day.
+  - Generates the **Consolidated Kitchen Batch Prep Sheet** for hotel partner kitchens, showing exact dish portion counts per arrival slot.
+  - Dispatches the **VIP Trip Pass & Route Reminder** to diners via push notification and SMS.
+- **Post-7:00 PM Bookings (30-Minute Grace Window):**
+  - Bookings placed between 7:00 PM and midnight for the next day's afternoon/evening slots (before the next day's 12:00 PM cut-off) receive their pass within 30 minutes, dynamically updating the hotel's prep manifest.
+- **Zero Proprietary Hardware Lock-In:**
+  - The Hotel Partner Portal operates as a lightweight PWA on standard off-the-shelf tablets (iPad / Android) with 1-tap QR scan check-in.
 
 ---
 
@@ -481,34 +463,25 @@ Mandatory compound and single-column indexes:
   - Automatically synthesizes a formal PDF Tax Invoice / Settlement Receipt (`invoice_number`, `invoice_pdf_url`) capturing created vs completed pre-booking counts, gross food sales, fee deductions, net payout in ₹, and bank UTR reference.
   - Emits `PayoutDisbursedEvent` notifying partner owners and managers via email and populating their B2B portal Invoices section for immediate download.
 
-## 7.6 Countertop Machine Settlement, 1-Tap Print & Strict Table Isolation
+## 7.6 VIP Arrival Check-In, Zero-Wait Dining & Completion Lifecycle
 
-The countertop billing machine executes a deterministic financial display and table isolation transaction:
+The pre-booking check-in workflow guarantees elevated hospitality and predictable turnaround:
 
-1. **Dual-Screen Bill Breakdown:**
-   $$\text{gross\_food\_amount} = \sum (\text{unit\_price\_snapshot}_i \times \text{quantity}_i)$$
-   $$\text{tax\_amount} = \text{gross\_food\_amount} \times (\text{gst\_rate} / 100)$$
-   $$\text{total\_bill\_amount} = \text{gross\_food\_amount} + \text{tax\_amount}$$
-   $$\text{advance\_paid\_amount} = \text{table\_reservations.preordered\_food\_amount (or ₹0.00 if walk-in)}$$
-   $$\text{balance\_due\_amount} = \max(0.00, \text{total\_bill\_amount} - \text{advance\_paid\_amount})$$
+1. **VIP Arrival & 1-Tap Verification:**
+   - Travelers arrive at the destination restaurant and present their Digital VIP Pass.
+   - Front desk/host taps **"Check-In"** or scans the pass QR using the Hotel Partner Portal on their tablet.
+   - Sets `pre_bookings.status = 'ARRIVED_SEATED'`.
+   - Table status is confirmed as occupied; kitchen is alerted to fire the pre-prepped fresh dishes.
 
-2. **In-Venue Restaurant Payment:**
-   - The diner settles any remaining balance (`balance_due_amount`) directly with the restaurant via the venue's existing payment setup (Cash, card machine, or restaurant's own Razorpay/UPI setup).
-   - In-venue payments flow directly to the restaurant partner. QuickBite never intercepts, delays, or takes commission on in-venue table collections.
+2. **Zero-Wait Hospitality ("Good Dining Culture"):**
+   - Diners bypass chaotic general queues and are escorted immediately to their reserved table.
+   - Guaranteed food arrives fresh within minutes of being seated.
 
-3. **Staff 1-Tap "Print Receipt":**
-   Staff taps 1 button: **"Print Receipt"**. The system executes an atomic transaction:
-   - Sets `table_orders.status = 'COMPLETED'` and records `completed_at = NOW()` (which initiates the $T+X$ delayed daily settlement clock for any online pre-booked food).
-   - Sets `table_orders.payment_status = 'FULLY_PAID'`.
-   - Dispatches ESC/POS binary command to the built-in thermal printer: prints official itemized tax invoice receipt and triggers auto-cut.
-   - Clears physical dining card association: `dining_session_cards.status = 'AVAILABLE'`, unlinking it for reuse in the card tray.
-
-4. **Strict Table Isolation Guarantee for Next Customer:**
-   - Immediately upon order completion, `restaurant_tables.status` resets to `VACANT`.
-   - The completed order is permanently sealed and archived in PostgreSQL (read-only).
-   - When the next customer is seated at this table and scans the QR code or orders:
-     - The backend creates a completely new, isolated `table_orders` record with a unique `order_number`.
-     - The previous customer's order history, line items, and financial records are 100% isolated. Under zero circumstances can previous items or amounts bleed into or affect the new customer's dining session.
+3. **Dining Completion & Settlement Initiation:**
+   - Upon diners concluding their meal, host taps **"Complete Booking"**.
+   - Sets `pre_bookings.status = 'COMPLETED'` and records `completed_at = NOW()`.
+   - Table resets to `VACANT` for the next scheduled slot.
+   - `completed_at` initiates the $T+X$ delayed daily settlement holding period for partner disbursement.
 
 ---
 
@@ -568,7 +541,7 @@ project-root/
 │   ├── package.json
 │   └── README.md
 │
-├── b2b-portal/          # React PWA (Restaurant Operations & Kitchen Rush Board)
+├── hotel-portal/        # React PWA (Hotel Partner Operations & Kitchen Batch Prep Sheet)
 │   ├── src/
 │   │   ├── components/  # Layouts, data tables, modals
 │   │   ├── features/    # Zones, tables, menu, rush-board, calendar, orders, printers
@@ -579,7 +552,7 @@ project-root/
 │   ├── package.json
 │   └── README.md
 │
-├── customer-app/        # Unified Customer Application (Pre-Booking & In-Venue QR Ordering)
+├── customer-app/        # Unified Customer Application (Destination & Trending Pre-Booking)
 │   ├── src/
 │   │   ├── screens/     # Discovery, pre-booking slots, advance pre-order, passes, on-table menu
 │   │   ├── components/  # QR camera scanner, sticky category nav, dish cards, cart drawer
