@@ -21,17 +21,13 @@ erDiagram
     RESTAURANT_TABLES ||--o{ TABLE_RESERVATIONS : "allocated to"
     TABLE_RESERVATIONS ||--o{ RESERVATION_TABLES : "allocates"
     RESTAURANT_TABLES ||--o{ RESERVATION_TABLES : "booked by"
-    RESTAURANTS ||--o{ DINING_SESSION_CARDS : "stocks"
-    DINING_SESSION_CARDS ||--o| RESTAURANT_TABLES : "assigned to"
-    DINING_SESSION_CARDS ||--o| TABLE_ORDERS : "tracks"
-    DINING_SESSION_CARDS ||--o| TABLE_RESERVATIONS : "binds to"
+    RESTAURANTS ||--o{ KITCHEN_BATCH_MANIFESTS : "generates"
     RESTAURANTS ||--o{ TABLE_ORDERS : "processes"
     RESTAURANT_TABLES ||--o{ TABLE_ORDERS : "served at"
     USERS ||--o{ TABLE_ORDERS : "places"
     TABLE_RESERVATIONS ||--o| TABLE_ORDERS : "initiates"
     TABLE_ORDERS ||--o{ ORDER_ITEMS : "comprises"
-    TABLE_ORDERS ||--o{ ORDER_ITEM_AUDIT_LOGS : "audits edits on"
-    USERS ||--o{ ORDER_ITEM_AUDIT_LOGS : "performed by"
+
     FOOD_ITEMS ||--o{ ORDER_ITEMS : "ordered as"
     KITCHEN_PRINTERS ||--o{ ORDER_ITEMS : "routed to"
     RESTAURANTS ||--o{ DAILY_SETTLEMENT_BATCHES : "settled via"
@@ -159,16 +155,16 @@ erDiagram
         timestamp created_at
     }
 
-    DINING_SESSION_CARDS {
+    KITCHEN_BATCH_MANIFESTS {
         uuid id PK
         uuid restaurant_id FK
-        string card_uid UK
-        string card_number
+        date manifest_date
+        timestamp dispatched_at
+        int total_bookings
+        int total_guests
+        jsonb slot_breakdown_json
         string status
-        uuid active_table_id FK
-        uuid active_order_id FK
-        uuid active_reservation_id FK
-        timestamp assigned_at
+        timestamp created_at
     }
 
     TABLE_ORDERS {
@@ -176,7 +172,6 @@ erDiagram
         string order_number UK
         uuid restaurant_id FK
         uuid table_id FK
-        uuid dining_card_id FK
         uuid reservation_id FK
         uuid customer_id FK
         string customer_name
@@ -208,23 +203,6 @@ erDiagram
         uuid category_id_snapshot FK
         uuid assigned_printer_id_snapshot FK
         timestamp kot_printed_at
-    }
-
-    ORDER_ITEM_AUDIT_LOGS {
-        uuid id PK
-        uuid order_id FK
-        uuid order_item_id FK
-        uuid performed_by_user_id FK
-        string action_type
-        string item_name_snapshot
-        int previous_quantity
-        int new_quantity
-        decimal unit_price
-        decimal total_delta_amount
-        string reason_code
-        string reason_notes
-        uuid manager_approved_by FK
-        timestamp created_at
     }
 
     DAILY_SETTLEMENT_BATCHES {
@@ -316,7 +294,7 @@ sequenceDiagram
     Batch->>Partner: Send Email Notification with UTR Reference
 ```
 
-### 2.4 Countertop Billing Machine, 1-Tap Receipt & Table Isolation Lifecycle
+### 2.4 Destination Pre-Booking, 7:00 PM Batch Dispatch & 1-Tap VIP Check-In Lifecycle
 
 ```mermaid
 sequenceDiagram
@@ -359,7 +337,7 @@ sequenceDiagram
 
 ## 3. Financial Invariant Guarantees
 
-1. **Pre-Booking Fee Exclusivity:** The commercial split percentage (`prebooking_split_percentage`) applies strictly to upfront pre-booking customer charges. Spot QR orders and in-venue manual punching incur **0% platform commission**.
+1. **Pre-Booking Fee Exclusivity:** The commercial split percentage (`prebooking_split_percentage`) applies strictly to upfront customer pre-booking charges in Indian Rupees (₹).
 2. **Snapshot Immutability:** When a pre-booking occurs, `applied_split_ratio`, `platform_fee_amount`, and `partner_payout_amount` are written to `table_reservations`. Any future change to the restaurant's contract split ratio in the Admin Portal leaves past reservations and statements untouched.
 3. **Paise Accuracy:** All columns use `DECIMAL(10, 2)` denominated strictly in Indian Rupees (₹), completely eliminating binary floating-point rounding errors.
-4. **Anti-Fraud IP Privacy Isolation:** Customer name, verified phone number, physical table number, and client IP address are permanently captured upon spot order creation. The client IP address is visible exclusively to Super Admin in the Global Audit Ledger for fraud mitigation, and is strictly stripped from all restaurant tenant endpoints.
+4. **Anti-Fraud IP Privacy Isolation:** Customer name, verified phone number, physical table number, and client IP address are permanently captured upon pre-booking creation. The client IP address is visible exclusively to Super Admin in the Global Audit Ledger for fraud mitigation, and is strictly stripped from all restaurant tenant endpoints.

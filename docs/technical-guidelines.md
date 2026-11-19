@@ -1,7 +1,7 @@
 # QuickBite – Technical Guidelines
 
 **Document Type:** Technical Guidelines  
-**Project:** QuickBite – Restaurant Operations B2B SaaS Platform  
+**Project:** QuickBite – Dedicated Destination & Trending Food Pre-Booking Platform  
 **Stack Overview:**
 - **Frontend:** React (Web & Table QR Web), React Native (Customer Mobile App), Zod (Validation), Zustand (Client State), TanStack Query (Server State & Caching)
 - **Backend:** NestJS & TypeScript (Modular Monolith), DTO Validation (`class-validator` / `ValidationPipe`), Centralized Response & Exception Handling, Hardened Security Measurements
@@ -123,7 +123,7 @@ To handle physical preparation stations (e.g. Shawarma station, Tandoor / Grill 
   - Supports standard 80mm / 58mm thermal receipt printers using ESC/POS protocol.
   - Connectivity via Network TCP Socket (`IP:9100` LAN printers) or PWA Web Print / Bluetooth API.
 - **Manager Category-to-Printer Assignment UI:**
-  - Managers manage KOT routing directly from the B2B SaaS portal:
+  - Managers manage KOT routing directly from the Hotel Partner Operations Portal:
     - **Category Modal:** The `CategoryForm` includes an intuitive `printer_id` dropdown populated dynamically from configured active printers.
     - **Instant Live Update:** Selecting a new printer on a category mutates `menu_categories.assigned_printer_id` and takes effect immediately on subsequent orders without requiring server or hardware reboots.
 - **Standardized KOT Ticket Layout:**
@@ -363,19 +363,19 @@ Security measurements must be implemented across all layers:
   - Stored in the database only as a `bcrypt` hash ($\ge 10$ rounds).
   - Flags account with `must_reset_password = true`, requiring the partner to change credentials upon first login.
 
-### 6.10 Spot Order Anti-Fraud Authentication & Client IP Auditing
-- **Customer Authentication on Table QR:**
-  Walk-in customers scan the table QR code using the Customer Application to bind the active table session. Prior to punching or confirming a spot order, customers authenticate via a fast signup/login flow using their Name and Mobile Phone Number (SMS OTP verification).
+### 6.10 Pre-Booking Anti-Fraud Verification & Client IP Auditing
+- **Customer Authentication:**
+  Customers pre-booking food and tables authenticate via SMS OTP verification using their Full Name and Mobile Phone Number.
 - **Fraud Prevention & Data Capture:**
-  Every spot order permanently records:
+  Every pre-booking permanently records:
   - `customer_name`: Verified customer legal/display name.
   - `customer_phone`: Verified customer mobile number.
-  - `table_id`: Physical table where order is placed.
+  - `table_id`: Allocated physical dining table(s).
   - `client_ip`: Remote IPv4/IPv6 address extracted safely from `X-Forwarded-For` or request socket connection.
   - `user_agent`: Browser and device footprint.
 - **Strict Role-Based Privacy Isolation:**
-  - **Super Admin Visibility:** `client_ip` is fully serialized and visible to Super Admin in `/api/v1/admin/orders` and `/api/v1/admin/audit-logs` for bot/prank order mitigation and cybersecurity incident response.
-  - **Restaurant Privacy Protection:** The backend DTOs and serializers (`@Exclude()` in NestJS `ClassSerializerInterceptor`) strictly strip `client_ip` from all B2B restaurant endpoints (`/api/v1/b2b/orders`, Kitchen Rush Board WebSocket payloads). Restaurant staff have zero visibility into customer IP addresses.
+  - **Super Admin Visibility:** `client_ip` is fully serialized and visible to Super Admin in `/api/v1/admin/bookings` and `/api/v1/admin/audit-logs` for bot/prank booking mitigation and fraud investigations.
+  - **Restaurant Privacy Protection:** The backend DTOs and serializers (`@Exclude()` in NestJS `ClassSerializerInterceptor`) strictly strip `client_ip` from all hotel partner endpoints. Hotel staff see only customer name, phone, party size, and pre-ordered dishes.
 
 ---
 
@@ -400,7 +400,7 @@ companies_restaurants ──< calendar_overrides
 companies_restaurants ──< table_reservations (Pre-bookings with fee split snapshot)
 companies_restaurants ──< restaurant_payouts (T+X delayed food & fee disbursement ledger)
 companies_restaurants ──< kitchen_printers ──< printer_categories (Category KOT routing)
-restaurant_tables      ──< table_orders ──< order_items (In-venue spot orders, zero split)
+restaurant_tables      ──< table_reservations ──< prebooking_items (Advance pre-bookings)
 ```
 
 ## 7.3 Performance Indexing Rules
@@ -429,7 +429,7 @@ Mandatory compound and single-column indexes:
   - Snapshots `platform_fee_amount = prebooking_fee * (applied_split_ratio / 100)`.
   - Snapshots `partner_payout_amount = prebooking_fee - platform_fee_amount`.
 - **Zero Retroactive Mutation:** Any subsequent change by Super Admin to `restaurants.prebooking_split_percentage` applies exclusively to future reservations. Existing records in `table_reservations` are permanently immutable.
-- **Exclusion of Spot Orders:** `table_orders` (placed via table QR or punched by staff) have zero platform commission cuts. Diners pay the venue directly.
+- **Pre-Booking Fee Exclusivity:** Commercial split percentage applies strictly to upfront pre-booking customer charges. Pre-ordered food amounts belong 100% to the hotel partner.
 
 ## 7.5 Delayed Payout Engine Architecture (T+X Days Post-Dining)
 - **Holding Period Window Anchor (`completed_at`):**

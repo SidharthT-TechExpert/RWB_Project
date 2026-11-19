@@ -263,7 +263,7 @@ Consolidated preparation sheets generated automatically every evening at 7:00 PM
 ---
 
 ### 3.13 `table_orders`
-Active dining orders originating from Unified Customer App Pre-Bookings, In-Venue Table QR, or manual staff punching. Spot orders have zero platform commission.
+Pre-booked dining orders created via Unified Customer App, scheduled for arrival slots, and fulfilled upon diner check-in.
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
@@ -271,9 +271,8 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 | `order_number` | `VARCHAR(32)` | `NOT NULL, UNIQUE` | Human-friendly alphanumeric identifier (e.g. "ORD-84920") |
 | `restaurant_id` | `UUID` | `NOT NULL, REFERENCES restaurants(id) ON DELETE RESTRICT` | Tenant restaurant |
 | `table_id` | `UUID` | `NOT NULL, REFERENCES restaurant_tables(id) ON DELETE RESTRICT` | Physical table where food is served |
-| `dining_card_id` | `UUID` | `NULLABLE, REFERENCES dining_session_cards(id) ON DELETE SET NULL` | Linked physical dining session card |
 | `reservation_id`| `UUID` | `NULLABLE, REFERENCES table_reservations(id)` | Linked pre-booking (if pre-ordered meal) |
-| `order_type` | `VARCHAR(32)` | `NOT NULL` | `PRE_BOOKING`, `ON_TABLE_QR`, `STAFF_PUNCHED` |
+| `order_type` | `VARCHAR(32)` | `NOT NULL DEFAULT 'PRE_BOOKING'` | `PRE_BOOKING` |
 | `status` | `VARCHAR(32)` | `NOT NULL DEFAULT 'CONFIRMED'` | `CONFIRMED`, `PREPARING`, `SERVED`, `COMPLETED`, `CANCELLED` |
 | `gross_food_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Subtotal of ordered items in INR (₹) |
 | `tax_amount` | `DECIMAL(10, 2)` | `NOT NULL DEFAULT 0.00` | Calculated GST in INR (₹) |
@@ -287,7 +286,7 @@ Active dining orders originating from Unified Customer App Pre-Bookings, In-Venu
 | `settled_at` | `TIMESTAMPTZ` | `NULLABLE` | Timestamp when cashier closed bill at counter |
 | `settled_by_user_id`| `UUID` | `NULLABLE, REFERENCES users(id)` | Cashier/Staff user who settled the bill |
 | `customer_id` | `UUID` | `NULLABLE, REFERENCES users(id)` | Authenticated diner account |
-| `customer_name` | `VARCHAR(128)` | `NOT NULL` | Diner verified name captured during spot order |
+| `customer_name` | `VARCHAR(128)` | `NOT NULL` | Diner verified full name |
 | `customer_phone` | `VARCHAR(20)` | `NOT NULL` | Diner verified mobile phone number |
 | `client_ip` | `VARCHAR(45)` | `NOT NULL` | Remote client IP address (Admin-only visibility, masked from restaurant) |
 | `user_agent` | `VARCHAR(255)` | `NULLABLE` | Device and browser audit footprint |
@@ -317,29 +316,7 @@ Individual line items on an order, carrying category and printer snapshots for a
 
 ---
 
-### 3.15 `order_item_audit_logs`
-Immutable audit ledger recording all post-punch modifications, cancellations, voids, and quantity adjustments made to table order items by billing staff.
-
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | `UUID` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Unique audit record identifier |
-| `order_id` | `UUID` | `NOT NULL, REFERENCES table_orders(id) ON DELETE CASCADE` | Affected table order ticket |
-| `order_item_id` | `UUID` | `NULLABLE, REFERENCES order_items(id) ON DELETE SET NULL` | Target order line item |
-| `performed_by_user_id`| `UUID` | `NOT NULL, REFERENCES users(id)` | Cashier / staff user who performed the edit |
-| `action_type` | `VARCHAR(32)` | `NOT NULL` | `ITEM_VOIDED`, `QUANTITY_DECREASED`, `QUANTITY_INCREASED`, `ITEM_ADDED`, `PRICE_OVERRIDDEN` |
-| `item_name_snapshot` | `VARCHAR(150)` | `NOT NULL` | Name of dish modified |
-| `previous_quantity` | `INT` | `NOT NULL` | Quantity prior to modification |
-| `new_quantity` | `INT` | `NOT NULL` | Quantity after modification |
-| `unit_price` | `DECIMAL(10, 2)`| `NOT NULL` | Unit price in INR (₹) |
-| `total_delta_amount` | `DECIMAL(10, 2)`| `NOT NULL` | Change in order subtotal (negative for voids) in INR (₹) |
-| `reason_code` | `VARCHAR(64)` | `NOT NULL` | Standardized reason code (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`, `MANAGER_COMP`) |
-| `reason_notes` | `TEXT` | `NULLABLE` | Detailed staff explanation notes |
-| `manager_approved_by` | `UUID` | `NULLABLE, REFERENCES users(id)` | Manager who authorized void (mandatory if KOT was printed) |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Immutable audit record timestamp |
-
----
-
-### 3.16 `daily_settlement_batches`
+### 3.15 `daily_settlement_batches`
 Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payouts, booking metrics, bank UTR, and partner tax invoices.
 
 | Column | Type | Constraints | Description |
@@ -364,7 +341,7 @@ Rolling daily settlement batches tracking delayed $T+X$ day pre-booked food payo
 
 ---
 
-### 3.17 `monthly_settlements`
+### 3.16 `monthly_settlements`
 Monthly financial statement consolidating platform pre-booking fee splits.
 
 | Column | Type | Constraints | Description |
@@ -396,14 +373,9 @@ Monthly financial statement consolidating platform pre-booking fee splits.
 | `idx_calendar_overrides_lookup` | `calendar_overrides` | `(restaurant_id, override_date)` | Daily booking availability guards |
 | `idx_reservations_rest_date` | `table_reservations` | `(restaurant_id, reservation_date, status)` | Pre-booking slot conflict checks |
 | `idx_reservation_tables_lookup` | `reservation_tables` | `(table_id, reservation_id)` | Fast lookup of reserved tables per slot |
-| `idx_dining_cards_uid` | `dining_session_cards` | `(card_uid)` | Instant POS card reader lookup on insert/tap |
-| `idx_dining_cards_rest_status` | `dining_session_cards` | `(restaurant_id, status)` | Fast pool inventory & active table checks |
 | `idx_orders_rest_status_created`| `table_orders` | `(restaurant_id, status, created_at DESC)` | Real-time Kitchen Rush Board queries |
-| `idx_orders_dining_card` | `table_orders` | `(dining_card_id, status)` | Instant order retrieval from card insert |
 | `idx_orders_table_status` | `table_orders` | `(table_id, status)` | Active table order retrieval |
 | `idx_order_items_order_printer` | `order_items` | `(order_id, assigned_printer_id_snapshot)` | Automated category KOT dispatch |
-| `idx_order_item_audit_order` | `order_item_audit_logs` | `(order_id, created_at DESC)` | Instant order audit trail inspection |
-| `idx_order_item_audit_user` | `order_item_audit_logs` | `(performed_by_user_id, created_at DESC)` | Staff accountability & anti-theft tracking |
 | `idx_daily_settlements_fifo` | `daily_settlement_batches` | `(status, holding_matures_at ASC)` | Admin Daily Settlement window FIFO sorting queue |
 | `idx_daily_settlements_rest_date`| `daily_settlement_batches` | `(restaurant_id, status, batch_date DESC)` | Multi-criteria filtering & partner Settlements tab |
 | `idx_monthly_settlements_lookup`| `monthly_settlements` | `(restaurant_id, period_month)` | Monthly partner statement tab |
@@ -418,24 +390,13 @@ Monthly financial statement consolidating platform pre-booking fee splits.
    - Deleting a physical printer record cleanly resets `menu_categories.assigned_printer_id` to `NULL` without breaking category menus or deleting food items. Unassigned items default to venue primary printer.
 3. **Immutability of Pre-Booking Financials:**
    - Columns `applied_split_ratio`, `platform_fee_amount`, and `partner_payout_amount` on `table_reservations` are written upon reservation confirmation and cannot be modified by updates to `restaurants.prebooking_split_percentage`.
-4. **Spot Orders Zero Split:**
-   - Table QR and manual staff orders logged in `table_orders` have no platform commission cuts. Diners settle gross bills directly with the venue cashier.
+4. **Pre-Booking Quota & 12:00 PM Cut-Off Integrity:**
+   - Signature destination dishes strictly enforce daily portion limits (`daily_portion_quota`). Pre-bookings exceeding available quota or placed after the same-day 12:00 PM (Noon) cut-off are rejected at the database transaction layer.
 5. **Anti-Fraud Attribution & IP Privacy Isolation:**
-   - Every spot order recorded in `table_orders` requires verified `customer_name` and `customer_phone`.
-   - `client_ip` is captured automatically during order creation. Backend serialization rules and database projection views strictly prohibit selecting or serializing `client_ip` to restaurant tenant users. Only Super Admin has access to customer IP address information in the Global Audit Ledger.
-6. **Physical Dining Card Lifecycle & Countertop Billing Machine Settlement:**
-   - When food is served, a dining card is assigned to the table, transitioning `dining_session_cards.status` from `AVAILABLE` to `ACTIVE_BOUND`.
-   - When linked to an advance pre-booking, `table_orders.advance_paid_amount` is populated directly from `table_reservations.preordered_food_amount`.
-   - Any additional food items added at the table increment `table_orders.gross_food_amount`, with `balance_due_amount = GREATEST(0.00, total_bill_amount - advance_paid_amount)`.
-   - In-venue payments are collected directly by the restaurant partner (Cash, restaurant card machine, or restaurant's own Razorpay/UPI). QuickBite does not intercept in-venue payments.
-   - Upon staff 1-tap "Print Receipt", `payment_status` is updated to `FULLY_PAID`, `settled_at` is timestamped, `table_orders.status` transitions to `COMPLETED` (which begins the $T+X$ payout delay countdown for any online pre-booked food), and `dining_session_cards` unbinds and returns to `AVAILABLE` status in the card pool.
-7. **Strict Table Isolation & Cross-Session Separation:**
-   - Transitioning an order to `COMPLETED` atomically terminates the table session and resets `restaurant_tables.status` to `VACANT`.
-   - The completed order is permanently sealed in the database as an immutable historical record.
-   - When the next customer sits at that table and scans the QR code or orders, the platform generates a completely fresh, isolated `table_orders` ticket.
-   - Under zero circumstances can the next customer's order affect, leak into, or inherit items or amounts from the previous customer's completed dining session.
-8. **Mandatory Audit Logging for Counter Order Modifications:**
-   - Any post-punch edit to `table_orders` line items (voiding a dish, decreasing quantity, or adjusting price) made by billing staff at the countertop machine must atomically insert an immutable audit record into `order_item_audit_logs`.
-   - The audit log requires a mandatory `reason_code` (`NOT_SERVED`, `CUSTOMER_REJECTED`, `KITCHEN_SPILLAGE`, `WRONGLY_PUNCHED`, `MANAGER_COMP`).
-   - If the item was already printed in the kitchen (`order_items.kot_printed_at IS NOT NULL`), voiding or reducing quantity strictly requires authorization by a manager (`manager_approved_by`).
-   - Audit log records are permanently append-only and cannot be updated or deleted.
+   - Every pre-booking captures verified `customer_name`, `customer_phone`, and `client_ip`.
+   - `client_ip` is visible exclusively to Super Admin in the Global Audit Ledger for fraud mitigation and is masked from restaurant tenant responses.
+6. **1-Tap VIP Check-In & Dining Completion:**
+   - Arriving travelers present their Digital VIP Pass. Front desk performs 1-tap check-in, setting status to `ARRIVED_SEATED` and notifying the kitchen.
+   - Upon concluding the meal, host marks booking `COMPLETED` (`completed_at = NOW()`), releasing the table slot and initiating the $T+X$ delayed payout clock.
+7. **Automated 7:00 PM Kitchen Batch Manifest Integrity:**
+   - Every evening at 19:00, the system generates an immutable `kitchen_batch_manifests` record capturing aggregated dish portion counts per arrival slot for the next day's kitchen prep.
