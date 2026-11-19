@@ -248,7 +248,7 @@ flowchart TD
     D --> B
     C -->|Approve All 4 Docs| E["Activation Gate Unlocked"]
     E --> F["Admin Switches Status to Active"]
-    F --> G["Venue Live for Table Pre-Bookings & QR Ordering"]
+    F --> G["Venue Live for Destination Table & Food Pre-Bookings"]
 ```
 
 ### 2.2 Category-Based KOT Thermal Printing Flow
@@ -276,20 +276,20 @@ sequenceDiagram
     actor Admin as Super Admin
     actor Partner as Restaurant Partner
 
-    Customer->>Platform: Select Table(s) & Pre-Book Meal: Pay Pre-Booking Charge + Food Price in ₹
-    Platform->>Platform: Snapshot Split Ratio on Pre-Booking Charge; Hold Food Amount for T+X Payout
-    Customer->>Platform: Diners Arrive, Eat & Finish Meal
+    Customer->>Platform: Select Table and Pre-Book Meal (Pre-Booking Fee + Food Total in INR)
+    Platform->>Platform: Snapshot Split Ratio and Hold Food Amount for Payout
+    Customer->>Platform: Diners Arrive, Eat and Finish Meal
     Platform->>Platform: Staff Marks Order COMPLETED (completed_at recorded)
-    Note over Platform,Batch: Holding clock starts strictly from completed_at: holding_matures_at = completed_at + X days
+    Note over Platform,Batch: Holding clock starts strictly from completed_at (completed_at + X days delay)
     Platform->>Batch: Add Order to Daily Batch (Status: HOLDING_DELAY)
     Note over Batch: Holding for X days (Dispute clearance window)
-    Platform->>Batch: Maturity Worker: Status -> DISBURSABLE
-    Admin->>Batch: Opens Daily Settlement Window (Prioritized by FIFO: Oldest Matured First)
-    Admin->>Batch: Applies Multi-Criteria Filters (Restaurant, Status, Date Range, ₹ Amount)
-    Admin->>Batch: Reviews Volume Metrics (Created vs Completed Bookings & Net ₹ Payout)
-    Admin->>Partner: Transfer Funds via Bank NEFT/RTGS
+    Platform->>Batch: Maturity Worker updates Status to DISBURSABLE
+    Admin->>Batch: Opens Daily Settlement Window (FIFO: Oldest Matured First)
+    Admin->>Batch: Applies Multi-Criteria Filters (Restaurant, Status, Date Range, INR Amount)
+    Admin->>Batch: Reviews Volume Metrics (Created vs Completed Bookings and Net INR Payout)
+    Admin->>Partner: Transfer Funds via Bank NEFT / RTGS
     Admin->>Batch: Submit Bank UTR Number
-    Batch->>Batch: Status -> SETTLED
+    Batch->>Batch: Mark Batch Status as SETTLED
     Batch->>Partner: Push Formal PDF Tax Invoice to Invoices Section
     Batch->>Partner: Send Email Notification with UTR Reference
 ```
@@ -307,37 +307,38 @@ sequenceDiagram
     actor Chef as Kitchen Head Chef
 
     Note over Diner,App: Phase 1: Advance Discovery & Pre-Booking (Before 12:00 PM Cut-off)
-    Diner->>App: Discover Trending Restaurant & Select Slot (e.g. 1:00 PM)
-    Diner->>App: Pre-Order Signature Dishes & Pay Upfront in ₹
-    App->>DB: Lock Table Slot & Reserve Food Portions
+    Diner->>App: Discover Trending Restaurant and Select Arrival Slot (e.g. 1:00 PM)
+    Diner->>App: Pre-Order Signature Dishes and Pay Upfront in INR
+    App->>DB: Lock Table Slot and Reserve Food Portions
     DB-->>App: Issue Digital VIP Trip Pass with QR Code
 
     Note over System,Chef: Phase 2: 7:00 PM Day-Before Batch Dispatch
-    System->>DB: Query All Tomorrow's Confirmed Bookings at 19:00
-    DB-->>System: Aggregated Pre-Bookings & Portions Count
-    par 7:00 PM Notifications
-        System->>Chef: Dispatch Kitchen Batch Prep Sheet (Exact Portions per Slot)
-        System->>Diner: Send VIP Pass Reminder & Highway Navigation Link
+    System->>DB: Query All Confirmed Bookings for Tomorrow at 19:00
+    DB-->>System: Aggregated Pre-Bookings and Portions Count
+    par Dispatch Evening Notifications
+        System->>Chef: Send Kitchen Batch Prep Sheet (Exact Portions per Slot)
+    and
+        System->>Diner: Send VIP Pass Reminder and Highway Navigation Link
     end
-    Chef->>Chef: Procure & Prep Exact Fresh Portions (Zero Waste)
+    Chef->>Chef: Procure and Prep Exact Fresh Portions (Zero Waste)
 
     Note over Diner,Host: Phase 3: Arrival & Zero-Wait VIP Hospitality
-    Diner->>Host: Arrive at Hotel & Present Digital VIP Pass
-    Host->>DB: 1-Tap Check-In / Scan Pass QR (status = 'ARRIVED_SEATED')
+    Diner->>Host: Arrive at Hotel and Present Digital VIP Pass
+    Host->>DB: 1-Tap Check-In or Scan Pass QR (status = ARRIVED_SEATED)
     Host->>Diner: Escort to Reserved Table (Zero Wait, Good Hospitality Culture)
     Chef->>Diner: Serve Guaranteed Hot Signature Dishes Immediately
     
     Note over Diner,Host: Phase 4: Dining Completion & Settlement Clock
     Diner->>Host: Conclude Meal
-    Host->>DB: 1-Tap "Complete Booking" (status = 'COMPLETED', completed_at = NOW())
-    DB->>DB: Release Table Slot & Initiate T+X Delayed Settlement Clock
+    Host->>DB: 1-Tap Complete Booking (status = COMPLETED, completed_at = NOW())
+    DB->>DB: Release Table Slot and Initiate T+X Delayed Settlement Clock
 ```
 
 ---
 
 ## 3. Financial Invariant Guarantees
 
-1. **Pre-Booking Fee Exclusivity:** The commercial split percentage (`prebooking_split_percentage`) applies strictly to upfront customer pre-booking charges in Indian Rupees (₹).
+1. **Pre-Booking Fee Exclusivity:** The commercial split percentage (`prebooking_split_percentage`) applies strictly to upfront customer pre-booking charges in Indian Rupees (INR).
 2. **Snapshot Immutability:** When a pre-booking occurs, `applied_split_ratio`, `platform_fee_amount`, and `partner_payout_amount` are written to `table_reservations`. Any future change to the restaurant's contract split ratio in the Admin Portal leaves past reservations and statements untouched.
-3. **Paise Accuracy:** All columns use `DECIMAL(10, 2)` denominated strictly in Indian Rupees (₹), completely eliminating binary floating-point rounding errors.
+3. **Paise Accuracy:** All columns use `DECIMAL(10, 2)` denominated strictly in Indian Rupees (INR), completely eliminating binary floating-point rounding errors.
 4. **Anti-Fraud IP Privacy Isolation:** Customer name, verified phone number, physical table number, and client IP address are permanently captured upon pre-booking creation. The client IP address is visible exclusively to Super Admin in the Global Audit Ledger for fraud mitigation, and is strictly stripped from all restaurant tenant endpoints.
